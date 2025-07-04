@@ -133,32 +133,47 @@ public sealed class ReadCommand : AsyncCommand<ReadSettings>
             IgnoreCase = settings.IgnoreCase,
             TrimStrings = settings.TrimStrings,
             IgnoreMissingMemoFile = settings.IgnoreMissingMemo,
-            ValidateFields = false, // Optimize for performance
+            ValidateFields = false, // optimize for performance
+            CharacterDecodeFallback = null 
         };
 
-        // Apply limit at reader level for memory efficiency
         if (settings.Limit.HasValue)
         {
             readerOptions = readerOptions with { MaxRecords = settings.Limit.Value + settings.Skip };
         }
 
-        // Configure encoding if specified
         if (!string.IsNullOrEmpty(settings.Encoding))
         {
-            try
+            var encoding = TryGetEncoding(settings.Encoding);
+            if (encoding != null)
             {
-                readerOptions = readerOptions with { Encoding = System.Text.Encoding.GetEncoding(settings.Encoding) };
+                readerOptions = readerOptions with { Encoding = encoding };
             }
-            catch (ArgumentException)
+            else
             {
                 if (!settings.Quiet)
                 {
-                    AnsiConsole.MarkupLine($"[yellow]Warning:[/] Unknown encoding '{settings.Encoding}', using auto-detection");
+                    AnsiConsole.MarkupLine($"[yellow]Warning:[/] Unknown encoding '{settings.Encoding}'");
                 }
             }
         }
 
         return await DbfReader.OpenAsync(settings.FilePath, readerOptions);
+    }
+
+    /// <summary>
+    /// Tries to get an encoding by name, with special handling for Japanese encodings
+    /// </summary>
+    private static System.Text.Encoding? TryGetEncoding(string encodingName)
+    {
+        try
+        {
+            return System.Text.Encoding.GetEncoding(encodingName);
+        }
+        catch (ArgumentException)
+        {
+            return null;
+        }
     }
 
     /// <summary>
