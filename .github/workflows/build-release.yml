@@ -44,14 +44,14 @@ jobs:
         run: dotnet test --configuration Release --no-build --verbosity normal --collect:"XPlat Code Coverage"
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: https://data.forgejo.org/forgejo/upload-artifact@v4
         if: always()
         with:
           name: test-results
           path: '**/TestResults/**/*.xml'
 
       - name: Upload coverage reports
-        uses: actions/upload-artifact@v4
+        uses: https://data.forgejo.org/forgejo/upload-artifact@v4
         if: always()
         with:
           name: coverage-reports
@@ -174,7 +174,7 @@ jobs:
 
       - name: Upload Windows artifact
         if: matrix.os == 'windows'
-        uses: actions/upload-artifact@v4
+        uses: https://data.forgejo.org/forgejo/upload-artifact@v4
         with:
           name: ${{ steps.archive.outputs.name }}
           path: ${{ steps.archive.outputs.name }}.zip
@@ -182,7 +182,7 @@ jobs:
 
       - name: Upload Unix artifact
         if: matrix.os != 'windows'
-        uses: actions/upload-artifact@v4
+        uses: https://data.forgejo.org/forgejo/upload-artifact@v4
         with:
           name: ${{ steps.archive.outputs.name }}
           path: ${{ steps.archive.outputs.name }}.tar.gz
@@ -219,7 +219,7 @@ jobs:
           echo "Tag: $TAG_NAME"
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: https://data.forgejo.org/forgejo/download-artifact@v4
         with:
           path: ./artifacts
 
@@ -294,107 +294,74 @@ jobs:
           makeLatest: ${{ !contains(steps.version.outputs.version, '-') }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
-  publish-nuget:
-    name: Publish NuGet Package
-    needs: [build-and-test]
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+#  publish-nuget:
+#    name: Publish NuGet Package
+#    needs: [build-and-test]
+#    runs-on: ubuntu-latest
+#    if: startsWith(github.ref, 'refs/tags/v')
+#    
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v4
+#        with:
+#          fetch-depth: 0
+#
+#      - name: Setup .NET
+#        uses: actions/setup-dotnet@v4
+#        with:
+#          dotnet-version: ${{ env.DOTNET_VERSION }}
+#
+#      - name: Get version from tag
+#        id: version
+#        run: |
+#          VERSION=${GITHUB_REF#refs/tags/v}
+#          echo "version=$VERSION" >> $GITHUB_OUTPUT
+#          echo "Version: $VERSION"
+#
+#      - name: Pack NuGet package
+#        run: |
+#          dotnet pack ${{ env.PROJECT_PATH }} \
+#            --configuration Release \
+#            --output ./nupkg \
+#            -p:PackageVersion=${{ steps.version.outputs.version }} \
+#            -p:AssemblyVersion=${{ steps.version.outputs.version }} \
+#            -p:FileVersion=${{ steps.version.outputs.version }}
+#
+#      - name: Publish to NuGet.org
+#        run: |
+#          dotnet nuget push ./nupkg/*.nupkg \
+#            --api-key ${{ secrets.NUGET_API_KEY }} \
+#            --source https://api.nuget.org/v3/index.json \
+#            --skip-duplicate
+#        env:
+#          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Get version from tag
-        id: version
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Version: $VERSION"
-
-      - name: Pack NuGet package
-        run: |
-          dotnet pack ${{ env.PROJECT_PATH }} \
-            --configuration Release \
-            --output ./nupkg \
-            -p:PackageVersion=${{ steps.version.outputs.version }} \
-            -p:AssemblyVersion=${{ steps.version.outputs.version }} \
-            -p:FileVersion=${{ steps.version.outputs.version }}
-
-      - name: Publish to NuGet.org
-        run: |
-          dotnet nuget push ./nupkg/*.nupkg \
-            --api-key ${{ secrets.NUGET_API_KEY }} \
-            --source https://api.nuget.org/v3/index.json \
-            --skip-duplicate
-        env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-
-  update-homebrew:
-    name: Update Homebrew Formula
-    needs: [create-release]
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-')
-    
-    steps:
-      - name: Get version from tag
-        id: version
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Update Homebrew formula
-        uses: dawidd6/action-homebrew-bump-formula@v3
-        with:
-          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-          tap: your-org/homebrew-tap
-          formula: dbfsharp
-          tag: ${{ github.ref }}
-          revision: ${{ github.sha }}
-        continue-on-error: true
-
-  security-scan:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Run security audit
-        run: dotnet list package --vulnerable --include-transitive
-
-      - name: Run CodeQL Analysis
-        uses: github/codeql-action/init@v3
-        with:
-          languages: csharp
-
-      - name: Build for CodeQL
-        run: dotnet build --configuration Release
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+#  update-homebrew:
+#    name: Update Homebrew Formula
+#    needs: [create-release]
+#    runs-on: ubuntu-latest
+#    if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-')
+#    
+#    steps:
+#      - name: Get version from tag
+#        id: version
+#        run: |
+#          VERSION=${GITHUB_REF#refs/tags/v}
+#          echo "version=$VERSION" >> $GITHUB_OUTPUT
+#
+#      - name: Update Homebrew formula
+#        uses: dawidd6/action-homebrew-bump-formula@v3
+#        with:
+#          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+#          tap: your-org/homebrew-tap
+#          formula: dbfsharp
+#          tag: ${{ github.ref }}
+#          revision: ${{ github.sha }}
+#        continue-on-error: true
 
   notify-success:
     name: Notify Success
-    needs: [create-release, publish-nuget]
+    needs: [create-release] #, publish-nuget]
     runs-on: ubuntu-latest
     if: success() && startsWith(github.ref, 'refs/tags/v')
     
