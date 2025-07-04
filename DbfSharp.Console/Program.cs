@@ -1,7 +1,19 @@
-﻿
+﻿using System.Text;
 using DbfSharp.Console.Commands;
 using Spectre.Console;
 using Spectre.Console.Cli;
+
+// register code page encodings for legacy character sets
+Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+try
+{
+    Console.OutputEncoding = Encoding.UTF8;
+}
+catch
+{
+    Console.OutputEncoding = Encoding.Default;
+}
 
 try
 {
