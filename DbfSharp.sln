@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbfSharp.Console", "DbfSharp.Console\DbfSharp.Console.csproj", "{136AE889-7866-4801-AA63-C0685FC8493D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbfSharp.Core", "DbfSharp.Core\DbfSharp.Core.csproj", "{A322E66C-94FB-48C6-8F5E-B7BF0AFEB535}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbfSharp.Tests", "DbfSharp.Tests\DbfSharp.Tests.csproj", "{B264B229-6A93-40A2-AA4A-2569FBC19DAB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Files", "Solution Files", "{C61AD0E8-EF5E-44E3-9ED1-13FBC57847A4}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		.github\workflows\build-release.yml = .github\workflows\build-release.yml
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{136AE889-7866-4801-AA63-C0685FC8493D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{136AE889-7866-4801-AA63-C0685FC8493D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{136AE889-7866-4801-AA63-C0685FC8493D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{136AE889-7866-4801-AA63-C0685FC8493D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A322E66C-94FB-48C6-8F5E-B7BF0AFEB535}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A322E66C-94FB-48C6-8F5E-B7BF0AFEB535}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A322E66C-94FB-48C6-8F5E-B7BF0AFEB535}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A322E66C-94FB-48C6-8F5E-B7BF0AFEB535}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B264B229-6A93-40A2-AA4A-2569FBC19DAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B264B229-6A93-40A2-AA4A-2569FBC19DAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B264B229-6A93-40A2-AA4A-2569FBC19DAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B264B229-6A93-40A2-AA4A-2569FBC19DAB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

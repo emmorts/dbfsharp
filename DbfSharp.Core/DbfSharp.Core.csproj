@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <Optimize>true</Optimize>
+        <InvariantGlobalization>true</InvariantGlobalization>
+    </PropertyGroup>
+    
+    <PropertyGroup Condition="'$(AllowUnsafeBlocks)' == 'true'">
+        <DefineConstants>$(DefineConstants);UNSAFE_ENABLED</DefineConstants>
+    </PropertyGroup>
+
+</Project>
