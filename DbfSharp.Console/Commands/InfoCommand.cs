@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Text;
 using DbfSharp.Core;
 using DbfSharp.Core.Enums;
 using DbfSharp.Core.Parsing;
@@ -71,13 +72,11 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
                 AnsiConsole.WriteLine();
             }
 
-            // Create DBF reader options
             var readerOptions = CreateDbfReaderOptions(settings);
 
             using var reader = await DbfReader.OpenAsync(settings.FilePath, readerOptions);
             var stats = reader.GetStatistics();
 
-            // Show file overview
             DisplayFileOverview(reader, stats);
 
             if (settings.ShowHeader)
@@ -95,7 +94,7 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
             if (settings.ShowStats)
             {
                 AnsiConsole.WriteLine();
-                await DisplayRecordStatistics(reader, settings.Verbose);
+                DisplayRecordStatistics(reader, settings.Verbose);
             }
 
             if (settings.ShowMemo && stats.HasMemoFile)
@@ -127,11 +126,12 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
         // Set encoding if specified
         if (!string.IsNullOrEmpty(settings.Encoding))
         {
-            try
+            var encoding = TryGetEncoding(settings.Encoding);
+            if (encoding != null)
             {
-                options = options with { Encoding = System.Text.Encoding.GetEncoding(settings.Encoding) };
+                options = options with { Encoding = encoding };
             }
-            catch (ArgumentException)
+            else
             {
                 AnsiConsole.MarkupLine(
                     $"[yellow]Warning:[/] Unknown encoding '{settings.Encoding}', using auto-detection");
@@ -139,6 +139,21 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
         }
 
         return options;
+    }
+
+    /// <summary>
+    /// Tries to get an encoding by name, with special handling for Japanese encodings
+    /// </summary>
+    private static Encoding? TryGetEncoding(string encodingName)
+    {
+        try
+        {
+            return Encoding.GetEncoding(encodingName);
+        }
+        catch (ArgumentException)
+        {
+            return null;
+        }
     }
 
     /// <summary>
@@ -161,7 +176,7 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
 
         AnsiConsole.Write(panel);
     }
-
+    
     /// <summary>
     /// Displays detailed header information
     /// </summary>
@@ -259,11 +274,7 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
         var fieldIndex = 1;
         foreach (var field in reader.Fields)
         {
-            var netType = field.ExpectedNetType.Name;
-            if (field.SupportsNull && !netType.EndsWith("?"))
-            {
-                netType += "?";
-            }
+            var netType = GetFriendlyTypeName(field.ExpectedNetType, field.SupportsNull);
 
             var row = new List<string>
             {
@@ -317,7 +328,7 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
     /// <summary>
     /// Displays record statistics
     /// </summary>
-    private static async Task DisplayRecordStatistics(DbfReader reader, bool verbose)
+    private static void DisplayRecordStatistics(DbfReader reader, bool verbose)
     {
         var stats = reader.GetStatistics();
 
@@ -337,7 +348,6 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
 
         AnsiConsole.Write(table);
 
-        // Show sample data if verbose
         if (verbose && stats.ActiveRecords > 0)
         {
             AnsiConsole.WriteLine();
@@ -419,6 +429,48 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
         };
 
         AnsiConsole.Write(panel);
+    }
+
+    /// <summary>
+    /// Gets a friendly display name for a .NET type, handling nullable types properly
+    /// </summary>
+    private static string GetFriendlyTypeName(Type type, bool supportsNull)
+    {
+        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+        {
+            var underlyingType = Nullable.GetUnderlyingType(type);
+            if (underlyingType != null)
+            {
+                return GetSimpleTypeName(underlyingType) + "?";
+            }
+        }
+        
+        if (supportsNull && !type.IsValueType)
+        {
+            return GetSimpleTypeName(type) + "?";
+        }
+        
+        return GetSimpleTypeName(type);
+    }
+    
+    /// <summary>
+    /// Gets a simple, friendly name for common .NET types
+    /// </summary>
+    private static string GetSimpleTypeName(Type type)
+    {
+        return type.Name switch
+        {
+            "String" => "String",
+            "Int32" => "Int32",
+            "Decimal" => "Decimal", 
+            "DateTime" => "DateTime",
+            "Boolean" => "Boolean",
+            "Single" => "Single",
+            "Double" => "Double",
+            "Int64" => "Int64",
+            "Byte[]" => "Byte[]",
+            _ => type.Name
+        };
     }
 
     /// <summary>
