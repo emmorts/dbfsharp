@@ -64,52 +64,53 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.create_release == 'true'
     
     strategy:
+      fail-fast: false
       matrix:
         include:
           # Windows
-          - os: windows
+          - target_os: windows
             arch: x64
             runtime: win-x64
             extension: .exe
 
-          - os: windows
+          - target_os: windows
             arch: arm64
             runtime: win-arm64
             extension: .exe
-          
+
           # macOS
-          - os: macos
+          - target_os: macos
             arch: x64
             runtime: osx-x64
             extension: ''
 
-          - os: macos
+          - target_os: macos
             arch: arm64
             runtime: osx-arm64
             extension: ''
-          
+
           # Linux
-          - os: linux
+          - target_os: linux
             arch: x64
             runtime: linux-x64
             extension: ''
 
-          - os: linux
+          - target_os: linux
             arch: arm64
             runtime: linux-arm64
             extension: ''
-          
+
           # Linux musl (Alpine)
-          - os: linux-musl
+          - target_os: linux-musl
             arch: x64
             runtime: linux-musl-x64
             extension: ''
 
-          - os: linux-musl
+          - target_os: linux-musl
             arch: arm64
             runtime: linux-musl-arm64
             extension: ''
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -156,22 +157,22 @@ jobs:
       - name: Create archive name
         id: archive
         run: |
-          ARCHIVE_NAME="dbfsharp-${{ steps.version.outputs.version }}-${{ matrix.os }}-${{ matrix.arch }}"
+          ARCHIVE_NAME="dbfsharp-${{ steps.version.outputs.version }}-${{ matrix.target_os }}-${{ matrix.arch }}"
           echo "name=$ARCHIVE_NAME" >> $GITHUB_OUTPUT
           echo "Archive name: $ARCHIVE_NAME"
 
       - name: Create Windows ZIP archive
-        if: matrix.os == 'windows'
+        if: matrix.target_os == 'windows'
         run: |
           cd "./publish/${{ matrix.runtime }}"
           7z a "../../${{ steps.archive.outputs.name }}.zip" .
 
       - name: Create Unix TAR.GZ archive
-        if: matrix.os != 'windows'
+        if: matrix.target_os != 'windows'
         run: |
           cd "./publish/${{ matrix.runtime }}"
           tar -czf "../../${{ steps.archive.outputs.name }}.tar.gz" .
-
+          
       - name: Upload Windows artifact
         if: matrix.os == 'windows'
         uses: https://data.forgejo.org/forgejo/upload-artifact@v4
