@@ -6,6 +6,19 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <InvariantGlobalization>true</InvariantGlobalization>
+        
+        <!-- .NET Tool configuration -->
+        <PackAsTool>true</PackAsTool>
+        <ToolCommandName>dbfread</ToolCommandName>
+        <PackageId>DbfRead</PackageId>
+        <Version>0.1.0</Version>
+        <Authors>Tomas Stropus</Authors>
+        <Description>Cross-platform command-line tool for reading and processing DBF (dBASE) database files</Description>
+        <PackageTags>dbf;dbase;database;cli;tool</PackageTags>
+        <PackageProjectUrl>https://github.com/emmorts/DbfSharp</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/emmorts/DbfSharp</RepositoryUrl>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <ItemGroup>
@@ -15,6 +28,10 @@
 
     <ItemGroup>
       <ProjectReference Include="..\DbfSharp.Core\DbfSharp.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
 
 </Project>

@@ -271,7 +271,7 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
                 field.Name,
                 $"{field.Type} ({(char)field.Type})",
                 field.ActualLength.ToString(),
-                field.Type == FieldType.Numeric || field.Type == FieldType.Float
+                field.Type is FieldType.Numeric or FieldType.Float
                     ? field.ActualDecimalCount.ToString()
                     : "-",
                 netType

@@ -136,7 +136,7 @@ public sealed class VfpMemoFile : IMemoFile
             var blockHeader = VfpMemoBlockHeader.Read(_reader);
 
             // Validate memo length
-            if (blockHeader.Length == 0 || blockHeader.Length > int.MaxValue)
+            if (blockHeader.Length is 0 or > int.MaxValue)
                 return null;
 
             // Check if we have enough data
@@ -394,7 +394,7 @@ public sealed class Db4MemoFile : IMemoFile
             var memoHeader = Db4MemoHeader.Read(_reader);
 
             // Validate length
-            if (memoHeader.Length == 0 || memoHeader.Length > int.MaxValue)
+            if (memoHeader.Length is 0 or > int.MaxValue)
                 return null;
 
             // Read memo data

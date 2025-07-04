@@ -210,7 +210,7 @@ public readonly struct DbfField
             }
 
             // Check for end of file or invalid data
-            if (firstByte == 0x00 || firstByte == 0x1A)
+            if (firstByte is 0x00 or 0x1A)
             {
                 // Likely hit end of data or invalid field
                 reader.BaseStream.Position = currentPosition; // Reset position
@@ -329,7 +329,7 @@ public readonly struct DbfField
             {
                 foreach (var b in nameBytes)
                 {
-                    if (b < 32 || b > 126) // Not printable ASCII
+                    if (b is < 32 or > 126) // Not printable ASCII
                     {
                         validName = false;
                         break;
@@ -632,7 +632,7 @@ public readonly struct DbfField
     {
         var description = $"{Name} ({Type.GetDescription()}, {ActualLength}";
 
-        if (Type == FieldType.Numeric || Type == FieldType.Float)
+        if (Type is FieldType.Numeric or FieldType.Float)
         {
             description += $", {ActualDecimalCount} decimals";
         }
