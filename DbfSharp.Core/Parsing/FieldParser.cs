@@ -208,6 +208,10 @@ public class FieldParser : FieldParserBase
 
         var text = Encoding.ASCII.GetString(trimmed);
 
+        // Handle special case: lone dash represents null in many DBF files
+        if (text == "-")
+            return null;
+
         // Replace comma with dot for decimal separator (some locales use comma)
         text = text.Replace(',', '.');
 
