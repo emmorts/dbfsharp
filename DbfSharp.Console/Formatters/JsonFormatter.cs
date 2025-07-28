@@ -1,16 +1,18 @@
 using System.Text.Json;
+using DbfSharp.Console.Utils;
 using DbfSharp.Core;
 using DbfSharp.Core.Parsing;
 
 namespace DbfSharp.Console.Formatters;
 
 /// <summary>
-/// Formats DBF records as JSON using System.Text.Json for optimal performance and correctness
+/// Formats DBF records as JSON using System.Text.Json with direct streaming to avoid memory buffering
 /// </summary>
 public sealed class JsonFormatter : IDbfFormatter
 {
     private readonly FormatterOptions _options;
     private readonly JsonWriterOptions _jsonOptions;
+    private const int DefaultChunkSize = 1000;
 
     /// <summary>
     /// Initializes a new instance of the JsonFormatter
@@ -27,7 +29,7 @@ public sealed class JsonFormatter : IDbfFormatter
     }
 
     /// <summary>
-    /// Writes DBF records as formatted JSON to the specified TextWriter
+    /// Writes DBF records as formatted JSON directly to the specified TextWriter's underlying stream
     /// </summary>
     public async Task WriteAsync(
         IEnumerable<DbfRecord> records,
@@ -37,24 +39,70 @@ public sealed class JsonFormatter : IDbfFormatter
         CancellationToken cancellationToken = default
     )
     {
-        // for extremely large datasets, this could be converted to streaming approach
-        using var memoryStream = new MemoryStream();
+        var underlyingStream = GetUnderlyingStream(writer);
 
-        await using (var jsonWriter = new Utf8JsonWriter(memoryStream, _jsonOptions))
+        if (underlyingStream != null)
         {
-            await WriteJsonContent(jsonWriter, records, fields, reader, cancellationToken);
+            // direct stream writing - most efficient path
+            await WriteToStreamDirectlyAsync(records, fields, reader, underlyingStream, cancellationToken);
         }
-
-        memoryStream.Position = 0;
-        using var streamReader = new StreamReader(memoryStream, System.Text.Encoding.UTF8);
-        var jsonContent = await streamReader.ReadToEndAsync(cancellationToken);
-        await writer.WriteAsync(jsonContent.AsMemory(), cancellationToken);
+        else
+        {
+            // fallback: use a bridge that converts UTF-8 bytes to characters
+            await WriteWithTextWriterBridgeAsync(records, fields, reader, writer, cancellationToken);
+        }
     }
 
     /// <summary>
-    /// Writes the core JSON structure with proper error handling and type conversion
+    /// Attempts to extract the underlying stream from various TextWriter implementations
     /// </summary>
-    private async Task WriteJsonContent(
+    private static Stream? GetUnderlyingStream(TextWriter writer)
+    {
+        return writer switch
+        {
+            StreamWriter streamWriter => streamWriter.BaseStream,
+            // todo: add other TextWriter types that expose streams
+            _ => null
+        };
+    }
+
+    /// <summary>
+    /// Writes JSON directly to the underlying stream for maximum performance
+    /// </summary>
+    private async Task WriteToStreamDirectlyAsync(
+        IEnumerable<DbfRecord> records,
+        string[] fields,
+        DbfReader reader,
+        Stream stream,
+        CancellationToken cancellationToken
+    )
+    {
+        await using var jsonWriter = new Utf8JsonWriter(stream, _jsonOptions);
+        await WriteJsonContentAsync(jsonWriter, records, fields, reader, cancellationToken);
+        await jsonWriter.FlushAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Writes JSON using a TextWriter bridge when direct stream access is not available
+    /// </summary>
+    private async Task WriteWithTextWriterBridgeAsync(
+        IEnumerable<DbfRecord> records,
+        string[] fields,
+        DbfReader reader,
+        TextWriter writer,
+        CancellationToken cancellationToken
+    )
+    {
+        await using var textWriterStream = new TextWriterStream(writer);
+        await using var jsonWriter = new Utf8JsonWriter(textWriterStream, _jsonOptions);
+        await WriteJsonContentAsync(jsonWriter, records, fields, reader, cancellationToken);
+        await jsonWriter.FlushAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Writes the core JSON structure with chunked processing for memory efficiency
+    /// </summary>
+    private async Task WriteJsonContentAsync(
         Utf8JsonWriter jsonWriter,
         IEnumerable<DbfRecord> records,
         string[] fields,
@@ -64,7 +112,8 @@ public sealed class JsonFormatter : IDbfFormatter
     {
         jsonWriter.WriteStartArray();
 
-        await foreach (var record in ConvertToAsyncEnumerable(records, cancellationToken))
+        var recordCount = 0;
+        foreach (var record in records)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -77,6 +126,12 @@ public sealed class JsonFormatter : IDbfFormatter
             }
 
             jsonWriter.WriteEndObject();
+
+            recordCount++;
+            if (recordCount % DefaultChunkSize == 0)
+            {
+                await jsonWriter.FlushAsync(cancellationToken);
+            }
         }
 
         jsonWriter.WriteEndArray();
@@ -124,17 +179,16 @@ public sealed class JsonFormatter : IDbfFormatter
                 break;
 
             case InvalidValue invalidValue:
-                // For invalid values, we could optionally include error information
-                // For now, represent as null to maintain JSON validity
+                // for invalid values, we could optionally include error information
+                // for now, represent as null to maintain JSON validity
                 writer.WriteNull(propertyName);
                 break;
 
             case byte[] byteArray:
-                // Standard approach: encode binary data as base64
+                // encode binary data as base64
                 writer.WriteString(propertyName, Convert.ToBase64String(byteArray));
                 break;
 
-            // Integer types - explicitly handle to avoid boxing/unboxing overhead
             case int intValue:
                 writer.WriteNumber(propertyName, intValue);
                 break;
@@ -168,7 +222,7 @@ public sealed class JsonFormatter : IDbfFormatter
                 break;
 
             default:
-                // Fallback for any unexpected types - convert to string safely
+                // fallback for any unexpected types - convert to string
                 var stringRepresentation = value.ToString();
                 if (stringRepresentation != null)
                 {
@@ -178,6 +232,7 @@ public sealed class JsonFormatter : IDbfFormatter
                 {
                     writer.WriteNull(propertyName);
                 }
+
                 break;
         }
     }
@@ -201,29 +256,6 @@ public sealed class JsonFormatter : IDbfFormatter
             // Alternative: could write as string "NaN", "Infinity", "-Infinity"
             // but null is more universally parseable
             writer.WriteNull(propertyName);
-        }
-    }
-
-    /// <summary>
-    /// Converts IEnumerable to IAsyncEnumerable for cancellation support
-    /// This allows long-running operations to be cancelled gracefully
-    /// </summary>
-    private static async IAsyncEnumerable<T> ConvertToAsyncEnumerable<T>(
-        IEnumerable<T> source,
-        [System.Runtime.CompilerServices.EnumeratorCancellation]
-            CancellationToken cancellationToken = default
-    )
-    {
-        foreach (var item in source)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            yield return item;
-
-            // Yield control periodically to allow other operations
-            if (Random.Shared.Next(100) == 0) // Every ~100 records on average
-            {
-                await Task.Yield();
-            }
         }
     }
 }
