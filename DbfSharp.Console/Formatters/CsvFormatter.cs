@@ -26,12 +26,18 @@ public sealed class CsvFormatter : IDbfFormatter
     /// <summary>
     /// Creates a CSV formatter instance
     /// </summary>
-    public static CsvFormatter Csv(FormatterOptions? options = null) => new(',', options);
+    public static CsvFormatter Csv(FormatterOptions? options = null)
+    {
+        return new CsvFormatter(',', options);
+    }
 
     /// <summary>
     /// Creates a TSV formatter instance
     /// </summary>
-    public static CsvFormatter Tsv(FormatterOptions? options = null) => new('\t', options);
+    public static CsvFormatter Tsv(FormatterOptions? options = null)
+    {
+        return new CsvFormatter('\t', options);
+    }
 
     /// <summary>
     /// Writes DBF records as delimiter-separated values to the specified TextWriter
