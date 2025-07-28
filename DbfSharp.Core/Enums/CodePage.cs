@@ -81,7 +81,7 @@ public static class CodePage
     /// </summary>
     /// <param name="languageDriver">The language driver byte from the DBF header</param>
     /// <returns>The corresponding Encoding, or null if not found</returns>
-    public static Encoding? GetEncoding(byte languageDriver)
+    private static Encoding? GetEncoding(byte languageDriver)
     {
         if (!CodePages.TryGetValue(languageDriver, out var codePage))
         {
@@ -103,6 +103,7 @@ public static class CodePage
                 "cp865" => "ibm865",
                 "cp866" => "ibm866",
                 "cp737" => "ibm737",
+                "shift_jis" => "sjis",
                 "macintosh" => "macintosh",
                 "x-mac-cyrillic" => "x-mac-cyrillic",
                 "x-mac-ce" => "x-mac-ce",
@@ -173,38 +174,6 @@ public static class CodePage
     public static bool IsSupported(byte languageDriver)
     {
         return CodePages.ContainsKey(languageDriver);
-    }
-
-    /// <summary>
-    /// Gets the encoding name used internally by .NET for a given language driver
-    /// </summary>
-    /// <param name="languageDriver">The language driver byte</param>
-    /// <returns>The .NET encoding name, or null if not supported</returns>
-    public static string? GetNetEncodingName(byte languageDriver)
-    {
-        if (!CodePages.TryGetValue(languageDriver, out var codePage))
-        {
-            return null;
-        }
-
-        return codePage.EncodingName switch
-        {
-            "cp437" => "ibm437",
-            "cp850" => "ibm850",
-            "cp852" => "ibm852",
-            "cp857" => "ibm857",
-            "cp860" => "ibm860",
-            "cp861" => "ibm861",
-            "cp863" => "ibm863",
-            "cp865" => "ibm865",
-            "cp866" => "ibm866",
-            "cp737" => "ibm737",
-            "macintosh" => "macintosh",
-            "x-mac-cyrillic" => "x-mac-cyrillic",
-            "x-mac-ce" => "x-mac-ce",
-            "x-mac-greek" => "x-mac-greek",
-            _ => codePage.EncodingName
-        };
     }
 
     /// <summary>
