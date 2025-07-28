@@ -1,0 +1,92 @@
+#!/bin/sh
+#
+# Pre-push hook for dbfsharp
+# Handles automatic version tagging and ensures tags are pushed with commits
+#
+
+# Exit immediately if a command exits with a non-zero status.
+set -e
+
+remote="$1"
+url="$2"
+PROJECT_FILE="DbfSharp.Console/DbfSharp.Console.csproj"
+
+# Check if we're in the right directory
+if [ ! -f "$PROJECT_FILE" ]; then
+    echo "Error: $PROJECT_FILE not found. Please run from repository root."
+    exit 1
+fi
+
+# Loop through all refs being pushed
+while read local_ref local_sha remote_ref remote_sha; do
+    # --- Only inspect branch pushes to prevent recursion ---
+    if ! echo "$local_ref" | grep -q 'refs/heads/'; then
+        continue
+    fi
+    # --- Improvement: Handle branch deletion ---
+    if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
+        # Branch is being deleted, skip
+        continue
+    fi
+
+    # Determine the range of commits to check
+    if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+        # New branch, check all commits from the beginning
+        range="$local_sha"
+    else
+        # Existing branch, check new commits
+        range="$remote_sha..$local_sha"
+    fi
+
+    # --- Improvement: Find the specific commit that changed the version ---
+    COMMIT_TO_TAG=""
+    # Get a list of all commits in the push range that touched the project file.
+    COMMITS_TO_CHECK=$(git rev-list "$range" -- "$PROJECT_FILE")
+
+    for commit in $COMMITS_TO_CHECK; do
+        # For each commit, check if its patch contains an addition or deletion of the PackageVersion line.
+        # The `&>/dev/null` suppresses output; we only care if a match is found.
+        if git show "$commit" -- "$PROJECT_FILE" | grep -E '^[+-].*<PackageVersion>' &>/dev/null; then
+            COMMIT_TO_TAG="$commit"
+            # Found the most recent commit that changed the version. Stop searching.
+            break
+        fi
+    done
+
+    if [ -z "$COMMIT_TO_TAG" ]; then
+        # No commit in this push changed the version file, continue to the next ref
+        continue
+    fi
+
+    # --- Improvement: More robust version extraction ---
+    # Extract the version from the .csproj file *as it was in that specific commit*
+    VERSION_TAG=$(git show "$COMMIT_TO_TAG":"$PROJECT_FILE" | grep '<PackageVersion>' | sed -e 's/.*<PackageVersion>//' -e 's/<\/PackageVersion>.*//' | tr -d '[:space:]')
+
+    if [ -z "$VERSION_TAG" ]; then
+        echo "Warning: Could not extract PackageVersion from $PROJECT_FILE in commit $COMMIT_TO_TAG."
+        continue # Don't block push, but skip tagging
+    fi
+
+    TAG_NAME="v$VERSION_TAG"
+
+    echo "🎯 Found version change in commit $(git rev-parse --short "$COMMIT_TO_TAG")."
+    echo "Version: $VERSION_TAG, Tag: $TAG_NAME"
+
+    # Check if tag already exists on the remote
+    if git ls-remote --tags "$remote" | grep -q "refs/tags/$TAG_NAME"; then
+        echo "✅ Tag $TAG_NAME already exists on remote. Nothing to do."
+    else
+        # --- Improvement: Accurate and safe tag creation/push ---
+        echo "Creating tag $TAG_NAME pointing to $COMMIT_TO_TAG..."
+        git tag "$TAG_NAME" "$COMMIT_TO_TAG"
+
+        echo "Pushing tag $TAG_NAME to remote..."
+        # Use `|| exit 1` to ensure the main push is aborted if the tag push fails
+        git push "$remote" "$TAG_NAME" || exit 1
+    fi
+
+    # Once we find and handle a version change, we can assume one version bump per push.
+    break
+done
+
+exit 0
