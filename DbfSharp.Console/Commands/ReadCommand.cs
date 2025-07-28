@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using DbfSharp.Console.Formatters;
 using DbfSharp.Core;
 using DbfSharp.Core.Enums;
 using DbfSharp.Core.Parsing;
@@ -85,7 +86,7 @@ public sealed class ReadSettings : CommandSettings
 }
 
 /// <summary>
-/// Command for reading and displaying DBF file contents
+/// Command for reading and displaying DBF file contents using pluggable formatters
 /// </summary>
 public sealed class ReadCommand : AsyncCommand<ReadSettings>
 {
@@ -98,55 +99,20 @@ public sealed class ReadCommand : AsyncCommand<ReadSettings>
                 AnsiConsole.MarkupLine($"[blue]Reading DBF file:[/] {settings.FilePath}");
             }
 
-            // Create DBF reader options
-            var readerOptions = CreateDbfReaderOptions(settings);
-
-            // Apply limit to reader options if specified
-            if (settings.Limit.HasValue)
-            {
-                readerOptions = readerOptions with { MaxRecords = settings.Limit.Value + settings.Skip };
-            }
-
-            using var reader = DbfReader.Open(settings.FilePath, readerOptions);
+            // Create DBF reader with optimized settings
+            using var reader = await CreateDbfReaderAsync(settings);
 
             if (settings is { Verbose: true, Quiet: false })
             {
                 DisplayFileInfo(reader);
             }
 
-            // Get records to display
+            // Get records and fields to process
             var records = GetRecordsToDisplay(reader, settings);
+            var fieldsToDisplay = GetFieldsToDisplay(settings, reader);
 
-            // Filter fields if specified
-            var selectedFields = ParseSelectedFields(settings.Fields);
-            if (selectedFields != null)
-            {
-                records = FilterFields(records, selectedFields, reader);
-            }
-
-            // Format and output
-            if (settings.OutputPath != null)
-            {
-                // Write to file
-                await WriteToFile(records, reader, settings, selectedFields);
-                
-                if (!settings.Quiet)
-                {
-                    AnsiConsole.MarkupLine($"[green]Output written to:[/] {settings.OutputPath}");
-                }
-            }
-            else
-            {
-                // Write to console
-                if (settings is { Format: OutputFormat.Table, Quiet: false })
-                {
-                    DisplayAsTable(records, reader, selectedFields);
-                }
-                else
-                {
-                    await WriteToConsole(records, reader, settings);
-                }
-            }
+            // Create appropriate formatter and output data
+            await FormatAndOutputAsync(records, fieldsToDisplay, reader, settings);
 
             return 0;
         }
@@ -158,50 +124,45 @@ public sealed class ReadCommand : AsyncCommand<ReadSettings>
     }
 
     /// <summary>
-    /// Creates DBF reader options from command settings
+    /// Creates and configures the DBF reader with optimal settings
     /// </summary>
-    private static DbfReaderOptions CreateDbfReaderOptions(ReadSettings settings)
+    private static async Task<DbfReader> CreateDbfReaderAsync(ReadSettings settings)
     {
-        var options = new DbfReaderOptions
+        var readerOptions = new DbfReaderOptions
         {
             IgnoreCase = settings.IgnoreCase,
             TrimStrings = settings.TrimStrings,
             IgnoreMissingMemoFile = settings.IgnoreMissingMemo,
-            ValidateFields = false, // For performance
+            ValidateFields = false, // Optimize for performance
         };
 
-        // Set encoding if specified
+        // Apply limit at reader level for memory efficiency
+        if (settings.Limit.HasValue)
+        {
+            readerOptions = readerOptions with { MaxRecords = settings.Limit.Value + settings.Skip };
+        }
+
+        // Configure encoding if specified
         if (!string.IsNullOrEmpty(settings.Encoding))
         {
             try
             {
-                options = options with { Encoding = System.Text.Encoding.GetEncoding(settings.Encoding) };
+                readerOptions = readerOptions with { Encoding = System.Text.Encoding.GetEncoding(settings.Encoding) };
             }
             catch (ArgumentException)
             {
-                AnsiConsole.MarkupLine($"[yellow]Warning:[/] Unknown encoding '{settings.Encoding}', using auto-detection");
+                if (!settings.Quiet)
+                {
+                    AnsiConsole.MarkupLine($"[yellow]Warning:[/] Unknown encoding '{settings.Encoding}', using auto-detection");
+                }
             }
         }
 
-        return options;
+        return await DbfReader.OpenAsync(settings.FilePath, readerOptions);
     }
 
     /// <summary>
-    /// Parses the comma-separated field list
-    /// </summary>
-    private static string[]? ParseSelectedFields(string? fields)
-    {
-        if (string.IsNullOrWhiteSpace(fields))
-            return null;
-
-        return fields.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                    .Select(f => f.Trim())
-                    .Where(f => !string.IsNullOrEmpty(f))
-                    .ToArray();
-    }
-
-    /// <summary>
-    /// Gets the records to display based on settings
+    /// Gets the records to display based on user settings
     /// </summary>
     private static IEnumerable<DbfRecord> GetRecordsToDisplay(DbfReader reader, ReadSettings settings)
     {
@@ -223,14 +184,22 @@ public sealed class ReadCommand : AsyncCommand<ReadSettings>
     }
 
     /// <summary>
-    /// Filters records to only include selected fields
+    /// Determines which fields to display based on user settings and validates field names
     /// </summary>
-    private static IEnumerable<DbfRecord> FilterFields(
-        IEnumerable<DbfRecord> records,
-        string[] selectedFields,
-        DbfReader reader)
+    private static string[] GetFieldsToDisplay(ReadSettings settings, DbfReader reader)
     {
-        // Validate field names
+        if (string.IsNullOrWhiteSpace(settings.Fields))
+        {
+            return reader.FieldNames.ToArray();
+        }
+
+        var selectedFields = settings.Fields
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(f => f.Trim())
+            .Where(f => !string.IsNullOrEmpty(f))
+            .ToArray();
+
+        // Validate field names and warn about missing fields
         var validFields = new List<string>();
         foreach (var fieldName in selectedFields)
         {
@@ -238,7 +207,7 @@ public sealed class ReadCommand : AsyncCommand<ReadSettings>
             {
                 validFields.Add(fieldName);
             }
-            else
+            else if (!settings.Quiet)
             {
                 AnsiConsole.MarkupLine($"[yellow]Warning:[/] Field '{fieldName}' not found in DBF file");
             }
@@ -250,295 +219,99 @@ public sealed class ReadCommand : AsyncCommand<ReadSettings>
             Environment.Exit(1);
         }
 
-        // For now, just return the original records and filter during display
-        // TODO: Implement proper field filtering when DbfRecord constructor is accessible
-        return records;
+        return validFields.ToArray();
     }
 
     /// <summary>
-    /// Writes output to a file
+    /// Formats and outputs the data using the appropriate formatter
     /// </summary>
-    private static async Task WriteToFile(
+    private static async Task FormatAndOutputAsync(
         IEnumerable<DbfRecord> records,
-        DbfReader reader,
-        ReadSettings settings,
-        string[]? selectedFields)
-    {
-        var fieldsToWrite = selectedFields ?? reader.FieldNames.ToArray();
-        
-        await using var writer = new StreamWriter(settings.OutputPath!, false, System.Text.Encoding.UTF8);
-        
-        switch (settings.Format)
-        {
-            case OutputFormat.Csv:
-                await WriteCsv(records, fieldsToWrite, writer, ',');
-                break;
-            case OutputFormat.Tsv:
-                await WriteCsv(records, fieldsToWrite, writer, '\t');
-                break;
-            case OutputFormat.Json:
-                await WriteJson(records, fieldsToWrite, writer);
-                break;
-            default:
-                throw new ArgumentException($"Format {settings.Format} not supported for file output");
-        }
-    }
-
-    /// <summary>
-    /// Writes output to console
-    /// </summary>
-    private static async Task WriteToConsole(
-        IEnumerable<DbfRecord> records,
+        string[] fields,
         DbfReader reader,
         ReadSettings settings)
     {
-        var fieldsToWrite = ParseSelectedFields(settings.Fields) ?? reader.FieldNames.ToArray();
-        
-        switch (settings.Format)
+        var formatter = FormatterFactory.CreateFormatter(settings.Format, settings);
+
+        if (settings.OutputPath != null)
         {
-            case OutputFormat.Csv:
-                await WriteCsv(records, fieldsToWrite, System.Console.Out, ',');
-                break;
-            case OutputFormat.Tsv:
-                await WriteCsv(records, fieldsToWrite, System.Console.Out, '\t');
-                break;
-            case OutputFormat.Json:
-                await WriteJson(records, fieldsToWrite, System.Console.Out);
-                break;
+            // Output to file
+            await WriteToFileAsync(records, fields, reader, formatter, settings);
+        }
+        else
+        {
+            // Output to console - use console formatter if available for better experience
+            await WriteToConsoleAsync(records, fields, reader, formatter, settings);
         }
     }
 
     /// <summary>
-    /// Writes records in CSV/TSV format
+    /// Writes formatted output to a file
     /// </summary>
-    private static async Task WriteCsv(
+    private static async Task WriteToFileAsync(
         IEnumerable<DbfRecord> records,
         string[] fields,
-        TextWriter writer,
-        char delimiter)
+        DbfReader reader,
+        IDbfFormatter formatter,
+        ReadSettings settings)
     {
-        // Write header
-        await writer.WriteLineAsync(string.Join(delimiter, fields.Select(EscapeCsvField)));
+        await using var fileWriter = new StreamWriter(settings.OutputPath!, false, System.Text.Encoding.UTF8);
+        await formatter.WriteAsync(records, fields, reader, fileWriter);
 
-        // Write records
-        foreach (var record in records)
+        if (!settings.Quiet)
         {
-            var values = fields.Select(field => 
-            {
-                var value = record[field]; // Use indexer instead of GetValue
-                return EscapeCsvField(FormatCsvValue(value));
-            });
-            
-            await writer.WriteLineAsync(string.Join(delimiter, values));
+            AnsiConsole.MarkupLine($"[green]Output written to:[/] {settings.OutputPath}");
         }
     }
 
     /// <summary>
-    /// Writes records in JSON format
+    /// Writes formatted output to console, using console formatter if available
     /// </summary>
-    private static async Task WriteJson(
+    private static async Task WriteToConsoleAsync(
         IEnumerable<DbfRecord> records,
         string[] fields,
-        TextWriter writer)
+        DbfReader reader,
+        IDbfFormatter formatter,
+        ReadSettings settings)
     {
-        await writer.WriteLineAsync("[");
-        
-        var isFirst = true;
-        foreach (var record in records)
+        // Use console formatter for better interactive experience if available
+        if (formatter is IConsoleFormatter consoleFormatter && !settings.Quiet)
         {
-            if (!isFirst)
-                await writer.WriteLineAsync(",");
-            
-            await writer.WriteAsync("  {");
-            
-            var fieldValues = fields.Select(field =>
-            {
-                var value = record[field]; // Use indexer instead of GetValue
-                var jsonValue = FormatJsonValue(value);
-                return $"\"{EscapeJsonString(field)}\": {jsonValue}";
-            });
-            
-            await writer.WriteAsync(string.Join(", ", fieldValues));
-            await writer.WriteAsync("}");
-            
-            isFirst = false;
+            consoleFormatter.DisplayToConsole(records, fields, reader);
         }
-        
-        await writer.WriteLineAsync();
-        await writer.WriteLineAsync("]");
+        else
+        {
+            // Fallback to standard TextWriter output
+            await formatter.WriteAsync(records, fields, reader, System.Console.Out);
+        }
     }
 
     /// <summary>
-    /// Displays file information
+    /// Displays comprehensive file information for verbose mode
     /// </summary>
     private static void DisplayFileInfo(DbfReader reader)
     {
         var stats = reader.GetStatistics();
         
-        var table = new Table()
+        var infoTable = new Table()
             .Border(TableBorder.Rounded)
-            .Title("[bold blue]File Information[/]");
+            .Title("[bold blue]File Information[/]")
+            .AddColumn("Property", column => column.Width(20))
+            .AddColumn("Value");
 
-        table.AddColumn("Property");
-        table.AddColumn("Value");
+        // Add file statistics rows
+        infoTable.AddRow("File Name", stats.TableName);
+        infoTable.AddRow("DBF Version", stats.DbfVersion.GetDescription());
+        infoTable.AddRow("Last Updated", stats.LastUpdateDate?.ToString("yyyy-MM-dd") ?? "Unknown");
+        infoTable.AddRow("Total Records", stats.TotalRecords.ToString("N0"));
+        infoTable.AddRow("Active Records", stats.ActiveRecords.ToString("N0"));
+        infoTable.AddRow("Deleted Records", stats.DeletedRecords.ToString("N0"));
+        infoTable.AddRow("Field Count", stats.FieldCount.ToString());
+        infoTable.AddRow("Record Length", $"{stats.RecordLength} bytes");
+        infoTable.AddRow("Encoding", stats.Encoding);
+        infoTable.AddRow("Memo File", stats.HasMemoFile ? (stats.MemoFilePath ?? "Yes") : "No");
 
-        table.AddRow("File Name", stats.TableName);
-        table.AddRow("DBF Version", stats.DbfVersion.GetDescription());
-        table.AddRow("Last Updated", stats.LastUpdateDate?.ToString("yyyy-MM-dd") ?? "Unknown");
-        table.AddRow("Total Records", stats.TotalRecords.ToString("N0"));
-        table.AddRow("Active Records", stats.ActiveRecords.ToString("N0"));
-        table.AddRow("Deleted Records", stats.DeletedRecords.ToString("N0"));
-        table.AddRow("Field Count", stats.FieldCount.ToString());
-        table.AddRow("Record Length", $"{stats.RecordLength} bytes");
-        table.AddRow("Encoding", stats.Encoding);
-        table.AddRow("Memo File", stats.HasMemoFile ? (stats.MemoFilePath ?? "Yes") : "No");
-
-        AnsiConsole.Write(table);
+        AnsiConsole.Write(infoTable);
         AnsiConsole.WriteLine();
-    }
-
-    /// <summary>
-    /// Displays records as a formatted table using Spectre.Console
-    /// </summary>
-    private static void DisplayAsTable(
-        IEnumerable<DbfRecord> records,
-        DbfReader reader,
-        string[]? selectedFields)
-    {
-        var fieldsToShow = selectedFields ?? reader.FieldNames.ToArray();
-        
-        var table = new Table()
-            .Border(TableBorder.Rounded);
-
-        // Add columns
-        foreach (var fieldName in fieldsToShow)
-        {
-            var field = reader.FindField(fieldName);
-            var header = fieldName;
-            
-            if (field.HasValue)
-            {
-                header += $"\n[dim]({field.Value.Type.GetDescription()})[/]";
-            }
-            
-            table.AddColumn(new TableColumn(header).Centered());
-        }
-
-        // Add rows
-        var recordCount = 0;
-        foreach (var record in records)
-        {
-            var rowValues = new string[fieldsToShow.Length];
-            
-            for (int i = 0; i < fieldsToShow.Length; i++)
-            {
-                var value = record[fieldsToShow[i]]; // Use indexer instead of GetValue
-                rowValues[i] = FormatValueForTable(value);
-            }
-
-            table.AddRow(rowValues);
-            recordCount++;
-
-            // Prevent console overflow with too many records
-            if (recordCount >= 1000)
-            {
-                table.AddRow(Enumerable.Repeat("[dim]...[/]", fieldsToShow.Length).ToArray());
-                AnsiConsole.MarkupLine("[yellow]Note:[/] Only first 1000 records shown for table format. Use --format csv or --limit for more control.");
-                break;
-            }
-        }
-
-        if (recordCount == 0)
-        {
-            AnsiConsole.MarkupLine("[yellow]No records to display[/]");
-            return;
-        }
-
-        AnsiConsole.Write(table);
-        AnsiConsole.MarkupLine($"\n[dim]Showing {recordCount:N0} record(s)[/]");
-    }
-
-    /// <summary>
-    /// Formats a value for display in a table
-    /// </summary>
-    private static string FormatValueForTable(object? value)
-    {
-        return value switch
-        {
-            null => "[dim]NULL[/]",
-            string s when string.IsNullOrWhiteSpace(s) => "[dim]<empty>[/]",
-            DateTime dt => dt.ToString("yyyy-MM-dd"),
-            decimal d => d.ToString("N2"),
-            double d => d.ToString("N2"),
-            float f => f.ToString("N2"),
-            bool b => b ? "✓" : "✗",
-            InvalidValue => "[red]Error[/]",
-            byte[] bytes => $"[dim]<{bytes.Length} bytes>[/]",
-            _ => value.ToString()?.Replace("[", "[[").Replace("]", "]]") ?? "[dim]NULL[/]",
-        };
-    }
-
-    /// <summary>
-    /// Formats a value for CSV output
-    /// </summary>
-    private static string FormatCsvValue(object? value)
-    {
-        return value switch
-        {
-            null => "",
-            string s => s,
-            DateTime dt => dt.ToString("yyyy-MM-dd HH:mm:ss"),
-            decimal d => d.ToString("F"),
-            double d => d.ToString("F"),
-            float f => f.ToString("F"),
-            bool b => b ? "True" : "False",
-            InvalidValue => "<INVALID>",
-            byte[] bytes => $"<{bytes.Length} bytes>",
-            _ => value.ToString() ?? "",
-        };
-    }
-
-    /// <summary>
-    /// Formats a value for JSON output
-    /// </summary>
-    private static string FormatJsonValue(object? value)
-    {
-        return value switch
-        {
-            null => "null",
-            string s => $"\"{EscapeJsonString(s)}\"",
-            DateTime dt => $"\"{dt:yyyy-MM-ddTHH:mm:ss}\"",
-            decimal d => d.ToString("F"),
-            double d => d.ToString("F"),
-            float f => f.ToString("F"),
-            bool b => b ? "true" : "false",
-            InvalidValue => "null",
-            byte[] => "null",
-            _ => $"\"{EscapeJsonString(value.ToString() ?? "")}\"",
-        };
-    }
-
-    /// <summary>
-    /// Escapes a string for CSV output
-    /// </summary>
-    private static string EscapeCsvField(string field)
-    {
-        if (field.Contains(',') || field.Contains('"') || field.Contains('\n') || field.Contains('\r'))
-        {
-            return $"\"{field.Replace("\"", "\"\"")}\"";
-        }
-        return field;
-    }
-
-    /// <summary>
-    /// Escapes a string for JSON output
-    /// </summary>
-    private static string EscapeJsonString(string str)
-    {
-        return str.Replace("\\", "\\\\")
-                  .Replace("\"", "\\\"")
-                  .Replace("\n", "\\n")
-                  .Replace("\r", "\\r")
-                  .Replace("\t", "\\t");
     }
 }
