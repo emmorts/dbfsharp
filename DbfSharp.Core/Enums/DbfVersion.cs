@@ -59,67 +59,71 @@ public static class DbfVersionExtensions
     /// </summary>
     /// <param name="version">The DBF version</param>
     /// <returns>A descriptive string</returns>
-    public static string GetDescription(this DbfVersion version) => version switch
-    {
-        DbfVersion.DBase2 => "dBASE II / FoxBASE",
-        DbfVersion.DBase3Plus => "FoxBASE+/dBase III plus, no memory",
-        DbfVersion.VisualFoxPro => "Visual FoxPro",
-        DbfVersion.VisualFoxProAutoIncrement => "Visual FoxPro, autoincrement enabled",
-        DbfVersion.VisualFoxProVarchar => "Visual FoxPro with field type Varchar or Varbinary",
-        DbfVersion.DBase4SqlTable => "dBASE IV SQL table files, no memo",
-        DbfVersion.DBase4SqlSystem => "dBASE IV SQL system files, no memo",
-        DbfVersion.DBase3PlusWithMemo => "FoxBASE+/dBASE III PLUS, with memo",
-        DbfVersion.DBase4WithMemo => "dBASE IV with memo",
-        DbfVersion.DBase4SqlTableWithMemo => "dBASE IV SQL table files, with memo",
-        DbfVersion.FoxPro2WithMemo => "FoxPro 2.x (or earlier) with memo",
-        DbfVersion.HiPerSix => "HiPer-Six format with SMT memo file",
-        DbfVersion.FoxBaseLegacy => "FoxBASE",
-        _ => $"Unknown (0x{(byte)version:X2})",
-    };
+    public static string GetDescription(this DbfVersion version) =>
+        version switch
+        {
+            DbfVersion.DBase2 => "dBASE II / FoxBASE",
+            DbfVersion.DBase3Plus => "FoxBASE+/dBase III plus, no memory",
+            DbfVersion.VisualFoxPro => "Visual FoxPro",
+            DbfVersion.VisualFoxProAutoIncrement => "Visual FoxPro, autoincrement enabled",
+            DbfVersion.VisualFoxProVarchar => "Visual FoxPro with field type Varchar or Varbinary",
+            DbfVersion.DBase4SqlTable => "dBASE IV SQL table files, no memo",
+            DbfVersion.DBase4SqlSystem => "dBASE IV SQL system files, no memo",
+            DbfVersion.DBase3PlusWithMemo => "FoxBASE+/dBASE III PLUS, with memo",
+            DbfVersion.DBase4WithMemo => "dBASE IV with memo",
+            DbfVersion.DBase4SqlTableWithMemo => "dBASE IV SQL table files, with memo",
+            DbfVersion.FoxPro2WithMemo => "FoxPro 2.x (or earlier) with memo",
+            DbfVersion.HiPerSix => "HiPer-Six format with SMT memo file",
+            DbfVersion.FoxBaseLegacy => "FoxBASE",
+            _ => $"Unknown (0x{(byte)version:X2})",
+        };
 
     /// <summary>
     /// Determines if this DBF version supports memo fields
     /// </summary>
     /// <param name="version">The DBF version</param>
     /// <returns>True if memo fields are supported</returns>
-    public static bool SupportsMemoFields(this DbfVersion version) => version switch
-    {
-        DbfVersion.DBase3PlusWithMemo => true,
-        DbfVersion.DBase4WithMemo => true,
-        DbfVersion.DBase4SqlTableWithMemo => true,
-        DbfVersion.FoxPro2WithMemo => true,
-        DbfVersion.HiPerSix => true,
-        DbfVersion.VisualFoxPro => true,
-        DbfVersion.VisualFoxProAutoIncrement => true,
-        DbfVersion.VisualFoxProVarchar => true,
-        _ => false,
-    };
+    public static bool SupportsMemoFields(this DbfVersion version) =>
+        version switch
+        {
+            DbfVersion.DBase3PlusWithMemo => true,
+            DbfVersion.DBase4WithMemo => true,
+            DbfVersion.DBase4SqlTableWithMemo => true,
+            DbfVersion.FoxPro2WithMemo => true,
+            DbfVersion.HiPerSix => true,
+            DbfVersion.VisualFoxPro => true,
+            DbfVersion.VisualFoxProAutoIncrement => true,
+            DbfVersion.VisualFoxProVarchar => true,
+            _ => false,
+        };
 
     /// <summary>
     /// Determines if this is a Visual FoxPro version
     /// </summary>
     /// <param name="version">The DBF version</param>
     /// <returns>True if this is a Visual FoxPro version</returns>
-    public static bool IsVisualFoxPro(this DbfVersion version) => version switch
-    {
-        DbfVersion.VisualFoxPro => true,
-        DbfVersion.VisualFoxProAutoIncrement => true,
-        DbfVersion.VisualFoxProVarchar => true,
-        _ => false,
-    };
+    public static bool IsVisualFoxPro(this DbfVersion version) =>
+        version switch
+        {
+            DbfVersion.VisualFoxPro => true,
+            DbfVersion.VisualFoxProAutoIncrement => true,
+            DbfVersion.VisualFoxProVarchar => true,
+            _ => false,
+        };
 
     /// <summary>
     /// Determines if this is an older DBF format (dBASE II/III era)
     /// </summary>
     /// <param name="version">The DBF version</param>
     /// <returns>True if this is an older format</returns>
-    public static bool IsLegacyFormat(this DbfVersion version) => version switch
-    {
-        DbfVersion.DBase2 => true,
-        DbfVersion.DBase3Plus => true,
-        DbfVersion.DBase3PlusWithMemo => true,
-        _ => false,
-    };
+    public static bool IsLegacyFormat(this DbfVersion version) =>
+        version switch
+        {
+            DbfVersion.DBase2 => true,
+            DbfVersion.DBase3Plus => true,
+            DbfVersion.DBase3PlusWithMemo => true,
+            _ => false,
+        };
 
     /// <summary>
     /// Converts a raw byte value to a DbfVersion enum value

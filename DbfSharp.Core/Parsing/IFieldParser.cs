@@ -26,7 +26,13 @@ public interface IFieldParser
     /// <param name="encoding">The encoding to use for text conversion</param>
     /// <param name="options">Reader options for parsing behavior</param>
     /// <returns>The parsed field value</returns>
-    object? Parse(DbfField field, ReadOnlySpan<byte> data, IMemoFile? memoFile, System.Text.Encoding encoding, DbfReaderOptions options);
+    object? Parse(
+        DbfField field,
+        ReadOnlySpan<byte> data,
+        IMemoFile? memoFile,
+        System.Text.Encoding encoding,
+        DbfReaderOptions options
+    );
 }
 
 /// <summary>
@@ -51,7 +57,12 @@ public class FieldParsingException : Exception
     /// <param name="rawData">The raw data that failed to parse</param>
     /// <param name="message">The error message</param>
     /// <param name="innerException">The inner exception that caused the parsing failure</param>
-    public FieldParsingException(DbfField field, ReadOnlySpan<byte> rawData, string message, Exception? innerException = null)
+    public FieldParsingException(
+        DbfField field,
+        ReadOnlySpan<byte> rawData,
+        string message,
+        Exception? innerException = null
+    )
         : base(message, innerException)
     {
         Field = field;
@@ -125,7 +136,13 @@ public abstract class FieldParserBase : IFieldParser
     /// <param name="encoding">The encoding to use for text conversion</param>
     /// <param name="options">Reader options for parsing behavior</param>
     /// <returns>The parsed field value</returns>
-    public abstract object? Parse(DbfField field, ReadOnlySpan<byte> data, IMemoFile? memoFile, System.Text.Encoding encoding, DbfReaderOptions options);
+    public abstract object? Parse(
+        DbfField field,
+        ReadOnlySpan<byte> data,
+        IMemoFile? memoFile,
+        System.Text.Encoding encoding,
+        DbfReaderOptions options
+    );
 
     /// <summary>
     /// Decodes text data using the specified encoding with error handling
@@ -134,10 +151,16 @@ public abstract class FieldParserBase : IFieldParser
     /// <param name="encoding">The encoding to use</param>
     /// <param name="options">Reader options for error handling</param>
     /// <returns>The decoded string</returns>
-    protected static string DecodeText(ReadOnlySpan<byte> data, System.Text.Encoding encoding, DbfReaderOptions options)
+    protected static string DecodeText(
+        ReadOnlySpan<byte> data,
+        System.Text.Encoding encoding,
+        DbfReaderOptions options
+    )
     {
         if (data.IsEmpty)
+        {
             return string.Empty;
+        }
 
         try
         {
@@ -146,12 +169,12 @@ public abstract class FieldParserBase : IFieldParser
             {
                 var decoder = encoding.GetDecoder();
                 decoder.Fallback = options.CharacterDecodeFallback;
-                
+
                 var maxCharCount = decoder.GetCharCount(data, flush: true);
                 Span<char> chars = stackalloc char[maxCharCount];
                 var charCount = decoder.GetChars(data, chars, flush: true);
-                
-                var result = new string(chars.Slice(0, charCount));
+
+                var result = new string(chars[..charCount]);
                 return options.TrimStrings ? result.Trim() : result;
             }
             else
@@ -166,7 +189,8 @@ public abstract class FieldParserBase : IFieldParser
                 default, // Field info not available at this level
                 data,
                 $"Character decoding failed: {ex.Message}",
-                ex);
+                ex
+            );
         }
     }
 
@@ -183,7 +207,7 @@ public abstract class FieldParserBase : IFieldParser
         {
             end--;
         }
-        return data.Slice(0, end);
+        return data[..end];
     }
 
     /// <summary>
@@ -195,35 +219,35 @@ public abstract class FieldParserBase : IFieldParser
     {
         // Trim common padding characters
         var trimmed = data;
-        
+
         // Trim from end
         while (trimmed.Length > 0)
         {
             var lastByte = trimmed[trimmed.Length - 1];
             if (lastByte is 0 or 32 or 42) // null, space, asterisk
             {
-                trimmed = trimmed.Slice(0, trimmed.Length - 1);
+                trimmed = trimmed[..^1];
             }
             else
             {
                 break;
             }
         }
-        
+
         // Trim from start
         while (trimmed.Length > 0)
         {
             var firstByte = trimmed[0];
             if (firstByte is 0 or 32)
             {
-                trimmed = trimmed.Slice(1);
+                trimmed = trimmed[1..];
             }
             else
             {
                 break;
             }
         }
-        
+
         return trimmed;
     }
 
@@ -235,15 +259,19 @@ public abstract class FieldParserBase : IFieldParser
     protected static bool IsNullValue(ReadOnlySpan<byte> data)
     {
         if (data.IsEmpty)
+        {
             return true;
+        }
 
         // Check if all bytes are null, space, or zero
         foreach (var b in data)
         {
             if (b != 0 && b != 32 && b != 48) // not null, space, or '0'
+            {
                 return false;
+            }
         }
-        
+
         return true;
     }
 
@@ -264,12 +292,16 @@ public abstract class FieldParserBase : IFieldParser
             // ASCII decimal number
             var trimmed = TrimPadding(data);
             if (IsNullValue(trimmed))
+            {
                 return 0;
+            }
 
             var text = System.Text.Encoding.ASCII.GetString(trimmed);
             if (int.TryParse(text, out var result))
+            {
                 return result;
-            
+            }
+
             throw new FormatException($"Invalid memo index format: '{text}'");
         }
     }

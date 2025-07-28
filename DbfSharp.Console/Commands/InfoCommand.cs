@@ -68,13 +68,12 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
         string? tempFilePath = null;
         try
         {
-            // Resolve file path (from argument or stdin)
             var (filePath, isTemporary) = await StdinHelper.ResolveFilePathAsync(settings.FilePath);
             if (isTemporary)
             {
                 tempFilePath = filePath;
             }
-            
+
             if (!settings.Quiet)
             {
                 var source = isTemporary ? "stdin" : filePath;
@@ -122,7 +121,6 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
         }
         finally
         {
-            // Clean up temporary file if created
             if (tempFilePath != null)
             {
                 StdinHelper.CleanupTemporaryFile(tempFilePath);
@@ -138,10 +136,9 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
         var options = new DbfReaderOptions
         {
             IgnoreMissingMemoFile = settings.IgnoreMissingMemo,
-            ValidateFields = true // For info command, we want validation
+            ValidateFields = true
         };
 
-        // Set encoding if specified
         if (!string.IsNullOrEmpty(settings.Encoding))
         {
             var encoding = TryGetEncoding(settings.Encoding);
@@ -152,7 +149,8 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
             else
             {
                 AnsiConsole.MarkupLine(
-                    $"[yellow]Warning:[/] Unknown encoding '{settings.Encoding}', using auto-detection");
+                    $"[yellow]Warning:[/] Unknown encoding '{settings.Encoding}', using auto-detection"
+                );
             }
         }
 
@@ -180,21 +178,25 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
     private static void DisplayFileOverview(DbfReader reader, DbfStatistics stats)
     {
         var panel = new Panel(
-            Align.Left(new Markup(
-                $"[bold]File:[/] {stats.TableName}\n" +
-                $"[bold]Version:[/] {stats.DbfVersion.GetDescription()}\n" +
-                $"[bold]Records:[/] {stats.ActiveRecords:N0} active, {stats.DeletedRecords:N0} deleted\n" +
-                $"[bold]Fields:[/] {stats.FieldCount}\n" +
-                $"[bold]Encoding:[/] {stats.Encoding}\n" +
-                $"[bold]Last Updated:[/] {stats.LastUpdateDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "Unknown"}")))
+            Align.Left(
+                new Markup(
+                    $"[bold]File:[/] {stats.TableName}\n"
+                    + $"[bold]Version:[/] {stats.DbfVersion.GetDescription()}\n"
+                    + $"[bold]Records:[/] {stats.ActiveRecords:N0} active, {stats.DeletedRecords:N0} deleted\n"
+                    + $"[bold]Fields:[/] {stats.FieldCount}\n"
+                    + $"[bold]Encoding:[/] {stats.Encoding}\n"
+                    + $"[bold]Last Updated:[/] {stats.LastUpdateDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "Unknown"}"
+                )
+            )
+        )
         {
             Header = new PanelHeader("[bold blue]DBF File Overview[/]"),
-            Border = BoxBorder.Rounded
+            Border = BoxBorder.Rounded,
         };
 
         AnsiConsole.Write(panel);
     }
-    
+
     /// <summary>
     /// Displays detailed header information
     /// </summary>
@@ -210,59 +212,60 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
         table.AddColumn("Value", col => col.Width(40));
         table.AddColumn("Details");
 
-        // Version information
         table.AddRow(
             "DBF Version",
             header.DbfVersion.GetDescription(),
-            $"Byte: 0x{header.DbVersionByte:X2}");
+            $"Byte: 0x{header.DbVersionByte:X2}"
+        );
 
-        // Date information
         if (header.LastUpdateDate.HasValue)
         {
             table.AddRow(
                 "Last Update",
                 header.LastUpdateDate.Value.ToString("yyyy-MM-dd"),
-                $"Raw: {header.Year:00}/{header.Month:00}/{header.Day:00}");
+                $"Raw: {header.Year:00}/{header.Month:00}/{header.Day:00}"
+            );
         }
         else
         {
             table.AddRow(
                 "Last Update",
                 "Unknown",
-                $"Raw: {header.Year:00}/{header.Month:00}/{header.Day:00}");
+                $"Raw: {header.Year:00}/{header.Month:00}/{header.Day:00}"
+            );
         }
 
-        // Structure information
         table.AddRow(
             "Header Length",
             $"{header.HeaderLength} bytes",
-            $"Fields area: {header.HeaderLength - DbfHeader.Size - 1} bytes");
+            $"Fields area: {header.HeaderLength - DbfHeader.Size - 1} bytes"
+        );
 
-        table.AddRow(
-            "Record Length",
-            $"{header.RecordLength} bytes",
-            "Including deletion flag");
+        table.AddRow("Record Length", $"{header.RecordLength} bytes", "Including deletion flag");
 
         table.AddRow(
             "Total Records",
             header.NumberOfRecords.ToString("N0"),
-            "Including deleted records");
+            "Including deleted records"
+        );
 
-        // Flags and features
         table.AddRow(
             "MDX Index",
             header.MdxFlag != 0 ? "Present" : "None",
-            $"Flag: 0x{header.MdxFlag:X2}");
+            $"Flag: 0x{header.MdxFlag:X2}"
+        );
 
         table.AddRow(
             "Encryption",
             header.EncryptionFlag != 0 ? "Encrypted" : "None",
-            $"Flag: 0x{header.EncryptionFlag:X2}");
+            $"Flag: 0x{header.EncryptionFlag:X2}"
+        );
 
         table.AddRow(
             "Language Driver",
             header.EncodingDescription,
-            $"Code: 0x{header.LanguageDriver:X2}");
+            $"Code: 0x{header.LanguageDriver:X2}"
+        );
 
         AnsiConsole.Write(table);
     }
@@ -303,7 +306,7 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
                 field.Type is FieldType.Numeric or FieldType.Float
                     ? field.ActualDecimalCount.ToString()
                     : "-",
-                netType
+                netType,
             };
 
             if (verbose)
@@ -311,9 +314,21 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
                 row.Add($"0x{field.Address:X8}");
 
                 var flags = new List<string>();
-                if (field.UsesMemoFile) flags.Add("Memo");
-                if (field.IndexFieldFlag != 0) flags.Add("Index");
-                if (field.SetFieldsFlag != 0) flags.Add("Set");
+                if (field.UsesMemoFile)
+                {
+                    flags.Add("Memo");
+                }
+
+                if (field.IndexFieldFlag != 0)
+                {
+                    flags.Add("Index");
+                }
+
+                if (field.SetFieldsFlag != 0)
+                {
+                    flags.Add("Set");
+                }
+
                 row.Add(string.Join(", ", flags));
             }
 
@@ -323,21 +338,17 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
 
         AnsiConsole.Write(table);
 
-        // Show field type summary
-        var typeGroups = reader.Fields
-            .GroupBy(f => f.Type)
-            .OrderBy(g => g.Key.ToString())
-            .ToList();
+        var typeGroups = reader.Fields.GroupBy(f => f.Type).OrderBy(g => g.Key.ToString()).ToList();
 
         if (typeGroups.Count > 1)
         {
             AnsiConsole.WriteLine();
             var typePanel = new Panel(
-                string.Join(" • ", typeGroups.Select(g =>
-                    $"[bold]{g.Key}[/]: {g.Count()}")))
+                string.Join(" • ", typeGroups.Select(g => $"[bold]{g.Key}[/]: {g.Count()}"))
+            )
             {
                 Header = new PanelHeader("[dim]Field Type Summary[/]"),
-                Border = BoxBorder.None
+                Border = BoxBorder.None,
             };
             AnsiConsole.Write(typePanel);
         }
@@ -359,10 +370,16 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
         table.AddColumn("Percentage", col => col.RightAligned());
 
         table.AddRow("Total Records", stats.TotalRecords.ToString("N0"), "100.0%");
-        table.AddRow("Active Records", stats.ActiveRecords.ToString("N0"),
-            $"{(stats.TotalRecords > 0 ? stats.ActiveRecords * 100.0 / stats.TotalRecords : 0):F1}%");
-        table.AddRow("Deleted Records", stats.DeletedRecords.ToString("N0"),
-            $"{(stats.TotalRecords > 0 ? stats.DeletedRecords * 100.0 / stats.TotalRecords : 0):F1}%");
+        table.AddRow(
+            "Active Records",
+            stats.ActiveRecords.ToString("N0"),
+            $"{(stats.TotalRecords > 0 ? stats.ActiveRecords * 100.0 / stats.TotalRecords : 0):F1}%"
+        );
+        table.AddRow(
+            "Deleted Records",
+            stats.DeletedRecords.ToString("N0"),
+            $"{(stats.TotalRecords > 0 ? stats.DeletedRecords * 100.0 / stats.TotalRecords : 0):F1}%"
+        );
 
         AnsiConsole.Write(table);
 
@@ -388,10 +405,8 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
             return;
         }
 
-        var table = new Table()
-            .Border(TableBorder.Rounded);
+        var table = new Table().Border(TableBorder.Rounded);
 
-        // Add columns (limit to first 5 fields for readability)
         var fieldsToShow = reader.FieldNames.Take(5).ToArray();
         foreach (var fieldName in fieldsToShow)
         {
@@ -403,7 +418,6 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
             table.AddColumn("[dim]...[/]");
         }
 
-        // Add sample rows
         foreach (var record in sampleRecords)
         {
             var values = new List<string>();
@@ -438,12 +452,16 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
         var stats = reader.GetStatistics();
 
         var panel = new Panel(
-            Align.Left(new Markup(
-                $"[bold]Memo File:[/] {stats.MemoFilePath ?? "Present"}\n" +
-                $"[bold]Status:[/] {(stats.HasMemoFile ? "Available" : "Missing")}")))
+            Align.Left(
+                new Markup(
+                    $"[bold]Memo File:[/] {stats.MemoFilePath ?? "Present"}\n"
+                    + $"[bold]Status:[/] {(stats.HasMemoFile ? "Available" : "Missing")}"
+                )
+            )
+        )
         {
             Header = new PanelHeader("[bold blue]Memo File Information[/]"),
-            Border = BoxBorder.Rounded
+            Border = BoxBorder.Rounded,
         };
 
         AnsiConsole.Write(panel);
@@ -462,15 +480,15 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
                 return GetSimpleTypeName(underlyingType) + "?";
             }
         }
-        
+
         if (supportsNull && !type.IsValueType)
         {
             return GetSimpleTypeName(type) + "?";
         }
-        
+
         return GetSimpleTypeName(type);
     }
-    
+
     /// <summary>
     /// Gets a simple, friendly name for common .NET types
     /// </summary>
@@ -480,14 +498,14 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
         {
             "String" => "String",
             "Int32" => "Int32",
-            "Decimal" => "Decimal", 
+            "Decimal" => "Decimal",
             "DateTime" => "DateTime",
             "Boolean" => "Boolean",
             "Single" => "Single",
             "Double" => "Double",
             "Int64" => "Int64",
             "Byte[]" => "Byte[]",
-            _ => type.Name
+            _ => type.Name,
         };
     }
 
@@ -508,7 +526,7 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
             bool b => b ? "True" : "False",
             InvalidValue => "[red]<invalid>[/]",
             byte[] bytes => $"[dim]<{bytes.Length} bytes>[/]",
-            _ => value.ToString()?.Replace("[", "[[").Replace("]", "]]") ?? "[dim]NULL[/]"
+            _ => value.ToString()?.Replace("[", "[[").Replace("]", "]]") ?? "[dim]NULL[/]",
         };
     }
 }

@@ -30,7 +30,9 @@ public static class TestHelper
         var path = Path.Combine(TestDataPath, fileName);
         if (!File.Exists(path))
         {
-            throw new FileNotFoundException($"Test file not found: {fileName}. Expected at: {path}");
+            throw new FileNotFoundException(
+                $"Test file not found: {fileName}. Expected at: {path}"
+            );
         }
 
         return path;
@@ -54,9 +56,12 @@ public static class TestHelper
     public static IEnumerable<string> GetAllTestDbfFiles()
     {
         if (!Directory.Exists(TestDataPath))
+        {
             return [];
+        }
 
-        return Directory.GetFiles(TestDataPath, "*.dbf")
+        return Directory
+            .GetFiles(TestDataPath, "*.dbf")
             .Select(Path.GetFileName)
             .Where(name => name != null)
             .Cast<string>()
@@ -101,7 +106,9 @@ public static class TestHelper
         try
         {
             if (File.Exists(filePath))
+            {
                 File.Delete(filePath);
+            }
 
             // Delete associated memo files
             var memoExtensions = new[] { ".fpt", ".dbt" };
@@ -111,7 +118,9 @@ public static class TestHelper
             {
                 var memoPath = basePath + ext;
                 if (File.Exists(memoPath))
+                {
                     File.Delete(memoPath);
+                }
             }
         }
         catch
@@ -165,7 +174,7 @@ public static class TestHelper
     public static TheoryData<string> GetAllValidTestFilesTheoryData()
     {
         var theoryData = new TheoryData<string>();
-        
+
         theoryData.Add(TestFiles.People);
         theoryData.Add(TestFiles.DBase02);
         theoryData.Add(TestFiles.DBase03);
@@ -178,7 +187,7 @@ public static class TestHelper
         theoryData.Add(TestFiles.DBase8B);
         theoryData.Add(TestFiles.DBaseF5);
         theoryData.Add(TestFiles.Cp1251);
-        
+
         return theoryData;
     }
 
@@ -204,10 +213,11 @@ public static class TestHelper
     public static TheoryData<string> GetMemoFileTestData()
     {
         return GetFilteredTestFilesTheoryData(fileName =>
-            fileName.Contains("83") ||
-            fileName.Contains("8b") ||
-            fileName.Contains("8c") ||
-            fileName.Contains("f5"));
+            fileName.Contains("83")
+            || fileName.Contains("8b")
+            || fileName.Contains("8c")
+            || fileName.Contains("f5")
+        );
     }
 
     /// <summary>
@@ -216,8 +226,7 @@ public static class TestHelper
     public static TheoryData<string> GetVisualFoxProTestData()
     {
         return GetFilteredTestFilesTheoryData(fileName =>
-            fileName.Contains("30") ||
-            fileName.Contains("31") ||
-            fileName.Contains("32"));
+            fileName.Contains("30") || fileName.Contains("31") || fileName.Contains("32")
+        );
     }
 }

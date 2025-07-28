@@ -23,7 +23,11 @@ public static class FormatterFactory
             OutputFormat.Csv => CsvFormatter.Csv(options),
             OutputFormat.Tsv => CsvFormatter.Tsv(options),
             OutputFormat.Json => new JsonFormatter(options),
-            _ => throw new ArgumentException($"Unsupported output format: {format}", nameof(format))
+            OutputFormat.Excel => new ExcelFormatter(options),
+            _ => throw new ArgumentException(
+                $"Unsupported output format: {format}",
+                nameof(format)
+            ),
         };
     }
 
@@ -33,7 +37,10 @@ public static class FormatterFactory
     /// <param name="format">The desired output format</param>
     /// <param name="settings">Read command settings for extracting formatter options</param>
     /// <returns>Console formatter or null if not supported</returns>
-    public static IConsoleFormatter? CreateConsoleFormatter(OutputFormat format, ReadSettings settings)
+    public static IConsoleFormatter? CreateConsoleFormatter(
+        OutputFormat format,
+        ReadSettings settings
+    )
     {
         var formatter = CreateFormatter(format, settings);
         return formatter as IConsoleFormatter;
@@ -52,7 +59,7 @@ public static class FormatterFactory
             MaxDisplayRecords = settings.Limit ?? 50,
             ShowWarnings = !settings.Quiet,
             DateFormat = null, // todo
-            PrettyPrint = !settings.Quiet
+            PrettyPrint = !settings.Quiet,
         };
     }
 
@@ -64,6 +71,16 @@ public static class FormatterFactory
     public static bool SupportsConsoleDisplay(OutputFormat format)
     {
         return format == OutputFormat.Table;
+    }
+
+    /// <summary>
+    /// Determines if the specified format requires file output (cannot write to stdout)
+    /// </summary>
+    /// <param name="format">The output format to check</param>
+    /// <returns>True if the format requires file output</returns>
+    public static bool RequiresFileOutput(OutputFormat format)
+    {
+        return format == OutputFormat.Excel;
     }
 
     /// <summary>
@@ -79,7 +96,8 @@ public static class FormatterFactory
             OutputFormat.Csv => ".csv",
             OutputFormat.Tsv => ".tsv",
             OutputFormat.Json => ".json",
-            _ => ".txt"
+            OutputFormat.Excel => ".xlsx",
+            _ => ".txt",
         };
     }
 }

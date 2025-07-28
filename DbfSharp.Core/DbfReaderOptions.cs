@@ -98,33 +98,7 @@ public record DbfReaderOptions
     /// Gets or sets whether to use memory-mapped files for better performance with large files.
     /// Default is false for compatibility. Enable for better performance with large files on 64-bit systems.
     /// </summary>
-    public bool UseMemoryMapping { get; set; } = false;
-
-    /// <summary>
-    /// Creates a copy of these options
-    /// </summary>
-    /// <returns>A new DbfReaderOptions instance with the same settings</returns>
-    // public DbfReaderOptions Clone()
-    // {
-    //     return new DbfReaderOptions
-    //     {
-    //         Encoding = Encoding,
-    //         IgnoreCase = IgnoreCase,
-    //         LowerCaseFieldNames = LowerCaseFieldNames,
-    //         LoadOnOpen = LoadOnOpen,
-    //         IgnoreMissingMemoFile = IgnoreMissingMemoFile,
-    //         CharacterDecodeFallback = CharacterDecodeFallback,
-    //         CustomFieldParser = CustomFieldParser,
-    //         EnableStringInterning = EnableStringInterning,
-    //         TrimStrings = TrimStrings,
-    //         RawMode = RawMode,
-    //         BufferSize = BufferSize,
-    //         ValidateFields = ValidateFields,
-    //         SkipDeletedRecords = SkipDeletedRecords,
-    //         MaxRecords = MaxRecords,
-    //         UseMemoryMapping = UseMemoryMapping
-    //     };
-    // }
+    public bool UseMemoryMapping { get; set; }
 
     /// <summary>
     /// Creates default options optimized for performance
@@ -134,12 +108,12 @@ public record DbfReaderOptions
     {
         return new DbfReaderOptions
         {
-            LoadOnOpen = false, // Stream for memory efficiency
-            EnableStringInterning = true, // Reduce memory for repeated field names
-            BufferSize = 128 * 1024, // Larger buffer for better I/O
-            UseMemoryMapping = Environment.Is64BitProcess, // Use memory mapping on 64-bit
-            ValidateFields = false, // Skip validation for speed
-            TrimStrings = false // Skip trimming for speed
+            LoadOnOpen = false,
+            EnableStringInterning = true, // reduce memory for repeated field names
+            BufferSize = 128 * 1024,
+            UseMemoryMapping = Environment.Is64BitProcess,
+            ValidateFields = false,
+            TrimStrings = false
         };
     }
 
@@ -151,12 +125,12 @@ public record DbfReaderOptions
     {
         return new DbfReaderOptions
         {
-            LoadOnOpen = false, // Never load all records
-            EnableStringInterning = true, // Reduce string duplication
-            BufferSize = 16 * 1024, // Smaller buffer
-            UseMemoryMapping = false, // Don't map entire file
-            RawMode = false, // Parse only when needed
-            TrimStrings = true // Remove unnecessary whitespace
+            LoadOnOpen = false,
+            EnableStringInterning = true,
+            BufferSize = 16 * 1024,
+            UseMemoryMapping = false,
+            RawMode = false,
+            TrimStrings = true
         };
     }
 
@@ -173,7 +147,7 @@ public record DbfReaderOptions
             ValidateFields = false,
             CharacterDecodeFallback = DecoderFallback.ReplacementFallback,
             TrimStrings = true,
-            SkipDeletedRecords = true
+            SkipDeletedRecords = true,
         };
     }
 
@@ -185,29 +159,64 @@ public record DbfReaderOptions
         var options = new List<string>();
 
         if (Encoding != null)
+        {
             options.Add($"Encoding={Encoding.EncodingName}");
+        }
+
         if (!IgnoreCase)
+        {
             options.Add("CaseSensitive");
+        }
+
         if (LowerCaseFieldNames)
+        {
             options.Add("LowerCaseNames");
+        }
+
         if (LoadOnOpen)
+        {
             options.Add("LoadOnOpen");
+        }
+
         if (IgnoreMissingMemoFile)
+        {
             options.Add("IgnoreMissingMemo");
+        }
+
         if (RawMode)
+        {
             options.Add("RawMode");
+        }
+
         if (!TrimStrings)
+        {
             options.Add("NoTrim");
+        }
+
         if (!ValidateFields)
+        {
             options.Add("NoValidation");
+        }
+
         if (!SkipDeletedRecords)
+        {
             options.Add("IncludeDeleted");
+        }
+
         if (MaxRecords.HasValue)
+        {
             options.Add($"MaxRecords={MaxRecords}");
+        }
+
         if (UseMemoryMapping)
+        {
             options.Add("MemoryMapped");
+        }
+
         if (BufferSize != 65536)
+        {
             options.Add($"Buffer={BufferSize}");
+        }
 
         return options.Count > 0 ? string.Join(", ", options) : "Default";
     }

@@ -11,35 +11,30 @@ public class DbfException : Exception
     /// <summary>
     /// Initializes a new instance of the DbfException class
     /// </summary>
-    public DbfException()
-    {
-    }
+    public DbfException() { }
 
     /// <summary>
     /// Initializes a new instance of the DbfException class with a specified error message
     /// </summary>
     /// <param name="message">The message that describes the error</param>
-    public DbfException(string message) : base(message)
-    {
-    }
+    public DbfException(string message)
+        : base(message) { }
 
     /// <summary>
     /// Initializes a new instance of the DbfException class with a specified error message and inner exception
     /// </summary>
     /// <param name="message">The message that describes the error</param>
     /// <param name="innerException">The exception that is the cause of the current exception</param>
-    public DbfException(string message, Exception innerException) : base(message, innerException)
-    {
-    }
+    public DbfException(string message, Exception innerException)
+        : base(message, innerException) { }
 
     /// <summary>
     /// Initializes a new instance of the DbfException class with serialized data
     /// </summary>
     /// <param name="info">The SerializationInfo that holds the serialized object data about the exception being thrown</param>
     /// <param name="context">The StreamingContext that contains contextual information about the source or destination</param>
-    protected DbfException(SerializationInfo info, StreamingContext context) : base(info, context)
-    {
-    }
+    protected DbfException(SerializationInfo info, StreamingContext context)
+        : base(info, context) { }
 }
 
 /// <summary>
@@ -56,24 +51,22 @@ public class DbfNotFoundException : DbfException
     /// <summary>
     /// Initializes a new instance of the DbfNotFoundException class
     /// </summary>
-    public DbfNotFoundException()
-    {
-    }
+    public DbfNotFoundException() { }
 
     /// <summary>
     /// Initializes a new instance of the DbfNotFoundException class with a specified error message
     /// </summary>
     /// <param name="message">The message that describes the error</param>
-    public DbfNotFoundException(string message) : base(message)
-    {
-    }
+    public DbfNotFoundException(string message)
+        : base(message) { }
 
     /// <summary>
     /// Initializes a new instance of the DbfNotFoundException class with a specified file path
     /// </summary>
     /// <param name="filePath">The path of the file that was not found</param>
     /// <param name="message">The message that describes the error</param>
-    public DbfNotFoundException(string filePath, string message) : base(message)
+    public DbfNotFoundException(string filePath, string message)
+        : base(message)
     {
         FilePath = filePath;
     }
@@ -83,16 +76,16 @@ public class DbfNotFoundException : DbfException
     /// </summary>
     /// <param name="message">The message that describes the error</param>
     /// <param name="innerException">The exception that is the cause of the current exception</param>
-    public DbfNotFoundException(string message, Exception innerException) : base(message, innerException)
-    {
-    }
+    public DbfNotFoundException(string message, Exception innerException)
+        : base(message, innerException) { }
 
     /// <summary>
     /// Initializes a new instance of the DbfNotFoundException class with serialized data
     /// </summary>
     /// <param name="info">The SerializationInfo that holds the serialized object data about the exception being thrown</param>
     /// <param name="context">The StreamingContext that contains contextual information about the source or destination</param>
-    protected DbfNotFoundException(SerializationInfo info, StreamingContext context) : base(info, context)
+    protected DbfNotFoundException(SerializationInfo info, StreamingContext context)
+        : base(info, context)
     {
         FilePath = info.GetString(nameof(FilePath));
     }
@@ -128,17 +121,14 @@ public class MissingMemoFileException : DbfException
     /// <summary>
     /// Initializes a new instance of the MissingMemoFileException class
     /// </summary>
-    public MissingMemoFileException()
-    {
-    }
+    public MissingMemoFileException() { }
 
     /// <summary>
     /// Initializes a new instance of the MissingMemoFileException class with a specified error message
     /// </summary>
     /// <param name="message">The message that describes the error</param>
-    public MissingMemoFileException(string message) : base(message)
-    {
-    }
+    public MissingMemoFileException(string message)
+        : base(message) { }
 
     /// <summary>
     /// Initializes a new instance of the MissingMemoFileException class with file paths
@@ -146,7 +136,8 @@ public class MissingMemoFileException : DbfException
     /// <param name="dbfFilePath">The path of the DBF file</param>
     /// <param name="memoFilePath">The path of the expected memo file</param>
     /// <param name="message">The message that describes the error</param>
-    public MissingMemoFileException(string dbfFilePath, string memoFilePath, string message) : base(message)
+    public MissingMemoFileException(string dbfFilePath, string memoFilePath, string message)
+        : base(message)
     {
         DbfFilePath = dbfFilePath;
         MemoFilePath = memoFilePath;
@@ -157,16 +148,16 @@ public class MissingMemoFileException : DbfException
     /// </summary>
     /// <param name="message">The message that describes the error</param>
     /// <param name="innerException">The exception that is the cause of the current exception</param>
-    public MissingMemoFileException(string message, Exception innerException) : base(message, innerException)
-    {
-    }
+    public MissingMemoFileException(string message, Exception innerException)
+        : base(message, innerException) { }
 
     /// <summary>
     /// Initializes a new instance of the MissingMemoFileException class with serialized data
     /// </summary>
     /// <param name="info">The SerializationInfo that holds the serialized object data about the exception being thrown</param>
     /// <param name="context">The StreamingContext that contains contextual information about the source or destination</param>
-    protected MissingMemoFileException(SerializationInfo info, StreamingContext context) : base(info, context)
+    protected MissingMemoFileException(SerializationInfo info, StreamingContext context)
+        : base(info, context)
     {
         DbfFilePath = info.GetString(nameof(DbfFilePath));
         MemoFilePath = info.GetString(nameof(MemoFilePath));
@@ -209,17 +200,14 @@ public class FieldParseException : DbfException
     /// <summary>
     /// Initializes a new instance of the FieldParseException class
     /// </summary>
-    public FieldParseException()
-    {
-    }
+    public FieldParseException() { }
 
     /// <summary>
     /// Initializes a new instance of the FieldParseException class with a specified error message
     /// </summary>
     /// <param name="message">The message that describes the error</param>
-    public FieldParseException(string message) : base(message)
-    {
-    }
+    public FieldParseException(string message)
+        : base(message) { }
 
     /// <summary>
     /// Initializes a new instance of the FieldParseException class with field information
@@ -228,7 +216,8 @@ public class FieldParseException : DbfException
     /// <param name="fieldType">The type of the field that failed to parse</param>
     /// <param name="rawData">The raw data that failed to parse</param>
     /// <param name="message">The message that describes the error</param>
-    public FieldParseException(string fieldName, string fieldType, byte[] rawData, string message) : base(message)
+    public FieldParseException(string fieldName, string fieldType, byte[] rawData, string message)
+        : base(message)
     {
         FieldName = fieldName;
         FieldType = fieldType;
@@ -240,16 +229,16 @@ public class FieldParseException : DbfException
     /// </summary>
     /// <param name="message">The message that describes the error</param>
     /// <param name="innerException">The exception that is the cause of the current exception</param>
-    public FieldParseException(string message, Exception innerException) : base(message, innerException)
-    {
-    }
+    public FieldParseException(string message, Exception innerException)
+        : base(message, innerException) { }
 
     /// <summary>
     /// Initializes a new instance of the FieldParseException class with serialized data
     /// </summary>
     /// <param name="info">The SerializationInfo that holds the serialized object data about the exception being thrown</param>
     /// <param name="context">The StreamingContext that contains contextual information about the source or destination</param>
-    protected FieldParseException(SerializationInfo info, StreamingContext context) : base(info, context)
+    protected FieldParseException(SerializationInfo info, StreamingContext context)
+        : base(info, context)
     {
         FieldName = info.GetString(nameof(FieldName));
         FieldType = info.GetString(nameof(FieldType));

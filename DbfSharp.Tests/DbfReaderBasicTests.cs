@@ -51,13 +51,13 @@ public class DbfReaderBasicTests
     {
         var filePath = TestHelper.GetTestFilePath(fileName);
 
-        using var reader = DbfReader.Open(filePath, new DbfReaderOptions
-        {
-            IgnoreMissingMemoFile = true,
-        });
+        using var reader = DbfReader.Open(
+            filePath,
+            new DbfReaderOptions { IgnoreMissingMemoFile = true }
+        );
         Assert.NotNull(reader);
         Assert.True(reader.Fields.Count > 0);
-        
+
         // Should be able to enumerate without errors
         var recordCount = 0;
         foreach (var record in reader.Records)
@@ -65,9 +65,12 @@ public class DbfReaderBasicTests
             Assert.NotNull(record);
             Assert.Equal(reader.Fields.Count, record.FieldCount);
             recordCount++;
-            
+
             // Don't read too many records in tests
-            if (recordCount > 100) break;
+            if (recordCount > 100)
+            {
+                break;
+            }
         }
     }
 
@@ -90,20 +93,24 @@ public class DbfReaderBasicTests
     [InlineData(TestHelper.TestFiles.DBase30, DbfVersion.VisualFoxPro, true)]
     [InlineData(TestHelper.TestFiles.DBase31, DbfVersion.VisualFoxProAutoIncrement, false)]
     [InlineData(TestHelper.TestFiles.DBase83, DbfVersion.DBase3PlusWithMemo, true)]
-    public void Header_DbfVersion_ShouldBeDetectedCorrectly(string fileName, DbfVersion expectedVersion, bool hasMemo)
+    public void Header_DbfVersion_ShouldBeDetectedCorrectly(
+        string fileName,
+        DbfVersion expectedVersion,
+        bool hasMemo
+    )
     {
         if (!TestHelper.TestFileExists(fileName))
         {
             // Skip test if file doesn't exist
             return;
         }
-        
+
         var filePath = TestHelper.GetTestFilePath(fileName);
 
-        using var reader = DbfReader.Open(filePath, new DbfReaderOptions
-        {
-            IgnoreMissingMemoFile = !hasMemo,
-        });
+        using var reader = DbfReader.Open(
+            filePath,
+            new DbfReaderOptions { IgnoreMissingMemoFile = !hasMemo }
+        );
 
         Assert.Equal(expectedVersion, reader.Header.DbfVersion);
     }
@@ -141,7 +148,7 @@ public class DbfReaderBasicTests
         foreach (var record in records)
         {
             Assert.Equal(reader.Fields.Count, record.FieldCount);
-            Assert.Equal(reader.Fields.Count, record.FieldNames.Length);
+            Assert.Equal(reader.Fields.Count, record.FieldNames.Count);
         }
     }
 
@@ -154,7 +161,7 @@ public class DbfReaderBasicTests
         var firstRecord = reader.Records.First();
 
         // Test index-based access
-        for (int i = 0; i < firstRecord.FieldCount; i++)
+        for (var i = 0; i < firstRecord.FieldCount; i++)
         {
             var value = firstRecord[i];
             var fieldName = firstRecord.GetFieldName(i);
@@ -202,7 +209,7 @@ public class DbfReaderBasicTests
 
         using var reader = DbfReader.Open(filePath);
         Assert.False(reader.IsLoaded);
-        
+
         reader.Load();
 
         Assert.True(reader.IsLoaded);
@@ -311,12 +318,12 @@ public class DbfReaderBasicTests
                     var stringValue = record.GetValue<string>(field.Name);
                     Assert.True(stringValue is null or string);
                     break;
-                    
+
                 case FieldType.Date:
                     var dateValue = record.GetValue<DateTime?>(field.Name);
                     Assert.True(dateValue is null or DateTime);
                     break;
-                    
+
                 case FieldType.Float:
                 case FieldType.Double:
                 case FieldType.Numeric:
@@ -324,7 +331,7 @@ public class DbfReaderBasicTests
                     var numericValue = record[field.Name];
                     Assert.True(numericValue is null or int or decimal or double or float);
                     break;
-                    
+
                 case FieldType.Logical:
                     var boolValue = record.GetValue<bool?>(field.Name);
                     Assert.True(boolValue is null or bool);
@@ -376,7 +383,7 @@ public class DbfReaderBasicTests
 
         Assert.NotNull(dictionary);
         Assert.Equal(reader.Fields.Count, dictionary.Count);
-        
+
         foreach (var fieldName in reader.FieldNames)
         {
             Assert.True(dictionary.ContainsKey(fieldName));
@@ -393,7 +400,7 @@ public class DbfReaderBasicTests
 
         // May have deleted records or not, both are valid
         Assert.True(deletedRecords.Count >= 0);
-        
+
         foreach (var record in deletedRecords)
         {
             Assert.NotNull(record);
@@ -408,7 +415,7 @@ public class DbfReaderBasicTests
 
         using var reader = DbfReader.Open(filePath);
         reader.Load(); // Load to enable count properties
-        
+
         var activeCount = reader.Count;
         var deletedCount = reader.DeletedCount;
         var totalCount = reader.RecordCount;
