@@ -64,9 +64,8 @@ public sealed class TextMemo : MemoData
     /// Initializes a new instance of TextMemo
     /// </summary>
     /// <param name="data">The text data</param>
-    public TextMemo(ReadOnlyMemory<byte> data) : base(data)
-    {
-    }
+    public TextMemo(ReadOnlyMemory<byte> data)
+        : base(data) { }
 
     /// <summary>
     /// Converts the memo to a string using the specified encoding
@@ -88,9 +87,8 @@ public class BinaryMemo : MemoData
     /// Initializes a new instance of BinaryMemo
     /// </summary>
     /// <param name="data">The binary data</param>
-    public BinaryMemo(ReadOnlyMemory<byte> data) : base(data)
-    {
-    }
+    public BinaryMemo(ReadOnlyMemory<byte> data)
+        : base(data) { }
 }
 
 /// <summary>
@@ -102,9 +100,8 @@ public sealed class PictureMemo : BinaryMemo
     /// Initializes a new instance of PictureMemo
     /// </summary>
     /// <param name="data">The picture data</param>
-    public PictureMemo(ReadOnlyMemory<byte> data) : base(data)
-    {
-    }
+    public PictureMemo(ReadOnlyMemory<byte> data)
+        : base(data) { }
 }
 
 /// <summary>
@@ -116,9 +113,8 @@ public sealed class ObjectMemo : BinaryMemo
     /// Initializes a new instance of ObjectMemo
     /// </summary>
     /// <param name="data">The OLE object data</param>
-    public ObjectMemo(ReadOnlyMemory<byte> data) : base(data)
-    {
-    }
+    public ObjectMemo(ReadOnlyMemory<byte> data)
+        : base(data) { }
 }
 
 /// <summary>
@@ -167,21 +163,30 @@ public static class MemoFileFactory
     /// <param name="dbfVersion">The DBF version</param>
     /// <param name="options">Reader options</param>
     /// <returns>A memo file instance, or null if no memo file is needed</returns>
-    public static IMemoFile? CreateMemoFile(string dbfFilePath, DbfVersion dbfVersion, DbfReaderOptions options)
+    public static IMemoFile? CreateMemoFile(
+        string dbfFilePath,
+        DbfVersion dbfVersion,
+        DbfReaderOptions options
+    )
     {
         if (!dbfVersion.SupportsMemoFields())
+        {
             return null;
+        }
 
         var memoFilePath = FindMemoFile(dbfFilePath);
         if (memoFilePath == null)
         {
             if (options.IgnoreMissingMemoFile)
+            {
                 return NullMemoFile.Instance;
-            
+            }
+
             throw new Exceptions.MissingMemoFileException(
                 dbfFilePath,
                 GetExpectedMemoFileName(dbfFilePath),
-                $"Memo file not found for {dbfFilePath}");
+                $"Memo file not found for {dbfFilePath}"
+            );
         }
 
         var extension = Path.GetExtension(memoFilePath).ToLowerInvariant();
@@ -189,7 +194,9 @@ public static class MemoFileFactory
         {
             ".fpt" => new VfpMemoFile(memoFilePath, options),
             ".dbt" => CreateDbtMemoFile(memoFilePath, dbfVersion, options),
-            _ => throw new NotSupportedException($"Memo file extension {extension} is not supported")
+            _ => throw new NotSupportedException(
+                $"Memo file extension {extension} is not supported"
+            ),
         };
     }
 
@@ -201,15 +208,17 @@ public static class MemoFileFactory
     private static string? FindMemoFile(string dbfFilePath)
     {
         var basePath = Path.ChangeExtension(dbfFilePath, null);
-        
+
         // Try different extensions (case-insensitive)
         var extensions = new[] { ".fpt", ".FPT", ".dbt", ".DBT" };
-        
+
         foreach (var ext in extensions)
         {
             var memoPath = basePath + ext;
             if (File.Exists(memoPath))
+            {
                 return memoPath;
+            }
         }
 
         return null;
@@ -233,14 +242,18 @@ public static class MemoFileFactory
     /// <param name="dbfVersion">The DBF version</param>
     /// <param name="options">Reader options</param>
     /// <returns>A DBT memo file instance</returns>
-    private static IMemoFile CreateDbtMemoFile(string memoFilePath, DbfVersion dbfVersion, DbfReaderOptions options)
+    private static IMemoFile CreateDbtMemoFile(
+        string memoFilePath,
+        DbfVersion dbfVersion,
+        DbfReaderOptions options
+    )
     {
         return dbfVersion switch
         {
             DbfVersion.DBase3PlusWithMemo => new Db3MemoFile(memoFilePath, options),
             DbfVersion.DBase4WithMemo => new Db4MemoFile(memoFilePath, options),
             DbfVersion.DBase4SqlTableWithMemo => new Db4MemoFile(memoFilePath, options),
-            _ => new Db4MemoFile(memoFilePath, options) // Default to DB4 format
+            _ => new Db4MemoFile(memoFilePath, options), // Default to DB4 format
         };
     }
 }

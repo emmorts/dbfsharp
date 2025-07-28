@@ -34,7 +34,9 @@ public static class StdinHelper
     /// </summary>
     /// <param name="filePath">The file path argument (may be null or empty)</param>
     /// <returns>A tuple containing the file path to use and whether it's a temporary file</returns>
-    public static async Task<(string FilePath, bool IsTemporary)> ResolveFilePathAsync(string? filePath)
+    public static async Task<(string FilePath, bool IsTemporary)> ResolveFilePathAsync(
+        string? filePath
+    )
     {
         if (!string.IsNullOrWhiteSpace(filePath))
         {
@@ -42,9 +44,12 @@ public static class StdinHelper
         }
 
         if (!IsStdinAvailable())
+        {
             throw new InvalidOperationException(
-                "No input file specified and no data available from stdin. " +
-                "Provide a file path or pipe data to stdin (e.g., 'cat file.dbf | dbfsharp read').");
+                "No input file specified and no data available from stdin. "
+                + "Provide a file path or pipe data to stdin (e.g., 'cat file.dbf | dbfsharp read')."
+            );
+        }
 
         var tempFile = await CreateTemporaryFileFromStdinAsync();
 

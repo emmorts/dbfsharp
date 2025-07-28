@@ -18,7 +18,12 @@ public sealed class VfpMemoFile : IMemoFile
     /// Visual FoxPro memo file header structure
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    private readonly struct VfpMemoHeader(uint nextBlock, ushort reserved1, ushort blockSize, uint reserved2)
+    private readonly struct VfpMemoHeader(
+        uint nextBlock,
+        ushort reserved1,
+        ushort blockSize,
+        uint reserved2
+    )
     {
         public readonly uint NextBlock = nextBlock; // Next available block
         public readonly ushort Reserved1 = reserved1; // Reserved
@@ -62,7 +67,7 @@ public sealed class VfpMemoFile : IMemoFile
     {
         Picture = 0,
         Text = 1,
-        Object = 2
+        Object = 2,
     }
 
     /// <summary>
@@ -87,7 +92,13 @@ public sealed class VfpMemoFile : IMemoFile
 
         try
         {
-            _fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, _options.BufferSize);
+            _fileStream = new FileStream(
+                filePath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                _options.BufferSize
+            );
             _reader = new BinaryReader(_fileStream);
             _header = VfpMemoHeader.Read(_reader);
             IsValid = true;
@@ -106,7 +117,9 @@ public sealed class VfpMemoFile : IMemoFile
             _reader?.Dispose();
 
             if (!_options.IgnoreMissingMemoFile)
+            {
                 throw new InvalidDataException($"Failed to open memo file: {ex.Message}", ex);
+            }
         }
     }
 
@@ -118,7 +131,9 @@ public sealed class VfpMemoFile : IMemoFile
     public byte[]? GetMemo(int index)
     {
         if (!IsValid || index <= 0 || _disposed)
+        {
             return null;
+        }
 
         try
         {
@@ -127,7 +142,9 @@ public sealed class VfpMemoFile : IMemoFile
 
             // Check if position is within file bounds
             if (blockPosition >= _fileStream.Length)
+            {
                 return null;
+            }
 
             // Seek to block position
             _fileStream.Seek(blockPosition, SeekOrigin.Begin);
@@ -137,17 +154,23 @@ public sealed class VfpMemoFile : IMemoFile
 
             // Validate memo length
             if (blockHeader.Length is 0 or > int.MaxValue)
+            {
                 return null;
+            }
 
             // Check if we have enough data
             var remainingBytes = _fileStream.Length - _fileStream.Position;
             if (blockHeader.Length > remainingBytes)
+            {
                 return null;
+            }
 
             // Read memo data
             var memoData = _reader.ReadBytes((int)blockHeader.Length);
             if (memoData.Length != blockHeader.Length)
+            {
                 return null;
+            }
 
             // Return typed memo data based on memo type
             return CreateTypedMemo(blockHeader.Type, memoData);
@@ -155,7 +178,12 @@ public sealed class VfpMemoFile : IMemoFile
         catch (Exception ex)
         {
             if (_options.ValidateFields)
-                throw new InvalidDataException($"Failed to read memo at index {index}: {ex.Message}", ex);
+            {
+                throw new InvalidDataException(
+                    $"Failed to read memo at index {index}: {ex.Message}",
+                    ex
+                );
+            }
 
             return null;
         }
@@ -174,7 +202,7 @@ public sealed class VfpMemoFile : IMemoFile
             MemoType.Picture => new PictureMemo(data),
             MemoType.Text => new TextMemo(data),
             MemoType.Object => new ObjectMemo(data),
-            _ => new BinaryMemo(data) // Unknown type, treat as binary
+            _ => new BinaryMemo(data), // Unknown type, treat as binary
         };
     }
 
@@ -224,7 +252,13 @@ public sealed class Db3MemoFile : IMemoFile
 
         try
         {
-            _fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, _options.BufferSize);
+            _fileStream = new FileStream(
+                filePath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                _options.BufferSize
+            );
             _reader = new BinaryReader(_fileStream);
             IsValid = true;
         }
@@ -235,7 +269,9 @@ public sealed class Db3MemoFile : IMemoFile
             _reader?.Dispose();
 
             if (!_options.IgnoreMissingMemoFile)
+            {
                 throw new InvalidDataException($"Failed to open memo file: {ex.Message}", ex);
+            }
         }
     }
 
@@ -247,7 +283,9 @@ public sealed class Db3MemoFile : IMemoFile
     public byte[]? GetMemo(int index)
     {
         if (!IsValid || index <= 0 || _disposed)
+        {
             return null;
+        }
 
         try
         {
@@ -255,7 +293,9 @@ public sealed class Db3MemoFile : IMemoFile
             var blockPosition = (long)index * blockSize;
 
             if (blockPosition >= _fileStream.Length)
+            {
                 return null;
+            }
 
             _fileStream.Seek(blockPosition, SeekOrigin.Begin);
 
@@ -266,7 +306,9 @@ public sealed class Db3MemoFile : IMemoFile
             {
                 var bytesRead = _fileStream.Read(buffer, 0, blockSize);
                 if (bytesRead == 0)
+                {
                     break;
+                }
 
                 // Look for memo terminator (0x1A)
                 var terminatorIndex = Array.IndexOf(buffer, (byte)0x1A, 0, bytesRead);
@@ -286,7 +328,12 @@ public sealed class Db3MemoFile : IMemoFile
         catch (Exception ex)
         {
             if (_options.ValidateFields)
-                throw new InvalidDataException($"Failed to read memo at index {index}: {ex.Message}", ex);
+            {
+                throw new InvalidDataException(
+                    $"Failed to read memo at index {index}: {ex.Message}",
+                    ex
+                );
+            }
 
             return null;
         }
@@ -355,7 +402,13 @@ public sealed class Db4MemoFile : IMemoFile
 
         try
         {
-            _fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, _options.BufferSize);
+            _fileStream = new FileStream(
+                filePath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                _options.BufferSize
+            );
             _reader = new BinaryReader(_fileStream);
             IsValid = true;
         }
@@ -366,7 +419,9 @@ public sealed class Db4MemoFile : IMemoFile
             _reader?.Dispose();
 
             if (!_options.IgnoreMissingMemoFile)
+            {
                 throw new InvalidDataException($"Failed to open memo file: {ex.Message}", ex);
+            }
         }
     }
 
@@ -378,7 +433,9 @@ public sealed class Db4MemoFile : IMemoFile
     public byte[]? GetMemo(int index)
     {
         if (!IsValid || index <= 0 || _disposed)
+        {
             return null;
+        }
 
         try
         {
@@ -386,7 +443,9 @@ public sealed class Db4MemoFile : IMemoFile
             var blockPosition = (long)index * blockSize;
 
             if (blockPosition >= _fileStream.Length)
+            {
                 return null;
+            }
 
             _fileStream.Seek(blockPosition, SeekOrigin.Begin);
 
@@ -395,12 +454,16 @@ public sealed class Db4MemoFile : IMemoFile
 
             // Validate length
             if (memoHeader.Length is 0 or > int.MaxValue)
+            {
                 return null;
+            }
 
             // Read memo data
             var data = _reader.ReadBytes((int)memoHeader.Length);
             if (data.Length != memoHeader.Length)
+            {
                 return null;
+            }
 
             // Remove field terminators (0x1F is common in dBase IV)
             var terminatorIndex = Array.IndexOf(data, (byte)0x1F);
@@ -414,7 +477,12 @@ public sealed class Db4MemoFile : IMemoFile
         catch (Exception ex)
         {
             if (_options.ValidateFields)
-                throw new InvalidDataException($"Failed to read memo at index {index}: {ex.Message}", ex);
+            {
+                throw new InvalidDataException(
+                    $"Failed to read memo at index {index}: {ex.Message}",
+                    ex
+                );
+            }
 
             return null;
         }

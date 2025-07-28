@@ -17,16 +17,23 @@ public static class BinaryReaderExtensions
     /// <exception cref="ArgumentNullException">Thrown when reader is null</exception>
     /// <exception cref="EndOfStreamException">Thrown when not enough data is available</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T ReadStruct<T>(this BinaryReader reader) where T : struct
+    public static T ReadStruct<T>(this BinaryReader reader)
+        where T : struct
     {
         if (reader == null)
+        {
             throw new ArgumentNullException(nameof(reader));
+        }
 
         var size = Marshal.SizeOf<T>();
         var bytes = reader.ReadBytes(size);
 
         if (bytes.Length != size)
-            throw new EndOfStreamException($"Expected {size} bytes for {typeof(T).Name}, got {bytes.Length}");
+        {
+            throw new EndOfStreamException(
+                $"Expected {size} bytes for {typeof(T).Name}, got {bytes.Length}"
+            );
+        }
 
         // Use safe marshaling instead of unsafe code
         var handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
@@ -48,12 +55,18 @@ public static class BinaryReaderExtensions
     /// <param name="count">The number of structures to read</param>
     /// <returns>An array of structures</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T[] ReadStructArray<T>(this BinaryReader reader, int count) where T : struct
+    public static T[] ReadStructArray<T>(this BinaryReader reader, int count)
+        where T : struct
     {
         if (reader == null)
+        {
             throw new ArgumentNullException(nameof(reader));
+        }
+
         if (count < 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(count));
+        }
 
         var result = new T[count];
         var size = Marshal.SizeOf<T>();
@@ -61,11 +74,14 @@ public static class BinaryReaderExtensions
 
         var bytes = reader.ReadBytes(totalBytes);
         if (bytes.Length != totalBytes)
+        {
             throw new EndOfStreamException(
-                $"Expected {totalBytes} bytes for {count} {typeof(T).Name} structures, got {bytes.Length}");
+                $"Expected {totalBytes} bytes for {count} {typeof(T).Name} structures, got {bytes.Length}"
+            );
+        }
 
         // Use safe marshaling for each structure
-        for (int i = 0; i < count; i++)
+        for (var i = 0; i < count; i++)
         {
             var offset = i * size;
             var structBytes = new byte[size];
@@ -93,15 +109,26 @@ public static class BinaryReaderExtensions
     /// <param name="encoding">The encoding to use for string conversion</param>
     /// <returns>The decoded string</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string ReadNullTerminatedString(this BinaryReader reader, int maxLength,
-        System.Text.Encoding encoding)
+    public static string ReadNullTerminatedString(
+        this BinaryReader reader,
+        int maxLength,
+        System.Text.Encoding encoding
+    )
     {
         if (reader == null)
+        {
             throw new ArgumentNullException(nameof(reader));
+        }
+
         if (encoding == null)
+        {
             throw new ArgumentNullException(nameof(encoding));
+        }
+
         if (maxLength < 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(maxLength));
+        }
 
         var bytes = reader.ReadBytes(maxLength);
         var nullIndex = Array.IndexOf(bytes, (byte)0);
@@ -123,22 +150,38 @@ public static class BinaryReaderExtensions
     /// <param name="trimChars">Characters to trim (defaults to null bytes and spaces)</param>
     /// <returns>The decoded and trimmed string</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string ReadFixedString(this BinaryReader reader, int length, System.Text.Encoding encoding,
-        byte[]? trimChars = null)
+    public static string ReadFixedString(
+        this BinaryReader reader,
+        int length,
+        System.Text.Encoding encoding,
+        byte[]? trimChars = null
+    )
     {
         if (reader == null)
+        {
             throw new ArgumentNullException(nameof(reader));
+        }
+
         if (encoding == null)
+        {
             throw new ArgumentNullException(nameof(encoding));
+        }
+
         if (length < 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(length));
+        }
 
         if (length == 0)
+        {
             return string.Empty;
+        }
 
         var bytes = reader.ReadBytes(length);
         if (bytes.Length != length)
+        {
             throw new EndOfStreamException($"Expected {length} bytes, got {bytes.Length}");
+        }
 
         // Trim padding characters
         trimChars ??= new byte[] { 0, 32 }; // null and space
@@ -150,7 +193,9 @@ public static class BinaryReaderExtensions
         }
 
         if (endIndex == 0)
+        {
             return string.Empty;
+        }
 
         return encoding.GetString(bytes, 0, endIndex);
     }
@@ -164,12 +209,19 @@ public static class BinaryReaderExtensions
     public static void Skip(this BinaryReader reader, int count)
     {
         if (reader == null)
+        {
             throw new ArgumentNullException(nameof(reader));
+        }
+
         if (count < 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(count));
+        }
 
         if (count == 0)
+        {
             return;
+        }
 
         // Try to seek if possible (faster than reading)
         if (reader.BaseStream.CanSeek)
@@ -188,7 +240,9 @@ public static class BinaryReaderExtensions
                 var bytesRead = reader.Read(buffer, 0, toRead);
 
                 if (bytesRead == 0)
+                {
                     throw new EndOfStreamException("Reached end of stream while skipping bytes");
+                }
 
                 remaining -= bytesRead;
             }
@@ -204,10 +258,14 @@ public static class BinaryReaderExtensions
     public static int PeekByte(this BinaryReader reader)
     {
         if (reader == null)
+        {
             throw new ArgumentNullException(nameof(reader));
+        }
 
         if (!reader.BaseStream.CanSeek)
+        {
             throw new NotSupportedException("Stream must support seeking to peek");
+        }
 
         var position = reader.BaseStream.Position;
         try
@@ -230,7 +288,9 @@ public static class BinaryReaderExtensions
     public static int Read(this BinaryReader reader, Span<byte> buffer)
     {
         if (reader == null)
+        {
             throw new ArgumentNullException(nameof(reader));
+        }
 
         return reader.BaseStream.Read(buffer);
     }
@@ -245,14 +305,18 @@ public static class BinaryReaderExtensions
     public static void ReadExactly(this BinaryReader reader, Span<byte> buffer)
     {
         if (reader == null)
+        {
             throw new ArgumentNullException(nameof(reader));
+        }
 
         var totalRead = 0;
         while (totalRead < buffer.Length)
         {
-            var bytesRead = reader.BaseStream.Read(buffer.Slice(totalRead));
+            var bytesRead = reader.BaseStream.Read(buffer[totalRead..]);
             if (bytesRead == 0)
+            {
                 throw new EndOfStreamException($"Expected {buffer.Length} bytes, got {totalRead}");
+            }
 
             totalRead += bytesRead;
         }
@@ -268,7 +332,9 @@ public static class BinaryReaderExtensions
     public static long ReadLittleEndianInteger(this BinaryReader reader, int size)
     {
         if (reader == null)
+        {
             throw new ArgumentNullException(nameof(reader));
+        }
 
         return size switch
         {
@@ -276,7 +342,7 @@ public static class BinaryReaderExtensions
             2 => reader.ReadInt16(),
             4 => reader.ReadInt32(),
             8 => reader.ReadInt64(),
-            _ => throw new ArgumentException($"Unsupported integer size: {size}", nameof(size))
+            _ => throw new ArgumentException($"Unsupported integer size: {size}", nameof(size)),
         };
     }
 
@@ -290,7 +356,9 @@ public static class BinaryReaderExtensions
     public static long ReadBigEndianInteger(this BinaryReader reader, int size)
     {
         if (reader == null)
+        {
             throw new ArgumentNullException(nameof(reader));
+        }
 
         return size switch
         {
@@ -298,7 +366,7 @@ public static class BinaryReaderExtensions
             2 => BinaryPrimitives.ReverseEndianness(reader.ReadInt16()),
             4 => BinaryPrimitives.ReverseEndianness(reader.ReadInt32()),
             8 => BinaryPrimitives.ReverseEndianness(reader.ReadInt64()),
-            _ => throw new ArgumentException($"Unsupported integer size: {size}", nameof(size))
+            _ => throw new ArgumentException($"Unsupported integer size: {size}", nameof(size)),
         };
     }
 }
@@ -341,10 +409,10 @@ public static class BinaryPrimitives
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint ReverseEndianness(uint value)
     {
-        return ((value & 0x000000FFU) << 24) |
-               ((value & 0x0000FF00U) << 8) |
-               ((value & 0x00FF0000U) >> 8) |
-               ((value & 0xFF000000U) >> 24);
+        return ((value & 0x000000FFU) << 24)
+            | ((value & 0x0000FF00U) << 8)
+            | ((value & 0x00FF0000U) >> 8)
+            | ((value & 0xFF000000U) >> 24);
     }
 
     /// <summary>
@@ -353,13 +421,13 @@ public static class BinaryPrimitives
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ulong ReverseEndianness(ulong value)
     {
-        return ((value & 0x00000000000000FFUL) << 56) |
-               ((value & 0x000000000000FF00UL) << 40) |
-               ((value & 0x0000000000FF0000UL) << 24) |
-               ((value & 0x00000000FF000000UL) << 8) |
-               ((value & 0x000000FF00000000UL) >> 8) |
-               ((value & 0x0000FF0000000000UL) >> 24) |
-               ((value & 0x00FF000000000000UL) >> 40) |
-               ((value & 0xFF00000000000000UL) >> 56);
+        return ((value & 0x00000000000000FFUL) << 56)
+            | ((value & 0x000000000000FF00UL) << 40)
+            | ((value & 0x0000000000FF0000UL) << 24)
+            | ((value & 0x00000000FF000000UL) << 8)
+            | ((value & 0x000000FF00000000UL) >> 8)
+            | ((value & 0x0000FF0000000000UL) >> 24)
+            | ((value & 0x00FF000000000000UL) >> 40)
+            | ((value & 0xFF00000000000000UL) >> 56);
     }
 }

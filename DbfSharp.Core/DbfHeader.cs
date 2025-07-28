@@ -115,7 +115,8 @@ public readonly struct DbfHeader
         uint reserved3,
         byte mdxFlag,
         byte languageDriver,
-        ushort reserved4)
+        ushort reserved4
+    )
     {
         DbVersionByte = dbVersionByte;
         Year = year;
@@ -200,11 +201,37 @@ public readonly struct DbfHeader
             // Field descriptors start after the 32-byte header and end with 0x0D
             // Each field descriptor is 32 bytes
             if (HeaderLength <= Size + 1) // +1 for terminator
+            {
                 return 0;
+            }
 
             var fieldDescriptorArea = HeaderLength - Size - 1; // -1 for terminator byte
             return fieldDescriptorArea / DbfField.Size;
         }
+    }
+
+    /// <summary>
+    /// Asynchronously reads a DBF header from a stream
+    /// </summary>
+    /// <param name="stream">The stream positioned at the start of the file</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The parsed DBF header</returns>
+    /// <exception cref="ArgumentNullException">Thrown when stream is null</exception>
+    /// <exception cref="EndOfStreamException">Thrown when the stream doesn't contain enough data</exception>
+    public static async Task<DbfHeader> ReadAsync(
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (stream == null)
+        {
+            throw new ArgumentNullException(nameof(stream));
+        }
+
+        var headerBytes = new byte[Size];
+        await stream.ReadExactlyAsync(headerBytes, cancellationToken);
+
+        return FromBytes(headerBytes);
     }
 
     /// <summary>
@@ -217,12 +244,17 @@ public readonly struct DbfHeader
     public static DbfHeader Read(BinaryReader reader)
     {
         if (reader == null)
+        {
             throw new ArgumentNullException(nameof(reader));
+        }
 
-        // Read the header as a byte array and convert to struct
         var headerBytes = reader.ReadBytes(Size);
         if (headerBytes.Length != Size)
-            throw new EndOfStreamException($"Expected {Size} bytes for DBF header, got {headerBytes.Length}");
+        {
+            throw new EndOfStreamException(
+                $"Expected {Size} bytes for DBF header, got {headerBytes.Length}"
+            );
+        }
 
         return FromBytes(headerBytes);
     }
@@ -236,7 +268,12 @@ public readonly struct DbfHeader
     public static DbfHeader FromBytes(ReadOnlySpan<byte> bytes)
     {
         if (bytes.Length != Size)
-            throw new ArgumentException($"Expected {Size} bytes for DBF header, got {bytes.Length}", nameof(bytes));
+        {
+            throw new ArgumentException(
+                $"Expected {Size} bytes for DBF header, got {bytes.Length}",
+                nameof(bytes)
+            );
+        }
 
         var dbVersionByte = bytes[0];
         var version = DbfVersionExtensions.FromByte(dbVersionByte);
@@ -245,12 +282,13 @@ public readonly struct DbfHeader
         uint numberOfRecords;
         ushort headerLength;
         ushort recordLength;
-        byte year, month, day;
+        byte year,
+            month,
+            day;
 
         // dBASE II has a significantly different header format
         if (version == DbfVersion.DBase2 || dbVersionByte == 0x02)
         {
-            // Based on analysis of the actual dbase_02.dbf file:
             // Byte 0: Version (0x02)
             // Byte 1: Number of records
             // Bytes 2-5: Reserved/unused (zeros)
@@ -270,8 +308,6 @@ public readonly struct DbfHeader
             {
                 // Try alternative interpretation if the simple one doesn't work
                 numberOfRecords = BitConverter.ToUInt16(bytes.Slice(1, 2));
-                if (numberOfRecords > 65535)
-                    numberOfRecords = 9; // Known value from test case
             }
 
             if (recordLength is 0 or > 4000)
@@ -332,10 +368,10 @@ public readonly struct DbfHeader
     /// </summary>
     public override string ToString()
     {
-        return $"DBF Header: {DbfVersion.GetDescription()}, " +
-               $"{NumberOfRecords} records, " +
-               $"{FieldCount} fields, " +
-               $"Record length: {RecordLength}, " +
-               $"Encoding: {EncodingDescription}";
+        return $"DBF Header: {DbfVersion.GetDescription()}, "
+            + $"{NumberOfRecords} records, "
+            + $"{FieldCount} fields, "
+            + $"Record length: {RecordLength}, "
+            + $"Encoding: {EncodingDescription}";
     }
 }

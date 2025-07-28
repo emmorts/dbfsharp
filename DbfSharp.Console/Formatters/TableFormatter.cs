@@ -20,11 +20,13 @@ public sealed class TableFormatter : IConsoleFormatter
     /// <param name="options">Formatting options, particularly MaxDisplayRecords for console overflow prevention</param>
     public TableFormatter(FormatterOptions? options = null)
     {
-        _options = options ?? new FormatterOptions
-        {
-            MaxDisplayRecords = DefaultMaxDisplayRecords,
-            IncludeTypeInfo = true
-        };
+        _options =
+            options
+            ?? new FormatterOptions
+            {
+                MaxDisplayRecords = DefaultMaxDisplayRecords,
+                IncludeTypeInfo = true,
+            };
     }
 
     /// <summary>
@@ -35,7 +37,8 @@ public sealed class TableFormatter : IConsoleFormatter
         IEnumerable<DbfRecord> records,
         string[] fields,
         DbfReader reader,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var table = CreateSpectreTable(fields, reader);
         var recordCount = PopulateTableRows(table, records, fields, cancellationToken);
@@ -59,7 +62,8 @@ public sealed class TableFormatter : IConsoleFormatter
         string[] fields,
         DbfReader reader,
         TextWriter writer,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         await WriteTextTableAsync(records, fields, reader, writer, cancellationToken);
     }
@@ -69,8 +73,7 @@ public sealed class TableFormatter : IConsoleFormatter
     /// </summary>
     private Table CreateSpectreTable(string[] fields, DbfReader reader)
     {
-        var table = new Table()
-            .Border(TableBorder.Rounded);
+        var table = new Table().Border(TableBorder.Rounded);
 
         foreach (var fieldName in fields)
         {
@@ -88,10 +91,16 @@ public sealed class TableFormatter : IConsoleFormatter
     {
         var header = EscapeMarkup(fieldName);
 
-        if (!_options.IncludeTypeInfo) return header;
+        if (!_options.IncludeTypeInfo)
+        {
+            return header;
+        }
 
         var field = reader.FindField(fieldName);
-        if (!field.HasValue) return header;
+        if (!field.HasValue)
+        {
+            return header;
+        }
 
         var typeDescription = field.Value.Type.GetDescription();
         header += $"\n[dim]({EscapeMarkup(typeDescription)})[/]";
@@ -106,7 +115,8 @@ public sealed class TableFormatter : IConsoleFormatter
         Table table,
         IEnumerable<DbfRecord> records,
         string[] fields,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var recordCount = 0;
         var maxRecords = _options.MaxDisplayRecords ?? DefaultMaxDisplayRecords;
@@ -124,7 +134,8 @@ public sealed class TableFormatter : IConsoleFormatter
                 if (_options.ShowWarnings)
                 {
                     AnsiConsole.MarkupLine(
-                        $"[yellow]Note:[/] Only first {maxRecords:N0} records shown for table format. Use --format csv or --limit for more control.");
+                        $"[yellow]Note:[/] Only first {maxRecords:N0} records shown for table format. Use --format csv or --limit for more control."
+                    );
                 }
 
                 break;
@@ -189,8 +200,14 @@ public sealed class TableFormatter : IConsoleFormatter
     /// </summary>
     private static string EscapeMarkup(string input)
     {
-        if (string.IsNullOrEmpty(input) || input.Contains("[/]") || input.StartsWith('[') && input.Contains(']'))
+        if (
+            string.IsNullOrEmpty(input)
+            || input.Contains("[/]")
+            || input.StartsWith('[') && input.Contains(']')
+        )
+        {
             return input;
+        }
 
         return input.Replace("[", "[[").Replace("]", "]]");
     }
@@ -204,7 +221,8 @@ public sealed class TableFormatter : IConsoleFormatter
         string[] fields,
         DbfReader reader,
         TextWriter writer,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var columnWidths = CalculateColumnWidths(records, fields, reader);
 
@@ -220,7 +238,8 @@ public sealed class TableFormatter : IConsoleFormatter
         IEnumerable<DbfRecord> records,
         string[] fields,
         DbfReader reader,
-        int sampleSize = 50)
+        int sampleSize = 50
+    )
     {
         var widths = new Dictionary<string, int>();
 
@@ -236,7 +255,10 @@ public sealed class TableFormatter : IConsoleFormatter
         var sampleCount = 0;
         foreach (var record in records)
         {
-            if (sampleCount++ > sampleSize) break;
+            if (sampleCount++ > sampleSize)
+            {
+                break;
+            }
 
             foreach (var field in fields)
             {
@@ -276,7 +298,9 @@ public sealed class TableFormatter : IConsoleFormatter
     private static string StripMarkup(string input)
     {
         if (string.IsNullOrEmpty(input))
+        {
             return input;
+        }
 
         // simple markup removal - could be enhanced with regex for more complex cases
         var result = input;
@@ -302,7 +326,8 @@ public sealed class TableFormatter : IConsoleFormatter
         DbfReader reader,
         Dictionary<string, int> columnWidths,
         TextWriter writer,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var headerParts = fields.Select(field =>
         {
@@ -319,7 +344,8 @@ public sealed class TableFormatter : IConsoleFormatter
     private static async Task WriteTextTableSeparator(
         Dictionary<string, int> columnWidths,
         TextWriter writer,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var separatorParts = columnWidths.Values.Select(width => new string('-', width));
         var separatorLine = string.Join("-+-", separatorParts);
@@ -331,7 +357,8 @@ public sealed class TableFormatter : IConsoleFormatter
         string[] fields,
         Dictionary<string, int> columnWidths,
         TextWriter writer,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var maxRecords = _options.MaxDisplayRecords ?? DefaultMaxDisplayRecords;
         var recordCount = 0;

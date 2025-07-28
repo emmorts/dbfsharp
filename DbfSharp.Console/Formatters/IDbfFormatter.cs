@@ -16,10 +16,10 @@ public interface IDbfFormatter
     /// <param name="writer">The TextWriter to write the formatted output to</param>
     /// <param name="cancellationToken">Cancellation token for async operations</param>
     Task WriteAsync(
-        IEnumerable<DbfRecord> records, 
-        string[] fields, 
-        DbfReader reader, 
+        IEnumerable<DbfRecord> records,
+        string[] fields,
+        DbfReader reader,
         TextWriter writer,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 }
-

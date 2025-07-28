@@ -1,12 +1,13 @@
 #if UNSAFE_ENABLED
-
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace DbfSharp.Core.Utils;
 
 /// <summary>
 /// High-performance unsafe extensions for BinaryReader
 /// These methods require the UNSAFE_ENABLED compilation symbol and AllowUnsafeBlocks=true
+/// Uses modern .NET intrinsics and cross-platform optimizations
 /// </summary>
 public static class UnsafeBinaryReaderExtensions
 {
@@ -19,21 +20,21 @@ public static class UnsafeBinaryReaderExtensions
     /// <exception cref="ArgumentNullException">Thrown when reader is null</exception>
     /// <exception cref="EndOfStreamException">Thrown when not enough data is available</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe T ReadStructUnsafe<T>(this BinaryReader reader) where T : unmanaged
+    public static unsafe T ReadStructUnsafe<T>(this BinaryReader reader)
+        where T : unmanaged
     {
         if (reader == null)
             throw new ArgumentNullException(nameof(reader));
 
         var size = sizeof(T);
         var bytes = reader.ReadBytes(size);
-        
-        if (bytes.Length != size)
-            throw new EndOfStreamException($"Expected {size} bytes for {typeof(T).Name}, got {bytes.Length}");
 
-        fixed (byte* ptr = bytes)
-        {
-            return *(T*)ptr;
-        }
+        if (bytes.Length != size)
+            throw new EndOfStreamException(
+                $"Expected {size} bytes for {typeof(T).Name}, got {bytes.Length}"
+            );
+
+        return MemoryMarshal.Read<T>(bytes);
     }
 
     /// <summary>
@@ -44,7 +45,8 @@ public static class UnsafeBinaryReaderExtensions
     /// <param name="count">The number of structures to read</param>
     /// <returns>An array of structures</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe T[] ReadStructArrayUnsafe<T>(this BinaryReader reader, int count) where T : unmanaged
+    public static T[] ReadStructArrayUnsafe<T>(this BinaryReader reader, int count)
+        where T : unmanaged
     {
         if (reader == null)
             throw new ArgumentNullException(nameof(reader));
@@ -55,19 +57,16 @@ public static class UnsafeBinaryReaderExtensions
             return Array.Empty<T>();
 
         var result = new T[count];
-        var size = sizeof(T);
+        var size = Unsafe.SizeOf<T>();
         var totalBytes = size * count;
-        
+
         var bytes = reader.ReadBytes(totalBytes);
         if (bytes.Length != totalBytes)
-            throw new EndOfStreamException($"Expected {totalBytes} bytes for {count} {typeof(T).Name} structures, got {bytes.Length}");
+            throw new EndOfStreamException(
+                $"Expected {totalBytes} bytes for {count} {typeof(T).Name} structures, got {bytes.Length}"
+            );
 
-        fixed (byte* bytePtr = bytes)
-        fixed (T* resultPtr = result)
-        {
-            Buffer.MemoryCopy(bytePtr, resultPtr, totalBytes, totalBytes);
-        }
-
+        MemoryMarshal.Cast<byte, T>(bytes).CopyTo(result);
         return result;
     }
 
@@ -79,7 +78,8 @@ public static class UnsafeBinaryReaderExtensions
     /// <param name="destination">The destination span</param>
     /// <exception cref="EndOfStreamException">Thrown when not enough data is available</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void ReadIntoSpanUnsafe<T>(this BinaryReader reader, Span<T> destination) where T : unmanaged
+    public static void ReadIntoSpanUnsafe<T>(this BinaryReader reader, Span<T> destination)
+        where T : unmanaged
     {
         if (reader == null)
             throw new ArgumentNullException(nameof(reader));
@@ -87,106 +87,193 @@ public static class UnsafeBinaryReaderExtensions
         if (destination.IsEmpty)
             return;
 
-        var size = sizeof(T);
+        var size = Unsafe.SizeOf<T>();
         var totalBytes = size * destination.Length;
         var bytes = reader.ReadBytes(totalBytes);
-        
+
         if (bytes.Length != totalBytes)
             throw new EndOfStreamException($"Expected {totalBytes} bytes, got {bytes.Length}");
 
-        fixed (byte* bytePtr = bytes)
-        fixed (T* destPtr = destination)
-        {
-            Buffer.MemoryCopy(bytePtr, destPtr, totalBytes, totalBytes);
-        }
+        var sourceSpan = MemoryMarshal.Cast<byte, T>(bytes);
+        sourceSpan.CopyTo(destination);
     }
 
     /// <summary>
-    /// Converts a byte span to a value type using unsafe casting
+    /// Converts a byte span to a value type using safe marshaling
     /// </summary>
     /// <typeparam name="T">The unmanaged value type</typeparam>
     /// <param name="bytes">The byte span</param>
     /// <returns>The converted value</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe T CastToStruct<T>(ReadOnlySpan<byte> bytes) where T : unmanaged
+    public static T CastToStruct<T>(ReadOnlySpan<byte> bytes)
+        where T : unmanaged
     {
-        var size = sizeof(T);
+        var size = Unsafe.SizeOf<T>();
         if (bytes.Length < size)
             throw new ArgumentException($"Not enough bytes: expected {size}, got {bytes.Length}");
 
-        fixed (byte* ptr = bytes)
-        {
-            return *(T*)ptr;
-        }
+        return MemoryMarshal.Read<T>(bytes);
     }
 
     /// <summary>
-    /// Converts a value type to bytes using unsafe casting
+    /// Converts a value type to bytes using safe marshaling
     /// </summary>
     /// <typeparam name="T">The unmanaged value type</typeparam>
     /// <param name="value">The value to convert</param>
     /// <returns>The byte representation</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe byte[] StructToBytes<T>(T value) where T : unmanaged
+    public static byte[] StructToBytes<T>(T value)
+        where T : unmanaged
     {
-        var size = sizeof(T);
+        var size = Unsafe.SizeOf<T>();
         var result = new byte[size];
-        
-        fixed (byte* ptr = result)
-        {
-            *(T*)ptr = value;
-        }
-        
+        MemoryMarshal.Write(result, ref Unsafe.AsRef(value));
         return result;
     }
 
     /// <summary>
-    /// Fast memory comparison using unsafe operations
+    /// Fast memory comparison using .NET's optimized SequenceEqual
     /// </summary>
     /// <param name="span1">First span to compare</param>
     /// <param name="span2">Second span to compare</param>
     /// <returns>True if the spans contain identical data</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe bool SequenceEqualUnsafe(ReadOnlySpan<byte> span1, ReadOnlySpan<byte> span2)
+    public static bool SequenceEqualUnsafe(
+        ReadOnlySpan<byte> span1,
+        ReadOnlySpan<byte> span2
+    )
     {
-        if (span1.Length != span2.Length)
-            return false;
-
-        if (span1.Length == 0)
-            return true;
-
-        fixed (byte* ptr1 = span1)
-        fixed (byte* ptr2 = span2)
-        {
-            return memcmp(ptr1, ptr2, span1.Length) == 0;
-        }
+        return span1.SequenceEqual(span2);
     }
 
     /// <summary>
-    /// Fast memory search using unsafe operations
+    /// Fast memory search using .NET's optimized IndexOf
     /// </summary>
     /// <param name="haystack">The span to search in</param>
     /// <param name="needle">The value to search for</param>
     /// <returns>The index of the first occurrence, or -1 if not found</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe int IndexOfUnsafe(ReadOnlySpan<byte> haystack, byte needle)
+    public static int IndexOfUnsafe(ReadOnlySpan<byte> haystack, byte needle)
     {
-        if (haystack.IsEmpty)
-            return -1;
+        return haystack.IndexOf(needle);
+    }
 
-        fixed (byte* ptr = haystack)
+    /// <summary>
+    /// Fast memory search for a sequence using .NET's optimized IndexOf
+    /// </summary>
+    /// <param name="haystack">The span to search in</param>
+    /// <param name="needle">The sequence to search for</param>
+    /// <returns>The index of the first occurrence, or -1 if not found</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int IndexOfSequenceUnsafe(ReadOnlySpan<byte> haystack, ReadOnlySpan<byte> needle)
+    {
+        return haystack.IndexOf(needle);
+    }
+
+    /// <summary>
+    /// Fast memory filling using .NET's optimized Fill
+    /// </summary>
+    /// <param name="destination">The span to fill</param>
+    /// <param name="value">The value to fill with</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void FillUnsafe(Span<byte> destination, byte value)
+    {
+        destination.Fill(value);
+    }
+
+    /// <summary>
+    /// Fast memory copying using .NET's optimized CopyTo
+    /// </summary>
+    /// <param name="source">The source span</param>
+    /// <param name="destination">The destination span</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void CopyUnsafe(ReadOnlySpan<byte> source, Span<byte> destination)
+    {
+        if (destination.Length < source.Length)
+            throw new ArgumentException("Destination span is too small");
+        
+        source.CopyTo(destination);
+    }
+
+    /// <summary>
+    /// Reads a structure directly from a stream using a stackalloc buffer for small structures
+    /// </summary>
+    /// <typeparam name="T">The unmanaged structure type to read</typeparam>
+    /// <param name="stream">The stream to read from</param>
+    /// <returns>The read structure</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe T ReadStructFromStreamUnsafe<T>(Stream stream)
+        where T : unmanaged
+    {
+        if (stream == null)
+            throw new ArgumentNullException(nameof(stream));
+
+        var size = sizeof(T);
+        
+        // stackalloc for small structures to avoid heap alloc
+        if (size <= 1024) // should be reasonable stack alloc limit
         {
-            var result = memchr(ptr, needle, haystack.Length);
-            return result == null ? -1 : (int)(result - ptr);
+            Span<byte> buffer = stackalloc byte[size];
+            var bytesRead = stream.Read(buffer);
+            
+            if (bytesRead != size)
+                throw new EndOfStreamException(
+                    $"Expected {size} bytes for {typeof(T).Name}, got {bytesRead}"
+                );
+
+            return MemoryMarshal.Read<T>(buffer);
+        }
+        else
+        {
+            // fallback to heap allocation for large structures
+            var buffer = new byte[size];
+            var bytesRead = stream.Read(buffer);
+            
+            if (bytesRead != size)
+                throw new EndOfStreamException(
+                    $"Expected {size} bytes for {typeof(T).Name}, got {bytesRead}"
+                );
+
+            return MemoryMarshal.Read<T>(buffer);
         }
     }
 
-    // P/Invoke declarations for native memory functions
-    [System.Runtime.InteropServices.DllImport("msvcrt.dll", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
-    private static extern unsafe int memcmp(byte* ptr1, byte* ptr2, int count);
+    /// <summary>
+    /// Reads structures directly from a stream into a pre-allocated array
+    /// </summary>
+    /// <typeparam name="T">The unmanaged structure type to read</typeparam>
+    /// <param name="stream">The stream to read from</param>
+    /// <param name="destination">The destination array</param>
+    /// <param name="offset">The offset in the destination array</param>
+    /// <param name="count">The number of structures to read</param>
+    /// <returns>The number of structures actually read</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int ReadStructArrayFromStreamUnsafe<T>(
+        Stream stream, 
+        T[] destination, 
+        int offset, 
+        int count)
+        where T : unmanaged
+    {
+        if (stream == null)
+            throw new ArgumentNullException(nameof(stream));
+        if (destination == null)
+            throw new ArgumentNullException(nameof(destination));
+        if (offset < 0 || offset >= destination.Length)
+            throw new ArgumentOutOfRangeException(nameof(offset));
+        if (count < 0 || offset + count > destination.Length)
+            throw new ArgumentOutOfRangeException(nameof(count));
 
-    [System.Runtime.InteropServices.DllImport("msvcrt.dll", CallingConvention = System.Runtime.InteropServices.CallingConvention.Cdecl)]
-    private static extern unsafe byte* memchr(byte* ptr, int value, int count);
+        if (count == 0)
+            return 0;
+
+        var destSpan = destination.AsSpan(offset, count);
+        var byteSpan = MemoryMarshal.AsBytes(destSpan);
+        var bytesRead = stream.Read(byteSpan);
+        
+        var structSize = Unsafe.SizeOf<T>();
+        return bytesRead / structSize;
+    }
 }
 
 #endif

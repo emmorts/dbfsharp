@@ -11,70 +11,71 @@ public static class CodePage
     /// <summary>
     /// Mapping of language driver bytes to encoding information
     /// </summary>
-    private static readonly Dictionary<byte, (string EncodingName, string Description)> CodePages = new()
-    {
-        { 0x00, ("ascii", "plain ol' ascii") },
-        { 0x01, ("cp437", "U.S. MS-DOS") },
-        { 0x02, ("cp850", "International MS-DOS") },
-        { 0x03, ("windows-1252", "Windows ANSI") },
-        { 0x04, ("macintosh", "Standard Macintosh") },
-        { 0x08, ("cp865", "Danish OEM") },
-        { 0x09, ("cp437", "Dutch OEM") },
-        { 0x0A, ("cp850", "Dutch OEM (secondary)") },
-        { 0x0B, ("cp437", "Finnish OEM") },
-        { 0x0D, ("cp437", "French OEM") },
-        { 0x0E, ("cp850", "French OEM (secondary)") },
-        { 0x0F, ("cp437", "German OEM") },
-        { 0x10, ("cp850", "German OEM (secondary)") },
-        { 0x11, ("cp437", "Italian OEM") },
-        { 0x12, ("cp850", "Italian OEM (secondary)") },
-        { 0x13, ("shift_jis", "Japanese Shift-JIS") },
-        { 0x14, ("cp850", "Spanish OEM (secondary)") },
-        { 0x15, ("cp437", "Swedish OEM") },
-        { 0x16, ("cp850", "Swedish OEM (secondary)") },
-        { 0x17, ("cp865", "Norwegian OEM") },
-        { 0x18, ("cp437", "Spanish OEM") },
-        { 0x19, ("cp437", "English OEM (Britain)") },
-        { 0x1A, ("cp850", "English OEM (Britain) (secondary)") },
-        { 0x1B, ("cp437", "English OEM (U.S.)") },
-        { 0x1C, ("cp863", "French OEM (Canada)") },
-        { 0x1D, ("cp850", "French OEM (secondary)") },
-        { 0x1F, ("cp852", "Czech OEM") },
-        { 0x22, ("cp852", "Hungarian OEM") },
-        { 0x23, ("cp852", "Polish OEM") },
-        { 0x24, ("cp860", "Portuguese OEM") },
-        { 0x25, ("cp850", "Portuguese OEM (secondary)") },
-        { 0x26, ("cp866", "Russian OEM") },
-        { 0x37, ("cp850", "English OEM (U.S.) (secondary)") },
-        { 0x40, ("cp852", "Romanian OEM") },
-        { 0x4D, ("gb2312", "Chinese GBK (PRC)") },
-        { 0x4E, ("euc-kr", "Korean (ANSI/OEM)") },
-        { 0x4F, ("big5", "Chinese Big 5 (Taiwan)") },
-        { 0x50, ("windows-874", "Thai (ANSI/OEM)") },
-        { 0x57, ("windows-1252", "ANSI") },
-        { 0x58, ("windows-1252", "Western European ANSI") },
-        { 0x59, ("windows-1252", "Spanish ANSI") },
-        { 0x64, ("cp852", "Eastern European MS-DOS") },
-        { 0x65, ("cp866", "Russian MS-DOS") },
-        { 0x66, ("cp865", "Nordic MS-DOS") },
-        { 0x67, ("cp861", "Icelandic MS-DOS") },
-        { 0x6A, ("cp737", "Greek MS-DOS (437G)") },
-        { 0x6B, ("cp857", "Turkish MS-DOS") },
-        { 0x78, ("big5", "Traditional Chinese (Hong Kong SAR, Taiwan) Windows") },
-        { 0x79, ("euc-kr", "Korean Windows") },
-        { 0x7A, ("gb2312", "Chinese Simplified (PRC, Singapore) Windows") },
-        { 0x7B, ("shift_jis", "Japanese Windows") },
-        { 0x7C, ("windows-874", "Thai Windows") },
-        { 0x7D, ("windows-1255", "Hebrew Windows") },
-        { 0x7E, ("windows-1256", "Arabic Windows") },
-        { 0x96, ("x-mac-cyrillic", "Russian Macintosh") },
-        { 0x97, ("x-mac-ce", "Macintosh EE") },
-        { 0x98, ("x-mac-greek", "Greek Macintosh") },
-        { 0xC8, ("windows-1250", "Eastern European Windows") },
-        { 0xC9, ("windows-1251", "Russian Windows") },
-        { 0xCA, ("windows-1254", "Turkish Windows") },
-        { 0xCB, ("windows-1253", "Greek Windows") }
-    };
+    private static readonly Dictionary<byte, (string EncodingName, string Description)> CodePages =
+        new()
+        {
+            { 0x00, ("ascii", "plain ol' ascii") },
+            { 0x01, ("cp437", "U.S. MS-DOS") },
+            { 0x02, ("cp850", "International MS-DOS") },
+            { 0x03, ("windows-1252", "Windows ANSI") },
+            { 0x04, ("macintosh", "Standard Macintosh") },
+            { 0x08, ("cp865", "Danish OEM") },
+            { 0x09, ("cp437", "Dutch OEM") },
+            { 0x0A, ("cp850", "Dutch OEM (secondary)") },
+            { 0x0B, ("cp437", "Finnish OEM") },
+            { 0x0D, ("cp437", "French OEM") },
+            { 0x0E, ("cp850", "French OEM (secondary)") },
+            { 0x0F, ("cp437", "German OEM") },
+            { 0x10, ("cp850", "German OEM (secondary)") },
+            { 0x11, ("cp437", "Italian OEM") },
+            { 0x12, ("cp850", "Italian OEM (secondary)") },
+            { 0x13, ("shift_jis", "Japanese Shift-JIS") },
+            { 0x14, ("cp850", "Spanish OEM (secondary)") },
+            { 0x15, ("cp437", "Swedish OEM") },
+            { 0x16, ("cp850", "Swedish OEM (secondary)") },
+            { 0x17, ("cp865", "Norwegian OEM") },
+            { 0x18, ("cp437", "Spanish OEM") },
+            { 0x19, ("cp437", "English OEM (Britain)") },
+            { 0x1A, ("cp850", "English OEM (Britain) (secondary)") },
+            { 0x1B, ("cp437", "English OEM (U.S.)") },
+            { 0x1C, ("cp863", "French OEM (Canada)") },
+            { 0x1D, ("cp850", "French OEM (secondary)") },
+            { 0x1F, ("cp852", "Czech OEM") },
+            { 0x22, ("cp852", "Hungarian OEM") },
+            { 0x23, ("cp852", "Polish OEM") },
+            { 0x24, ("cp860", "Portuguese OEM") },
+            { 0x25, ("cp850", "Portuguese OEM (secondary)") },
+            { 0x26, ("cp866", "Russian OEM") },
+            { 0x37, ("cp850", "English OEM (U.S.) (secondary)") },
+            { 0x40, ("cp852", "Romanian OEM") },
+            { 0x4D, ("gb2312", "Chinese GBK (PRC)") },
+            { 0x4E, ("euc-kr", "Korean (ANSI/OEM)") },
+            { 0x4F, ("big5", "Chinese Big 5 (Taiwan)") },
+            { 0x50, ("windows-874", "Thai (ANSI/OEM)") },
+            { 0x57, ("windows-1252", "ANSI") },
+            { 0x58, ("windows-1252", "Western European ANSI") },
+            { 0x59, ("windows-1252", "Spanish ANSI") },
+            { 0x64, ("cp852", "Eastern European MS-DOS") },
+            { 0x65, ("cp866", "Russian MS-DOS") },
+            { 0x66, ("cp865", "Nordic MS-DOS") },
+            { 0x67, ("cp861", "Icelandic MS-DOS") },
+            { 0x6A, ("cp737", "Greek MS-DOS (437G)") },
+            { 0x6B, ("cp857", "Turkish MS-DOS") },
+            { 0x78, ("big5", "Traditional Chinese (Hong Kong SAR, Taiwan) Windows") },
+            { 0x79, ("euc-kr", "Korean Windows") },
+            { 0x7A, ("gb2312", "Chinese Simplified (PRC, Singapore) Windows") },
+            { 0x7B, ("shift_jis", "Japanese Windows") },
+            { 0x7C, ("windows-874", "Thai Windows") },
+            { 0x7D, ("windows-1255", "Hebrew Windows") },
+            { 0x7E, ("windows-1256", "Arabic Windows") },
+            { 0x96, ("x-mac-cyrillic", "Russian Macintosh") },
+            { 0x97, ("x-mac-ce", "Macintosh EE") },
+            { 0x98, ("x-mac-greek", "Greek Macintosh") },
+            { 0xC8, ("windows-1250", "Eastern European Windows") },
+            { 0xC9, ("windows-1251", "Russian Windows") },
+            { 0xCA, ("windows-1254", "Turkish Windows") },
+            { 0xCB, ("windows-1253", "Greek Windows") },
+        };
 
     /// <summary>
     /// Attempts to get the encoding for a given language driver byte
@@ -108,7 +109,7 @@ public static class CodePage
                 "x-mac-cyrillic" => "x-mac-cyrillic",
                 "x-mac-ce" => "x-mac-ce",
                 "x-mac-greek" => "x-mac-greek",
-                _ => codePage.EncodingName
+                _ => codePage.EncodingName,
             };
 
             return Encoding.GetEncoding(encodingName);
@@ -180,7 +181,10 @@ public static class CodePage
     /// Gets all available code page mappings
     /// </summary>
     /// <returns>A read-only dictionary of all code page mappings</returns>
-    public static IReadOnlyDictionary<byte, (string EncodingName, string Description)> GetAllCodePages()
+    public static IReadOnlyDictionary<
+        byte,
+        (string EncodingName, string Description)
+    > GetAllCodePages()
     {
         return CodePages;
     }

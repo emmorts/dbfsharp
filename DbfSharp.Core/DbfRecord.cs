@@ -9,24 +9,18 @@ namespace DbfSharp.Core;
 /// </summary>
 public readonly struct DbfRecord : IEnumerable<KeyValuePair<string, object?>>
 {
+    private readonly DbfReader _reader;
     private readonly object?[] _values;
-    private readonly string[] _fieldNames;
-    private readonly Dictionary<string, int>? _fieldIndexMap;
 
     /// <summary>
     /// Initializes a new DbfRecord
     /// </summary>
-    /// <param name="values">The field values</param>
-    /// <param name="fieldNames">The field names</param>
-    /// <param name="fieldIndexMap">Optional field name to index mapping for fast lookups</param>
-    internal DbfRecord(object?[] values, string[] fieldNames, Dictionary<string, int>? fieldIndexMap = null)
+    /// <param name="reader">The DbfReader that owns this record.</param>
+    /// <param name="values">The field values for this record.</param>
+    internal DbfRecord(DbfReader reader, object?[] values)
     {
+        _reader = reader ?? throw new ArgumentNullException(nameof(reader));
         _values = values ?? throw new ArgumentNullException(nameof(values));
-        _fieldNames = fieldNames ?? throw new ArgumentNullException(nameof(fieldNames));
-        _fieldIndexMap = fieldIndexMap;
-
-        if (values.Length != fieldNames.Length)
-            throw new ArgumentException("Values and field names arrays must have the same length");
     }
 
     /// <summary>
@@ -37,7 +31,7 @@ public readonly struct DbfRecord : IEnumerable<KeyValuePair<string, object?>>
     /// <summary>
     /// Gets the field names
     /// </summary>
-    public ReadOnlySpan<string> FieldNames => _fieldNames;
+    public IReadOnlyList<string> FieldNames => _reader.FieldNames;
 
     /// <summary>
     /// Gets the field values
@@ -55,7 +49,10 @@ public readonly struct DbfRecord : IEnumerable<KeyValuePair<string, object?>>
         get
         {
             if (_values == null || index < 0 || index >= _values.Length)
+            {
                 throw new ArgumentOutOfRangeException(nameof(index));
+            }
+
             return _values[index];
         }
     }
@@ -71,11 +68,15 @@ public readonly struct DbfRecord : IEnumerable<KeyValuePair<string, object?>>
         get
         {
             if (string.IsNullOrEmpty(fieldName))
+            {
                 throw new ArgumentException("Field name cannot be null or empty", nameof(fieldName));
+            }
 
             var index = GetFieldIndex(fieldName);
             if (index < 0)
+            {
                 throw new ArgumentException($"Field '{fieldName}' not found", nameof(fieldName));
+            }
 
             return _values[index];
         }
@@ -222,9 +223,12 @@ public readonly struct DbfRecord : IEnumerable<KeyValuePair<string, object?>>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when index is out of range</exception>
     public string GetFieldName(int index)
     {
-        if (_fieldNames == null || index < 0 || index >= _fieldNames.Length)
+        if (_reader.FieldNames == null || index < 0 || index >= _reader.FieldNames.Count)
+        {
             throw new ArgumentOutOfRangeException(nameof(index));
-        return _fieldNames[index];
+        }
+
+        return _reader.FieldNames[index];
     }
 
     /// <summary>
@@ -233,13 +237,15 @@ public readonly struct DbfRecord : IEnumerable<KeyValuePair<string, object?>>
     /// <returns>A dictionary with field names as keys and values as values</returns>
     public Dictionary<string, object?> ToDictionary()
     {
-        if (_fieldNames == null || _values == null)
-            return new Dictionary<string, object?>();
-
-        var result = new Dictionary<string, object?>(_fieldNames.Length);
-        for (int i = 0; i < _fieldNames.Length; i++)
+        if (_reader.FieldNames == null || _values == null)
         {
-            result[_fieldNames[i]] = _values[i];
+            return new Dictionary<string, object?>();
+        }
+
+        var result = new Dictionary<string, object?>(_reader.FieldNames.Count);
+        for (var i = 0; i < _reader.FieldNames.Count; i++)
+        {
+            result[_reader.FieldNames[i]] = _values[i];
         }
 
         return result;
@@ -260,12 +266,14 @@ public readonly struct DbfRecord : IEnumerable<KeyValuePair<string, object?>>
     /// <returns>An enumerator of key-value pairs</returns>
     public IEnumerator<KeyValuePair<string, object?>> GetEnumerator()
     {
-        if (_fieldNames == null || _values == null)
-            yield break;
-
-        for (int i = 0; i < _fieldNames.Length; i++)
+        if (_reader.FieldNames == null || _values == null)
         {
-            yield return new KeyValuePair<string, object?>(_fieldNames[i], _values[i]);
+            yield break;
+        }
+
+        for (var i = 0; i < _reader.FieldNames.Count; i++)
+        {
+            yield return new KeyValuePair<string, object?>(_reader.FieldNames[i], _values[i]);
         }
     }
 
@@ -283,25 +291,7 @@ public readonly struct DbfRecord : IEnumerable<KeyValuePair<string, object?>>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int GetFieldIndex(string fieldName)
     {
-        // Use the index map if available for O(1) lookup
-        if (_fieldIndexMap != null)
-        {
-            return _fieldIndexMap.TryGetValue(fieldName, out var index) ? index : -1;
-        }
-
-        // Fall back to linear search
-        if (_fieldNames != null)
-        {
-            for (int i = 0; i < _fieldNames.Length; i++)
-            {
-                if (string.Equals(_fieldNames[i], fieldName, StringComparison.Ordinal))
-                {
-                    return i;
-                }
-            }
-        }
-
-        return -1;
+        return _reader.GetFieldIndex(fieldName);
     }
 
     /// <summary>
@@ -314,12 +304,17 @@ public readonly struct DbfRecord : IEnumerable<KeyValuePair<string, object?>>
     private static T ConvertValue<T>(object? value)
     {
         if (value is T directCast)
+        {
             return directCast;
+        }
 
         if (value == null)
         {
             if (default(T) == null)
+            {
                 return default!;
+            }
+
             throw new InvalidCastException($"Cannot convert null to non-nullable type {typeof(T)}");
         }
 
@@ -339,14 +334,16 @@ public readonly struct DbfRecord : IEnumerable<KeyValuePair<string, object?>>
     /// </summary>
     public override string ToString()
     {
-        if (_fieldNames == null || _values == null)
+        if (_reader.FieldNames == null || _values == null)
+        {
             return "Empty DBF Record";
+        }
 
-        var fields = new string[_fieldNames.Length];
-        for (int i = 0; i < _fieldNames.Length; i++)
+        var fields = new string[_reader.FieldNames.Count];
+        for (var i = 0; i < _reader.FieldNames.Count; i++)
         {
             var valueStr = _values[i]?.ToString() ?? "null";
-            fields[i] = $"{_fieldNames[i]}={valueStr}";
+            fields[i] = $"{_reader.FieldNames[i]}={valueStr}";
         }
 
         return $"DBF Record: {{{string.Join(", ", fields)}}}";
@@ -363,19 +360,29 @@ public readonly struct DbfRecord : IEnumerable<KeyValuePair<string, object?>>
     /// <summary>
     /// Determines equality based on field values
     /// </summary>
-    public bool Equals(DbfRecord other)
+    private bool Equals(DbfRecord other)
     {
         if (_values == null && other._values == null)
+        {
             return true;
-        if (_values == null || other._values == null)
-            return false;
-        if (_values.Length != other._values.Length)
-            return false;
+        }
 
-        for (int i = 0; i < _values.Length; i++)
+        if (_values == null || other._values == null)
+        {
+            return false;
+        }
+
+        if (_values.Length != other._values.Length)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < _values.Length; i++)
         {
             if (!Equals(_values[i], other._values[i]))
+            {
                 return false;
+            }
         }
 
         return true;
@@ -387,7 +394,9 @@ public readonly struct DbfRecord : IEnumerable<KeyValuePair<string, object?>>
     public override int GetHashCode()
     {
         if (_values == null)
+        {
             return 0;
+        }
 
         var hash = new HashCode();
         foreach (var value in _values)
@@ -413,10 +422,4 @@ public readonly struct DbfRecord : IEnumerable<KeyValuePair<string, object?>>
     {
         return !left.Equals(right);
     }
-
-    /// <summary>
-    /// Creates an empty record
-    /// </summary>
-    /// <returns>An empty DbfRecord</returns>
-    public static DbfRecord Empty => new(Array.Empty<object>(), Array.Empty<string>());
 }

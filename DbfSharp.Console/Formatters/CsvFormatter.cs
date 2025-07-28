@@ -41,7 +41,8 @@ public sealed class CsvFormatter : IDbfFormatter
         string[] fields,
         DbfReader reader,
         TextWriter writer,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         await WriteHeaderAsync(fields, reader, writer, cancellationToken);
         await WriteDataRowsAsync(records, fields, writer, cancellationToken);
@@ -54,7 +55,8 @@ public sealed class CsvFormatter : IDbfFormatter
         string[] fields,
         DbfReader reader,
         TextWriter writer,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var headerFields = fields.AsEnumerable();
 
@@ -80,7 +82,8 @@ public sealed class CsvFormatter : IDbfFormatter
         IEnumerable<DbfRecord> records,
         string[] fields,
         TextWriter writer,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         foreach (var record in records)
         {
@@ -108,7 +111,10 @@ public sealed class CsvFormatter : IDbfFormatter
             null => string.Empty,
             string stringValue => stringValue,
             DateTime dateTimeValue => FormatDateTime(dateTimeValue),
-            decimal decimalValue => decimalValue.ToString("F", System.Globalization.CultureInfo.InvariantCulture),
+            decimal decimalValue => decimalValue.ToString(
+                "F",
+                System.Globalization.CultureInfo.InvariantCulture
+            ),
             double doubleValue => FormatFloatingPoint(doubleValue),
             float floatValue => FormatFloatingPoint(floatValue),
             bool boolValue => boolValue ? "True" : "False",
@@ -133,9 +139,20 @@ public sealed class CsvFormatter : IDbfFormatter
     /// </summary>
     private static string FormatFloatingPoint(double value)
     {
-        if (double.IsNaN(value)) return "NaN";
-        if (double.IsPositiveInfinity(value)) return "Infinity";
-        if (double.IsNegativeInfinity(value)) return "-Infinity";
+        if (double.IsNaN(value))
+        {
+            return "NaN";
+        }
+
+        if (double.IsPositiveInfinity(value))
+        {
+            return "Infinity";
+        }
+
+        if (double.IsNegativeInfinity(value))
+        {
+            return "-Infinity";
+        }
 
         return value.ToString("F", System.Globalization.CultureInfo.InvariantCulture);
     }
@@ -150,10 +167,11 @@ public sealed class CsvFormatter : IDbfFormatter
         // - The delimiter character
         // - Double quote character
         // - Line break characters (CR or LF)
-        var needsEscaping = field.Contains(_delimiter) ||
-                            field.Contains('"') ||
-                            field.Contains('\n') ||
-                            field.Contains('\r');
+        var needsEscaping =
+            field.Contains(_delimiter)
+            || field.Contains('"')
+            || field.Contains('\n')
+            || field.Contains('\r');
 
         if (!needsEscaping)
         {

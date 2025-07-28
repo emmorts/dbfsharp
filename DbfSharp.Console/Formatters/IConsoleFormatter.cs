@@ -15,8 +15,9 @@ public interface IConsoleFormatter : IDbfFormatter
     /// <param name="reader">The DBF reader for metadata access</param>
     /// <param name="cancellationToken">Cancellation token for async operations</param>
     void DisplayToConsole(
-        IEnumerable<DbfRecord> records, 
-        string[] fields, 
+        IEnumerable<DbfRecord> records,
+        string[] fields,
         DbfReader reader,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 }

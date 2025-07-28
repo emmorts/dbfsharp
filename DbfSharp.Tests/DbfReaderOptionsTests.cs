@@ -170,7 +170,7 @@ public class DbfReaderOptionsTests
             BufferSize = 32768,
         };
 
-        var clone = original with {};
+        var clone = original with { };
 
         Assert.NotSame(original, clone);
         Assert.Equal(original.Encoding, clone.Encoding);
