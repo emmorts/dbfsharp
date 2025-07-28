@@ -1,4 +1,4 @@
-# DbfRead - DBF File Reader Tool
+# DbfSharp - DBF File Reader Tool
 
 A cross-platform command-line tool for reading and processing DBF (dBASE) database files.
 
@@ -7,33 +7,33 @@ A cross-platform command-line tool for reading and processing DBF (dBASE) databa
 Install as a global .NET tool:
 
 ```bash
-dotnet tool install -g DbfRead
+dotnet tool install -g DbfSharp
 ```
 
 ## Usage
 
 ### Read DBF file contents
 ```bash
-dbfread read data.dbf
-dbfread read data.dbf --format csv
-dbfread read data.dbf --limit 100 --fields NAME,SALARY
+dbfsharp read data.dbf
+dbfsharp read data.dbf --format csv
+dbfsharp read data.dbf --limit 100 --fields NAME,SALARY
 ```
 
 ### Display file information
 ```bash
-dbfread info data.dbf
-dbfread info data.dbf --verbose
+dbfsharp info data.dbf
+dbfsharp info data.dbf --verbose
 ```
 
 ### Export to different formats
 ```bash
-dbfread export data.dbf --output data.csv
-dbfread export data.dbf --format json --output data.json
+dbfsharp export data.dbf --output data.csv
+dbfsharp export data.dbf --format json --output data.json
 ```
 
 ### Validate file integrity
 ```bash
-dbfread validate data.dbf
+dbfsharp validate data.dbf
 ```
 
 ## Requirements
