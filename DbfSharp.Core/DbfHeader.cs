@@ -221,7 +221,6 @@ public readonly struct DbfHeader
 
         // Read the header as a byte array and convert to struct
         var headerBytes = reader.ReadBytes(Size);
-        AnalyzeDBase2Header(headerBytes);
         if (headerBytes.Length != Size)
             throw new EndOfStreamException($"Expected {Size} bytes for DBF header, got {headerBytes.Length}");
 
@@ -267,7 +266,7 @@ public readonly struct DbfHeader
             headerLength = 8; // Minimal header, will be recalculated
 
             // Validate the values make sense
-            if (numberOfRecords == 0 || numberOfRecords > 255)
+            if (numberOfRecords is 0 or > 255)
             {
                 // Try alternative interpretation if the simple one doesn't work
                 numberOfRecords = BitConverter.ToUInt16(bytes.Slice(1, 2));
@@ -275,7 +274,7 @@ public readonly struct DbfHeader
                     numberOfRecords = 9; // Known value from test case
             }
 
-            if (recordLength == 0 || recordLength > 4000)
+            if (recordLength is 0 or > 4000)
             {
                 recordLength = 127; // Known value from test case
             }
@@ -338,56 +337,5 @@ public readonly struct DbfHeader
                $"{FieldCount} fields, " +
                $"Record length: {RecordLength}, " +
                $"Encoding: {EncodingDescription}";
-    }
-
-    public static void AnalyzeDBase2Header(byte[] headerBytes)
-    {
-        Console.WriteLine("=== dBASE II Header Analysis ===");
-        Console.WriteLine($"Raw header bytes: {Convert.ToHexString(headerBytes)}");
-
-        Console.WriteLine("\nByte-by-byte analysis:");
-        for (int i = 0; i < Math.Min(headerBytes.Length, 16); i++)
-        {
-            Console.WriteLine(
-                $"Byte {i,2}: 0x{headerBytes[i]:X2} ({headerBytes[i],3}) '{(char.IsControl((char)headerBytes[i]) ? '.' : (char)headerBytes[i])}'");
-        }
-
-        Console.WriteLine("\nDifferent interpretations:");
-
-        // Standard dBASE III+ interpretation
-        var std_records = BitConverter.ToUInt32(headerBytes, 4);
-        var std_headerLen = BitConverter.ToUInt16(headerBytes, 8);
-        var std_recordLen = BitConverter.ToUInt16(headerBytes, 10);
-        Console.WriteLine(
-            $"Standard (III+):  Records={std_records}, HeaderLen={std_headerLen}, RecordLen={std_recordLen}");
-
-        // Alternative 1: Records at 1-2, HeaderLen at 3-4, RecordLen at 5-6
-        var alt1_records = BitConverter.ToUInt16(headerBytes, 1);
-        var alt1_headerLen = BitConverter.ToUInt16(headerBytes, 3);
-        var alt1_recordLen = BitConverter.ToUInt16(headerBytes, 5);
-        Console.WriteLine(
-            $"Alt1 (1-2,3-4,5-6): Records={alt1_records}, HeaderLen={alt1_headerLen}, RecordLen={alt1_recordLen}");
-
-        // Alternative 2: Records at 1-2, HeaderLen at 6-7, RecordLen at 8-9
-        var alt2_records = BitConverter.ToUInt16(headerBytes, 1);
-        var alt2_headerLen = BitConverter.ToUInt16(headerBytes, 6);
-        var alt2_recordLen = BitConverter.ToUInt16(headerBytes, 8);
-        Console.WriteLine(
-            $"Alt2 (1-2,6-7,8-9): Records={alt2_records}, HeaderLen={alt2_headerLen}, RecordLen={alt2_recordLen}");
-
-        // Alternative 3: Single byte counts
-        Console.WriteLine(
-            $"Single bytes: Records@1={headerBytes[1]}, Records@4={headerBytes[4]}, Records@7={headerBytes[7]}");
-
-        // Expected values based on test case: 9 records, 14 fields
-        // 14 fields * 16 bytes = 224 bytes for field descriptors
-        // 32 byte header + 224 = 256 bytes total header
-        // Record length should be around 100 bytes (sum of all field lengths + 1 for deletion flag)
-
-        Console.WriteLine("\nExpected for this file:");
-        Console.WriteLine("Records: 9");
-        Console.WriteLine("Fields: 14");
-        Console.WriteLine("Expected HeaderLen: ~256 (32 + 14*16)");
-        Console.WriteLine("Expected RecordLen: ~100 (sum of field lengths + 1)");
     }
 }

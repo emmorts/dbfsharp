@@ -200,7 +200,7 @@ public abstract class FieldParserBase : IFieldParser
         while (trimmed.Length > 0)
         {
             var lastByte = trimmed[trimmed.Length - 1];
-            if (lastByte == 0 || lastByte == 32 || lastByte == 42) // null, space, asterisk
+            if (lastByte is 0 or 32 or 42) // null, space, asterisk
             {
                 trimmed = trimmed.Slice(0, trimmed.Length - 1);
             }
@@ -214,7 +214,7 @@ public abstract class FieldParserBase : IFieldParser
         while (trimmed.Length > 0)
         {
             var firstByte = trimmed[0];
-            if (firstByte == 0 || firstByte == 32)
+            if (firstByte is 0 or 32)
             {
                 trimmed = trimmed.Slice(1);
             }
