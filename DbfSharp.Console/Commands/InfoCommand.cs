@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Text;
+using DbfSharp.Console.Utils;
 using DbfSharp.Core;
 using DbfSharp.Core.Enums;
 using DbfSharp.Core.Parsing;
@@ -13,9 +14,9 @@ namespace DbfSharp.Console.Commands;
 /// </summary>
 public sealed class InfoSettings : CommandSettings
 {
-    [CommandArgument(0, "<FILE>")]
-    [Description("Path to the DBF file to analyze")]
-    public string FilePath { get; set; } = string.Empty;
+    [CommandArgument(0, "[FILE]")]
+    [Description("Path to the DBF file to analyze (omit to read from stdin)")]
+    public string? FilePath { get; set; }
 
     [CommandOption("--fields")]
     [Description("Show field definitions")]
@@ -64,17 +65,26 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
 {
     public override async Task<int> ExecuteAsync(CommandContext context, InfoSettings settings)
     {
+        string? tempFilePath = null;
         try
         {
+            // Resolve file path (from argument or stdin)
+            var (filePath, isTemporary) = await StdinHelper.ResolveFilePathAsync(settings.FilePath);
+            if (isTemporary)
+            {
+                tempFilePath = filePath;
+            }
+            
             if (!settings.Quiet)
             {
-                AnsiConsole.MarkupLine($"[blue]Analyzing DBF file:[/] {settings.FilePath}");
+                var source = isTemporary ? "stdin" : filePath;
+                AnsiConsole.MarkupLine($"[blue]Analyzing DBF file:[/] {source}");
                 AnsiConsole.WriteLine();
             }
 
             var readerOptions = CreateDbfReaderOptions(settings);
 
-            using var reader = await DbfReader.OpenAsync(settings.FilePath, readerOptions);
+            using var reader = await DbfReader.OpenAsync(filePath, readerOptions);
             var stats = reader.GetStatistics();
 
             DisplayFileOverview(reader, stats);
@@ -109,6 +119,14 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
         {
             AnsiConsole.WriteException(ex);
             return 1;
+        }
+        finally
+        {
+            // Clean up temporary file if created
+            if (tempFilePath != null)
+            {
+                StdinHelper.CleanupTemporaryFile(tempFilePath);
+            }
         }
     }
 

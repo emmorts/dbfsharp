@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using DbfSharp.Console.Formatters;
+using DbfSharp.Console.Utils;
 using DbfSharp.Core;
 using DbfSharp.Core.Enums;
 using DbfSharp.Core.Parsing;
@@ -24,9 +25,9 @@ public enum OutputFormat
 /// </summary>
 public sealed class ReadSettings : CommandSettings
 {
-    [CommandArgument(0, "<FILE>")]
-    [Description("Path to the DBF file to read")]
-    public string FilePath { get; set; } = string.Empty;
+    [CommandArgument(0, "[FILE]")]
+    [Description("Path to the DBF file to read (omit to read from stdin)")]
+    public string? FilePath { get; set; }
 
     [CommandOption("-f|--format")]
     [Description("Output format (table, csv, tsv, json)")]
@@ -92,15 +93,24 @@ public sealed class ReadCommand : AsyncCommand<ReadSettings>
 {
     public override async Task<int> ExecuteAsync(CommandContext context, ReadSettings settings)
     {
+        string? tempFilePath = null;
         try
         {
+            // Resolve file path (from argument or stdin)
+            var (filePath, isTemporary) = await StdinHelper.ResolveFilePathAsync(settings.FilePath);
+            if (isTemporary)
+            {
+                tempFilePath = filePath;
+            }
+            
             if (!settings.Quiet)
             {
-                AnsiConsole.MarkupLine($"[blue]Reading DBF file:[/] {settings.FilePath}");
+                var source = isTemporary ? "stdin" : filePath;
+                AnsiConsole.MarkupLine($"[blue]Reading DBF file:[/] {source}");
             }
 
             // Create DBF reader with optimized settings
-            using var reader = await CreateDbfReaderAsync(settings);
+            using var reader = await CreateDbfReaderAsync(settings, filePath);
 
             if (settings is { Verbose: true, Quiet: false })
             {
@@ -121,12 +131,20 @@ public sealed class ReadCommand : AsyncCommand<ReadSettings>
             AnsiConsole.WriteException(ex);
             return 1;
         }
+        finally
+        {
+            // Clean up temporary file if created
+            if (tempFilePath != null)
+            {
+                StdinHelper.CleanupTemporaryFile(tempFilePath);
+            }
+        }
     }
 
     /// <summary>
     /// Creates and configures the DBF reader with optimal settings
     /// </summary>
-    private static async Task<DbfReader> CreateDbfReaderAsync(ReadSettings settings)
+    private static async Task<DbfReader> CreateDbfReaderAsync(ReadSettings settings, string filePath)
     {
         var readerOptions = new DbfReaderOptions
         {
@@ -158,7 +176,7 @@ public sealed class ReadCommand : AsyncCommand<ReadSettings>
             }
         }
 
-        return await DbfReader.OpenAsync(settings.FilePath, readerOptions);
+        return await DbfReader.OpenAsync(filePath, readerOptions);
     }
 
     /// <summary>
