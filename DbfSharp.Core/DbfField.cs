@@ -1,3 +1,5 @@
+using System.Buffers;
+using System.IO.Pipelines;
 using System.Text;
 using DbfSharp.Core.Enums;
 
@@ -169,9 +171,105 @@ public readonly struct DbfField
     }
 
     /// <summary>
+    /// Asynchronously reads field descriptors from a pipe reader.
+    /// </summary>
+    public static async ValueTask<DbfField[]> ReadFieldsAsync(
+        PipeReader pipeReader,
+        Encoding encoding,
+        int fieldCount,
+        bool lowerCaseNames = false,
+        DbfVersion dbfVersion = DbfVersion.Unknown,
+        CancellationToken cancellationToken = default
+    )
+    {
+        ArgumentNullException.ThrowIfNull(pipeReader);
+        ArgumentNullException.ThrowIfNull(encoding);
+
+        if (dbfVersion == DbfVersion.DBase2)
+        {
+            return await ReadDBase2FieldsAsync(pipeReader, encoding, lowerCaseNames, cancellationToken);
+        }
+
+        var fields = new List<DbfField>();
+        byte[]? rentedBuffer = null;
+
+        try
+        {
+            rentedBuffer = ArrayPool<byte>.Shared.Rent(Size);
+
+            while (true)
+            {
+                var result = await pipeReader.ReadAsync(cancellationToken);
+                var buffer = result.Buffer;
+                var position = buffer.Start;
+
+                if (buffer.IsEmpty && result.IsCompleted)
+                {
+                    break;
+                }
+
+                var terminator = buffer.PositionOf((byte)0x0D);
+                if (terminator != null)
+                {
+                    buffer = buffer.Slice(0, terminator.Value);
+                }
+
+                while (buffer.Length >= Size)
+                {
+                    var fieldSequence = buffer.Slice(0, Size);
+
+                    if (fieldSequence.FirstSpan[0] == 0x0D || fieldSequence.FirstSpan[0] == 0x1A)
+                    {
+                        pipeReader.AdvanceTo(fieldSequence.Start);
+                        return fields.ToArray();
+                    }
+
+                    DbfField field;
+                    if (fieldSequence.IsSingleSegment)
+                    {
+                        field = FromBytes(fieldSequence.FirstSpan, encoding, lowerCaseNames);
+                    }
+                    else
+                    {
+                        var fieldBytes = rentedBuffer.AsSpan(0, Size);
+                        fieldSequence.CopyTo(fieldBytes);
+                        field = FromBytes(fieldBytes, encoding, lowerCaseNames);
+                    }
+
+                    if (string.IsNullOrWhiteSpace(field.Name) || field.ActualLength == 0)
+                    {
+                        pipeReader.AdvanceTo(fieldSequence.Start);
+                        return fields.ToArray();
+                    }
+
+                    fields.Add(field);
+                    buffer = buffer.Slice(Size);
+                    position = fieldSequence.End;
+                }
+
+                pipeReader.AdvanceTo(position, result.Buffer.End);
+
+                if (result.IsCompleted || (terminator != null))
+                {
+                    break;
+                }
+            }
+
+            return fields.ToArray();
+        }
+        finally
+        {
+            if (rentedBuffer != null)
+            {
+                ArrayPool<byte>.Shared.Return(rentedBuffer);
+            }
+        }
+    }
+
+    /// <summary>
     /// Asynchronously reads field descriptors from a stream.
     /// </summary>
-    public static async Task<DbfField[]> ReadFieldsAsync(
+    public static async ValueTask<DbfField[]> ReadFieldsAsync(
         Stream stream,
         Encoding encoding,
         int fieldCount,
@@ -195,7 +293,7 @@ public readonly struct DbfField
         while (true)
         {
             var currentPosition = stream.Position;
-            var bytesRead = await stream.ReadAsync(firstByteBuf, 0, 1, cancellationToken);
+            var bytesRead = await stream.ReadAsync(firstByteBuf.AsMemory(0, 1), cancellationToken);
 
             if (bytesRead == 0 || firstByteBuf[0] == 0x0D || firstByteBuf[0] == 0x1A)
             {
@@ -312,7 +410,73 @@ public readonly struct DbfField
         return fields.ToArray();
     }
 
-    private static async Task<DbfField[]> ReadDBase2FieldsAsync(
+    private static async ValueTask<DbfField[]> ReadDBase2FieldsAsync(
+        PipeReader pipeReader,
+        Encoding encoding,
+        bool lowerCaseNames,
+        CancellationToken cancellationToken
+    )
+    {
+        var fields = new List<DbfField>();
+        byte[]? rentedBuffer = null;
+
+        try
+        {
+            rentedBuffer = ArrayPool<byte>.Shared.Rent(DBase2Size);
+
+            while (fields.Count < 128)
+            {
+                var result = await pipeReader.ReadAsync(cancellationToken);
+                var buffer = result.Buffer;
+
+                if (buffer.Length < DBase2Size)
+                {
+                    if (result.IsCompleted)
+                    {
+                        break;
+                    }
+
+                    pipeReader.AdvanceTo(buffer.Start, buffer.End);
+                    continue;
+                }
+
+                var fieldSequence = buffer.Slice(0, DBase2Size);
+                if (fieldSequence.IsSingleSegment)
+                {
+                    if (!IsValidDBase2Field(fieldSequence.FirstSpan))
+                    {
+                        pipeReader.AdvanceTo(buffer.Start);
+                        break;
+                    }
+                    fields.Add(FromDBase2Bytes(fieldSequence.FirstSpan, encoding, lowerCaseNames));
+                }
+                else
+                {
+                    var fieldBytes = rentedBuffer.AsSpan(0, DBase2Size);
+                    fieldSequence.CopyTo(fieldBytes);
+                    if (!IsValidDBase2Field(fieldBytes))
+                    {
+                        pipeReader.AdvanceTo(buffer.Start);
+                        break;
+                    }
+                    fields.Add(FromDBase2Bytes(fieldBytes, encoding, lowerCaseNames));
+                }
+
+                pipeReader.AdvanceTo(fieldSequence.End);
+            }
+
+            return fields.ToArray();
+        }
+        finally
+        {
+            if (rentedBuffer != null)
+            {
+                ArrayPool<byte>.Shared.Return(rentedBuffer);
+            }
+        }
+    }
+
+    private static async ValueTask<DbfField[]> ReadDBase2FieldsAsync(
         Stream stream,
         Encoding encoding,
         bool lowerCaseNames,
@@ -325,7 +489,7 @@ public readonly struct DbfField
         while (true)
         {
             var currentPosition = stream.Position;
-            var bytesRead = await stream.ReadAsync(fieldBytes, 0, DBase2Size, cancellationToken);
+            var bytesRead = await stream.ReadAsync(fieldBytes.AsMemory(0, DBase2Size), cancellationToken);
 
             if (bytesRead != DBase2Size)
             {
