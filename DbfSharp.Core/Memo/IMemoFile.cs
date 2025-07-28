@@ -47,12 +47,18 @@ public abstract class MemoData
     /// <summary>
     /// Implicitly converts MemoData to byte array
     /// </summary>
-    public static implicit operator byte[](MemoData memo) => memo.Data.ToArray();
+    public static implicit operator byte[](MemoData memo)
+    {
+        return memo.Data.ToArray();
+    }
 
     /// <summary>
     /// Implicitly converts MemoData to ReadOnlySpan
     /// </summary>
-    public static implicit operator ReadOnlySpan<byte>(MemoData memo) => memo.Data.Span;
+    public static implicit operator ReadOnlySpan<byte>(MemoData memo)
+    {
+        return memo.Data.Span;
+    }
 }
 
 /// <summary>
@@ -138,7 +144,10 @@ public sealed class NullMemoFile : IMemoFile
     /// <summary>
     /// Always returns null
     /// </summary>
-    public byte[]? GetMemo(int index) => null;
+    public byte[]? GetMemo(int index)
+    {
+        return null;
+    }
 
     /// <summary>
     /// Always returns true (null memo file is always "valid")
