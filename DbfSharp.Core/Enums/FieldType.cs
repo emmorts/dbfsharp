@@ -67,8 +67,9 @@ public static class FieldTypeExtensions
     /// </summary>
     /// <param name="fieldType">The field type</param>
     /// <returns>A descriptive string</returns>
-    public static string GetDescription(this FieldType fieldType) =>
-        fieldType switch
+    public static string GetDescription(this FieldType fieldType)
+    {
+        return fieldType switch
         {
             FieldType.Character => "Character",
             FieldType.Date => "Date",
@@ -89,29 +90,33 @@ public static class FieldTypeExtensions
             FieldType.Flags => "Flags",
             _ => "Unknown",
         };
+    }
 
     /// <summary>
     /// Determines if this field type uses memo files for data storage
     /// </summary>
     /// <param name="fieldType">The field type</param>
     /// <returns>True if the field type uses memo files</returns>
-    public static bool UsesMemoFile(this FieldType fieldType) =>
-        fieldType switch
+    public static bool UsesMemoFile(this FieldType fieldType)
+    {
+        return fieldType switch
         {
             FieldType.Memo => true,
             FieldType.General => true,
             FieldType.Picture => true,
-            FieldType.Binary => true, // Can use memo file depending on version
+            FieldType.Binary => true, //C an use memo file depending on version
             _ => false,
         };
+    }
 
     /// <summary>
     /// Gets the expected .NET type for this field type
     /// </summary>
     /// <param name="fieldType">The field type</param>
     /// <returns>The corresponding .NET type</returns>
-    public static Type GetExpectedNetType(this FieldType fieldType) =>
-        fieldType switch
+    public static Type GetExpectedNetType(this FieldType fieldType)
+    {
+        return fieldType switch
         {
             FieldType.Character => typeof(string),
             FieldType.Date => typeof(DateTime?),
@@ -132,14 +137,16 @@ public static class FieldTypeExtensions
             FieldType.Flags => typeof(byte[]),
             _ => typeof(object),
         };
+    }
 
     /// <summary>
     /// Determines if this field type supports null values
     /// </summary>
     /// <param name="fieldType">The field type</param>
     /// <returns>True if the field type can contain null values</returns>
-    public static bool SupportsNull(this FieldType fieldType) =>
-        fieldType switch
+    public static bool SupportsNull(this FieldType fieldType)
+    {
+        return fieldType switch
         {
             FieldType.Integer => false,
             FieldType.Currency => false,
@@ -147,6 +154,7 @@ public static class FieldTypeExtensions
             FieldType.Autoincrement => false,
             _ => true,
         };
+    }
 
     /// <summary>
     /// Converts a raw byte value to a FieldType enum value
@@ -167,5 +175,8 @@ public static class FieldTypeExtensions
     /// </summary>
     /// <param name="c">The character representing the field type</param>
     /// <returns>The corresponding FieldType, or null if not recognized</returns>
-    public static FieldType? FromChar(char c) => FromByte((byte)c);
+    public static FieldType? FromChar(char c)
+    {
+        return FromByte((byte)c);
+    }
 }

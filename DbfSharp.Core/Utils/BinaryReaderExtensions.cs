@@ -20,10 +20,7 @@ public static class BinaryReaderExtensions
     public static T ReadStruct<T>(this BinaryReader reader)
         where T : struct
     {
-        if (reader == null)
-        {
-            throw new ArgumentNullException(nameof(reader));
-        }
+        ArgumentNullException.ThrowIfNull(reader);
 
         var size = Marshal.SizeOf<T>();
         var bytes = reader.ReadBytes(size);
@@ -58,15 +55,8 @@ public static class BinaryReaderExtensions
     public static T[] ReadStructArray<T>(this BinaryReader reader, int count)
         where T : struct
     {
-        if (reader == null)
-        {
-            throw new ArgumentNullException(nameof(reader));
-        }
-
-        if (count < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(count));
-        }
+        ArgumentNullException.ThrowIfNull(reader);
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
 
         var result = new T[count];
         var size = Marshal.SizeOf<T>();
@@ -115,20 +105,9 @@ public static class BinaryReaderExtensions
         System.Text.Encoding encoding
     )
     {
-        if (reader == null)
-        {
-            throw new ArgumentNullException(nameof(reader));
-        }
-
-        if (encoding == null)
-        {
-            throw new ArgumentNullException(nameof(encoding));
-        }
-
-        if (maxLength < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(maxLength));
-        }
+        ArgumentNullException.ThrowIfNull(reader);
+        ArgumentNullException.ThrowIfNull(encoding);
+        ArgumentOutOfRangeException.ThrowIfNegative(maxLength);
 
         var bytes = reader.ReadBytes(maxLength);
         var nullIndex = Array.IndexOf(bytes, (byte)0);
@@ -157,20 +136,9 @@ public static class BinaryReaderExtensions
         byte[]? trimChars = null
     )
     {
-        if (reader == null)
-        {
-            throw new ArgumentNullException(nameof(reader));
-        }
-
-        if (encoding == null)
-        {
-            throw new ArgumentNullException(nameof(encoding));
-        }
-
-        if (length < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(length));
-        }
+        ArgumentNullException.ThrowIfNull(reader);
+        ArgumentNullException.ThrowIfNull(encoding);
+        ArgumentOutOfRangeException.ThrowIfNegative(length);
 
         if (length == 0)
         {
@@ -208,15 +176,8 @@ public static class BinaryReaderExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Skip(this BinaryReader reader, int count)
     {
-        if (reader == null)
-        {
-            throw new ArgumentNullException(nameof(reader));
-        }
-
-        if (count < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(count));
-        }
+        ArgumentNullException.ThrowIfNull(reader);
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
 
         if (count == 0)
         {
@@ -257,10 +218,7 @@ public static class BinaryReaderExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int PeekByte(this BinaryReader reader)
     {
-        if (reader == null)
-        {
-            throw new ArgumentNullException(nameof(reader));
-        }
+        ArgumentNullException.ThrowIfNull(reader);
 
         if (!reader.BaseStream.CanSeek)
         {
@@ -287,10 +245,7 @@ public static class BinaryReaderExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int Read(this BinaryReader reader, Span<byte> buffer)
     {
-        if (reader == null)
-        {
-            throw new ArgumentNullException(nameof(reader));
-        }
+        ArgumentNullException.ThrowIfNull(reader);
 
         return reader.BaseStream.Read(buffer);
     }
@@ -304,10 +259,7 @@ public static class BinaryReaderExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ReadExactly(this BinaryReader reader, Span<byte> buffer)
     {
-        if (reader == null)
-        {
-            throw new ArgumentNullException(nameof(reader));
-        }
+        ArgumentNullException.ThrowIfNull(reader);
 
         var totalRead = 0;
         while (totalRead < buffer.Length)
@@ -331,10 +283,7 @@ public static class BinaryReaderExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static long ReadLittleEndianInteger(this BinaryReader reader, int size)
     {
-        if (reader == null)
-        {
-            throw new ArgumentNullException(nameof(reader));
-        }
+        ArgumentNullException.ThrowIfNull(reader);
 
         return size switch
         {
@@ -355,10 +304,7 @@ public static class BinaryReaderExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static long ReadBigEndianInteger(this BinaryReader reader, int size)
     {
-        if (reader == null)
-        {
-            throw new ArgumentNullException(nameof(reader));
-        }
+        ArgumentNullException.ThrowIfNull(reader);
 
         return size switch
         {

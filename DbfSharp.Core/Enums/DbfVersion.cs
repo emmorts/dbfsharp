@@ -59,8 +59,9 @@ public static class DbfVersionExtensions
     /// </summary>
     /// <param name="version">The DBF version</param>
     /// <returns>A descriptive string</returns>
-    public static string GetDescription(this DbfVersion version) =>
-        version switch
+    public static string GetDescription(this DbfVersion version)
+    {
+        return version switch
         {
             DbfVersion.DBase2 => "dBASE II / FoxBASE",
             DbfVersion.DBase3Plus => "FoxBASE+/dBase III plus, no memory",
@@ -77,14 +78,16 @@ public static class DbfVersionExtensions
             DbfVersion.FoxBaseLegacy => "FoxBASE",
             _ => $"Unknown (0x{(byte)version:X2})",
         };
+    }
 
     /// <summary>
     /// Determines if this DBF version supports memo fields
     /// </summary>
     /// <param name="version">The DBF version</param>
     /// <returns>True if memo fields are supported</returns>
-    public static bool SupportsMemoFields(this DbfVersion version) =>
-        version switch
+    public static bool SupportsMemoFields(this DbfVersion version)
+    {
+        return version switch
         {
             DbfVersion.DBase3PlusWithMemo => true,
             DbfVersion.DBase4WithMemo => true,
@@ -96,34 +99,39 @@ public static class DbfVersionExtensions
             DbfVersion.VisualFoxProVarchar => true,
             _ => false,
         };
+    }
 
     /// <summary>
     /// Determines if this is a Visual FoxPro version
     /// </summary>
     /// <param name="version">The DBF version</param>
     /// <returns>True if this is a Visual FoxPro version</returns>
-    public static bool IsVisualFoxPro(this DbfVersion version) =>
-        version switch
+    public static bool IsVisualFoxPro(this DbfVersion version)
+    {
+        return version switch
         {
             DbfVersion.VisualFoxPro => true,
             DbfVersion.VisualFoxProAutoIncrement => true,
             DbfVersion.VisualFoxProVarchar => true,
             _ => false,
         };
+    }
 
     /// <summary>
     /// Determines if this is an older DBF format (dBASE II/III era)
     /// </summary>
     /// <param name="version">The DBF version</param>
     /// <returns>True if this is an older format</returns>
-    public static bool IsLegacyFormat(this DbfVersion version) =>
-        version switch
+    public static bool IsLegacyFormat(this DbfVersion version)
+    {
+        return version switch
         {
             DbfVersion.DBase2 => true,
             DbfVersion.DBase3Plus => true,
             DbfVersion.DBase3PlusWithMemo => true,
             _ => false,
         };
+    }
 
     /// <summary>
     /// Converts a raw byte value to a DbfVersion enum value
