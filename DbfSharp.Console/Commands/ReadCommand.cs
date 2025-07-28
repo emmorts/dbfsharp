@@ -96,26 +96,22 @@ public sealed class ReadCommand : AsyncCommand<ReadSettings>
         string? tempFilePath = null;
         try
         {
-            var (filePath, isTemporary) = await StdinHelper.ResolveFilePathAsync(settings.FilePath);
-            if (isTemporary)
-            {
-                tempFilePath = filePath;
-            }
+            using var inputSource = await StdinHelper.ResolveInputSourceAsync(settings.FilePath);
 
             if (!settings.Quiet)
             {
-                var source = isTemporary ? "stdin" : filePath;
+                var source = inputSource.IsStdin ? "stdin" : inputSource.OriginalPath;
                 AnsiConsole.MarkupLine($"[blue]Reading DBF file:[/] {source}");
             }
 
-            using var reader = await CreateDbfReaderAsync(settings, filePath);
+            using var reader = await CreateDbfReaderAsync(inputSource.Stream, settings);
 
             if (settings is { Verbose: true, Quiet: false })
             {
                 DisplayFileInfo(reader);
             }
 
-            var records = GetRecordsToDisplay(reader, settings);
+            var records = await GetRecordsToDisplayAsync(reader, settings);
             var fieldsToDisplay = GetFieldsToDisplay(settings, reader);
 
             if (FormatterFactory.RequiresFileOutput(settings.Format) && settings.OutputPath == null)
@@ -148,8 +144,8 @@ public sealed class ReadCommand : AsyncCommand<ReadSettings>
     /// Creates and configures the DBF reader with optimal settings
     /// </summary>
     private static async Task<DbfReader> CreateDbfReaderAsync(
-        ReadSettings settings,
-        string filePath
+        Stream stream,
+        ReadSettings settings
     )
     {
         var readerOptions = new DbfReaderOptions
@@ -159,11 +155,12 @@ public sealed class ReadCommand : AsyncCommand<ReadSettings>
             IgnoreMissingMemoFile = settings.IgnoreMissingMemo,
             ValidateFields = false,
             CharacterDecodeFallback = null,
+            SkipDeletedRecords = !settings.ShowDeleted,
         };
 
         if (string.IsNullOrEmpty(settings.Encoding))
         {
-            return await DbfReader.OpenAsync(filePath, readerOptions);
+            return await DbfReader.OpenAsync(stream, readerOptions);
         }
 
         var encoding = TryGetEncoding(settings.Encoding);
@@ -181,7 +178,7 @@ public sealed class ReadCommand : AsyncCommand<ReadSettings>
             }
         }
 
-        return await DbfReader.OpenAsync(filePath, readerOptions);
+        return await DbfReader.OpenAsync(stream, readerOptions);
     }
 
     /// <summary>
@@ -200,25 +197,33 @@ public sealed class ReadCommand : AsyncCommand<ReadSettings>
     }
 
     /// <summary>
-    /// Gets the records to display based on user settings
+    /// Asynchronously gets the records to display based on user settings.
     /// </summary>
-    private static IEnumerable<DbfRecord> GetRecordsToDisplay(
+    private static async Task<List<DbfRecord>> GetRecordsToDisplayAsync(
         DbfReader reader,
         ReadSettings settings
     )
     {
-        var records = settings.ShowDeleted
-            ? reader.Records.Concat(reader.DeletedRecords)
-            : reader.Records;
+        var records = new List<DbfRecord>();
+        var recordsToEnumerate = reader.ReadRecordsAsync();
 
-        if (settings.Skip > 0)
+        var count = 0;
+        var skipped = 0;
+        await foreach (var record in recordsToEnumerate)
         {
-            records = records.Skip(settings.Skip);
-        }
+            if (skipped < settings.Skip)
+            {
+                skipped++;
+                continue;
+            }
 
-        if (settings.Limit.HasValue)
-        {
-            records = records.Take(settings.Limit.Value);
+            if (settings.Limit.HasValue && count >= settings.Limit.Value)
+            {
+                break;
+            }
+
+            records.Add(record);
+            count++;
         }
 
         return records;

@@ -68,22 +68,18 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
         string? tempFilePath = null;
         try
         {
-            var (filePath, isTemporary) = await StdinHelper.ResolveFilePathAsync(settings.FilePath);
-            if (isTemporary)
-            {
-                tempFilePath = filePath;
-            }
+            using var inputSource = await StdinHelper.ResolveInputSourceAsync(settings.FilePath);
 
             if (!settings.Quiet)
             {
-                var source = isTemporary ? "stdin" : filePath;
+                var source = inputSource.IsStdin ? "stdin" : inputSource.OriginalPath;
                 AnsiConsole.MarkupLine($"[blue]Analyzing DBF file:[/] {source}");
                 AnsiConsole.WriteLine();
             }
 
             var readerOptions = CreateDbfReaderOptions(settings);
 
-            using var reader = await DbfReader.OpenAsync(filePath, readerOptions);
+            using var reader = await DbfReader.OpenAsync(inputSource.Stream, readerOptions);
             var stats = reader.GetStatistics();
 
             DisplayFileOverview(reader, stats);
