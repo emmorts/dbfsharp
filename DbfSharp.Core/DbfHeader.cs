@@ -1,3 +1,5 @@
+using System.Buffers;
+using System.IO.Pipelines;
 using System.Runtime.InteropServices;
 using System.Text;
 using DbfSharp.Core.Enums;
@@ -22,7 +24,7 @@ public readonly struct DbfHeader
     public readonly byte DbVersionByte;
 
     /// <summary>
-    /// Year of last update (2-digit, add 1900 for years >= 80, add 2000 for years < 80)
+    /// Year of last update (2-digit, add 1900 for years >= 80, add 2000 for years &lt; 80)
     /// </summary>
     public readonly byte Year;
 
@@ -211,6 +213,44 @@ public readonly struct DbfHeader
     }
 
     /// <summary>
+    /// Asynchronously reads a DBF header from a PipeReader
+    /// </summary>
+    /// <param name="pipeReader">PipeReader positioned at the start of the file</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The parsed DBF header</returns>
+    /// <exception cref="EndOfStreamException">
+    /// Thrown when the PipeReader doesn't contain enough data
+    /// </exception>
+    public static async ValueTask<DbfHeader> ReadAsync(
+        PipeReader pipeReader,
+        CancellationToken cancellationToken = default
+    )
+    {
+        while (true)
+        {
+            var result = await pipeReader.ReadAsync(cancellationToken);
+            var buffer = result.Buffer;
+
+            if (buffer.Length >= Size)
+            {
+                var headerSequence = buffer.Slice(0, Size);
+                var header = FromBytes(headerSequence.IsSingleSegment ? headerSequence.FirstSpan : headerSequence.ToArray());
+                pipeReader.AdvanceTo(headerSequence.End);
+                return header;
+            }
+
+            if (result.IsCompleted)
+            {
+                break;
+            }
+
+            pipeReader.AdvanceTo(buffer.Start, buffer.End);
+        }
+
+        throw new EndOfStreamException($"Expected {Size} bytes for DBF header, but stream ended.");
+    }
+
+    /// <summary>
     /// Asynchronously reads a DBF header from a stream
     /// </summary>
     /// <param name="stream">The stream positioned at the start of the file</param>
@@ -218,15 +258,12 @@ public readonly struct DbfHeader
     /// <returns>The parsed DBF header</returns>
     /// <exception cref="ArgumentNullException">Thrown when stream is null</exception>
     /// <exception cref="EndOfStreamException">Thrown when the stream doesn't contain enough data</exception>
-    public static async Task<DbfHeader> ReadAsync(
+    public static async ValueTask<DbfHeader> ReadAsync(
         Stream stream,
         CancellationToken cancellationToken = default
     )
     {
-        if (stream == null)
-        {
-            throw new ArgumentNullException(nameof(stream));
-        }
+        ArgumentNullException.ThrowIfNull(stream);
 
         var headerBytes = new byte[Size];
         await stream.ReadExactlyAsync(headerBytes, cancellationToken);
@@ -243,10 +280,7 @@ public readonly struct DbfHeader
     /// <exception cref="EndOfStreamException">Thrown when the stream doesn't contain enough data</exception>
     public static DbfHeader Read(BinaryReader reader)
     {
-        if (reader == null)
-        {
-            throw new ArgumentNullException(nameof(reader));
-        }
+        ArgumentNullException.ThrowIfNull(reader);
 
         var headerBytes = reader.ReadBytes(Size);
         if (headerBytes.Length != Size)
@@ -259,13 +293,7 @@ public readonly struct DbfHeader
         return FromBytes(headerBytes);
     }
 
-    /// <summary>
-    /// Creates a DBF header from a byte array
-    /// </summary>
-    /// <param name="bytes">The byte array containing the header data</param>
-    /// <returns>The parsed DBF header</returns>
-    /// <exception cref="ArgumentException">Thrown when the byte array is not the correct size</exception>
-    public static DbfHeader FromBytes(ReadOnlySpan<byte> bytes)
+    private static DbfHeader FromBytes(ReadOnlySpan<byte> bytes)
     {
         if (bytes.Length != Size)
         {

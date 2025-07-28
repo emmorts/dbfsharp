@@ -281,7 +281,10 @@ public readonly struct DbfRecord : IEnumerable<KeyValuePair<string, object?>>
     /// Gets an enumerator for the field name-value pairs
     /// </summary>
     /// <returns>An enumerator of key-value pairs</returns>
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 
     /// <summary>
     /// Gets the field index for a given field name
