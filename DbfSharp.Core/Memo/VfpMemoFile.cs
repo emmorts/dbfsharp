@@ -1,3 +1,5 @@
+using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace DbfSharp.Core.Memo;
@@ -8,39 +10,58 @@ namespace DbfSharp.Core.Memo;
 /// </summary>
 public sealed class VfpMemoFile : IMemoFile
 {
-    private readonly FileStream _fileStream;
-    private readonly BinaryReader _reader;
+    private const int HeaderSize = 512; // VFP memo file header is always 512 bytes
+    private const int BlockHeaderSize = 8; // Block header is 8 bytes (type + length)
+    private const int DefaultBlockSize = 64;
+    private const int SmallMemoThreshold = 4096;
+
+    private readonly FileStream? _fileStream;
     private readonly VfpMemoHeader _header;
     private readonly DbfReaderOptions _options;
+    private readonly Lock _lockObject = new();
     private bool _disposed;
 
     /// <summary>
     /// Visual FoxPro memo file header structure
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    private readonly struct VfpMemoHeader(
-        uint nextBlock,
-        ushort reserved1,
-        ushort blockSize,
-        uint reserved2
-    )
+    private readonly struct VfpMemoHeader(uint nextBlock, ushort reserved1, ushort blockSize, uint reserved2)
     {
         public readonly uint NextBlock = nextBlock; // Next available block
         public readonly ushort Reserved1 = reserved1; // Reserved
         public readonly ushort BlockSize = blockSize; // Size of each block
-        public readonly uint Reserved2 = reserved2; // Reserved (504 bytes total)
+        public readonly uint Reserved2 = reserved2; // Reserved (remaining bytes)
 
-        public static VfpMemoHeader Read(BinaryReader reader)
+        /// <summary>
+        /// Reads a VFP memo header from the given span
+        /// </summary>
+        /// <param name="data">Span containing at least 512 bytes</param>
+        /// <returns>The parsed header</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static VfpMemoHeader ReadFromSpan(ReadOnlySpan<byte> data)
         {
-            var nextBlock = reader.ReadUInt32();
-            var reserved1 = reader.ReadUInt16();
-            var blockSize = reader.ReadUInt16();
+            if (data.Length < HeaderSize)
+            {
+                throw new ArgumentException($"Insufficient data for memo header, need {HeaderSize} bytes",
+                    nameof(data));
+            }
 
-            // Skip the remaining 504 bytes of reserved space
-            reader.BaseStream.Seek(504, SeekOrigin.Current);
+            var nextBlock = MemoryMarshal.Read<uint>(data);
+            var reserved1 = MemoryMarshal.Read<ushort>(data[4..]);
+            var blockSize = MemoryMarshal.Read<ushort>(data[6..]);
 
             return new VfpMemoHeader(nextBlock, reserved1, blockSize, 0);
         }
+
+        /// <summary>
+        /// Gets whether this header appears to be valid
+        /// </summary>
+        public bool IsValid => BlockSize > 0;
+
+        /// <summary>
+        /// Gets the actual block size, using default if header value is invalid
+        /// </summary>
+        public int EffectiveBlockSize => BlockSize > 0 ? BlockSize : DefaultBlockSize;
     }
 
     /// <summary>
@@ -52,12 +73,35 @@ public sealed class VfpMemoFile : IMemoFile
         public readonly uint Type = type; // Memo type (0=Picture, 1=Text, 2=Object)
         public readonly uint Length = length; // Length of memo data
 
-        public static VfpMemoBlockHeader Read(BinaryReader reader)
+        /// <summary>
+        /// Reads a memo block header from the given span
+        /// </summary>
+        /// <param name="data">Span containing at least 8 bytes</param>
+        /// <returns>The parsed block header</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static VfpMemoBlockHeader ReadFromSpan(ReadOnlySpan<byte> data)
         {
-            var type = reader.ReadUInt32();
-            var length = reader.ReadUInt32();
+            if (data.Length < BlockHeaderSize)
+            {
+                throw new ArgumentException($"Insufficient data for block header, need {BlockHeaderSize} bytes",
+                    nameof(data));
+            }
+
+            var type = MemoryMarshal.Read<uint>(data);
+            var length = MemoryMarshal.Read<uint>(data[4..]);
+
             return new VfpMemoBlockHeader(type, length);
         }
+
+        /// <summary>
+        /// Gets whether this block header appears to be valid
+        /// </summary>
+        public bool IsValid => Length is > 0 and <= int.MaxValue;
+
+        /// <summary>
+        /// Gets the memo type as an enum
+        /// </summary>
+        public MemoType MemoType => (MemoType)Type;
     }
 
     /// <summary>
@@ -78,7 +122,7 @@ public sealed class VfpMemoFile : IMemoFile
     /// <summary>
     /// Gets whether the memo file is valid and accessible
     /// </summary>
-    public bool IsValid { get; private set; }
+    public bool IsValid { get; }
 
     /// <summary>
     /// Initializes a new instance of VfpMemoFile
@@ -87,8 +131,11 @@ public sealed class VfpMemoFile : IMemoFile
     /// <param name="options">Reader options</param>
     public VfpMemoFile(string filePath, DbfReaderOptions options)
     {
-        FilePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
-        _options = options ?? throw new ArgumentNullException(nameof(options));
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+        ArgumentNullException.ThrowIfNull(options);
+
+        FilePath = filePath;
+        _options = options;
 
         try
         {
@@ -97,29 +144,57 @@ public sealed class VfpMemoFile : IMemoFile
                 FileMode.Open,
                 FileAccess.Read,
                 FileShare.Read,
-                _options.BufferSize
+                _options.BufferSize,
+                FileOptions.SequentialScan
             );
-            _reader = new BinaryReader(_fileStream);
-            _header = VfpMemoHeader.Read(_reader);
-            IsValid = true;
 
-            // Validate header
-            if (_header.BlockSize == 0)
+            _header = ReadHeaderFromFile();
+
+            if (!_header.IsValid)
             {
-                IsValid = false;
-                throw new InvalidDataException("Invalid memo file: block size is zero");
+                throw new InvalidDataException($"Invalid memo file header: block size is {_header.BlockSize}");
             }
+
+            IsValid = true;
         }
         catch (Exception ex)
         {
             IsValid = false;
             _fileStream?.Dispose();
-            _reader?.Dispose();
 
             if (!_options.IgnoreMissingMemoFile)
             {
-                throw new InvalidDataException($"Failed to open memo file: {ex.Message}", ex);
+                throw new InvalidDataException($"Failed to open memo file '{filePath}': {ex.Message}", ex);
             }
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private VfpMemoHeader ReadHeaderFromFile()
+    {
+        if (_fileStream!.Length < HeaderSize)
+        {
+            throw new InvalidDataException($"File too small for VFP memo header, need {HeaderSize} bytes");
+        }
+
+        // use ArrayPool for header reading since it's exactly 512 bytes
+        var headerBuffer = ArrayPool<byte>.Shared.Rent(HeaderSize);
+        try
+        {
+            var actualBuffer = headerBuffer.AsSpan(0, HeaderSize);
+            _fileStream.Seek(0, SeekOrigin.Begin);
+
+            var bytesRead = _fileStream.Read(actualBuffer);
+            if (bytesRead < HeaderSize)
+            {
+                throw new InvalidDataException($"Could not read complete header, got {bytesRead} bytes");
+            }
+
+            return VfpMemoHeader.ReadFromSpan(actualBuffer);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(headerBuffer);
         }
     }
 
@@ -128,52 +203,21 @@ public sealed class VfpMemoFile : IMemoFile
     /// </summary>
     /// <param name="index">The memo block index</param>
     /// <returns>The memo data, or null if not found</returns>
-    public byte[]? GetMemo(int index)
+    public MemoData? GetMemo(int index)
     {
-        if (!IsValid || index <= 0 || _disposed)
+        if (!IsValid || index <= 0)
         {
             return null;
         }
 
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
         try
         {
-            // Calculate block position
-            var blockPosition = (long)index * _header.BlockSize;
-
-            // Check if position is within file bounds
-            if (blockPosition >= _fileStream.Length)
+            lock (_lockObject)
             {
-                return null;
+                return ReadMemoInternal(index);
             }
-
-            // Seek to block position
-            _fileStream.Seek(blockPosition, SeekOrigin.Begin);
-
-            // Read memo block header
-            var blockHeader = VfpMemoBlockHeader.Read(_reader);
-
-            // Validate memo length
-            if (blockHeader.Length is 0 or > int.MaxValue)
-            {
-                return null;
-            }
-
-            // Check if we have enough data
-            var remainingBytes = _fileStream.Length - _fileStream.Position;
-            if (blockHeader.Length > remainingBytes)
-            {
-                return null;
-            }
-
-            // Read memo data
-            var memoData = _reader.ReadBytes((int)blockHeader.Length);
-            if (memoData.Length != blockHeader.Length)
-            {
-                return null;
-            }
-
-            // Return typed memo data based on memo type
-            return CreateTypedMemo(blockHeader.Type, memoData);
         }
         catch (Exception ex)
         {
@@ -189,15 +233,102 @@ public sealed class VfpMemoFile : IMemoFile
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private MemoData? ReadMemoInternal(int index)
+    {
+        var blockPosition = (long)index * _header.EffectiveBlockSize;
+        if (blockPosition + BlockHeaderSize > _fileStream!.Length)
+        {
+            return null;
+        }
+
+        _fileStream.Seek(blockPosition, SeekOrigin.Begin);
+
+        Span<byte> blockHeaderBuffer = stackalloc byte[BlockHeaderSize];
+        var headerBytesRead = _fileStream.Read(blockHeaderBuffer);
+        if (headerBytesRead < BlockHeaderSize)
+        {
+            return null;
+        }
+
+        var blockHeader = VfpMemoBlockHeader.ReadFromSpan(blockHeaderBuffer);
+
+        if (!blockHeader.IsValid)
+        {
+            return null;
+        }
+
+        var dataLength = (int)blockHeader.Length;
+
+        var remainingFileLength = _fileStream.Length - _fileStream.Position;
+        if (dataLength <= remainingFileLength)
+        {
+            return dataLength <= SmallMemoThreshold
+                ? ReadSmallMemo(blockHeader.MemoType, dataLength)
+                : ReadLargeMemo(blockHeader.MemoType, dataLength);
+        }
+
+        if (_options.ValidateFields)
+        {
+            throw new InvalidDataException(
+                $"Memo at index {index} claims length {dataLength} but only {remainingFileLength} bytes remain in file");
+        }
+
+        return null;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private MemoData? ReadSmallMemo(MemoType memoType, int dataLength)
+    {
+        Span<byte> buffer = stackalloc byte[dataLength];
+        var bytesRead = _fileStream!.Read(buffer);
+
+        if (bytesRead != dataLength)
+        {
+            return null;
+        }
+
+        var result = new byte[dataLength];
+        buffer.CopyTo(result);
+
+        return CreateTypedMemo(memoType, new ReadOnlyMemory<byte>(result));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private MemoData? ReadLargeMemo(MemoType memoType, int dataLength)
+    {
+        var buffer = ArrayPool<byte>.Shared.Rent(dataLength);
+        try
+        {
+            var actualBuffer = buffer.AsSpan(0, dataLength);
+            var bytesRead = _fileStream!.Read(actualBuffer);
+
+            if (bytesRead != dataLength)
+            {
+                return null;
+            }
+
+            var result = new byte[dataLength];
+            actualBuffer.CopyTo(result);
+
+            return CreateTypedMemo(memoType, new ReadOnlyMemory<byte>(result));
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
     /// <summary>
     /// Creates typed memo data based on the memo type
     /// </summary>
-    /// <param name="type">The memo type</param>
+    /// <param name="memoType">The memo type</param>
     /// <param name="data">The raw memo data</param>
     /// <returns>Typed memo data</returns>
-    private static byte[] CreateTypedMemo(uint type, byte[] data)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static MemoData CreateTypedMemo(MemoType memoType, ReadOnlyMemory<byte> data)
     {
-        return (MemoType)type switch
+        return memoType switch
         {
             MemoType.Picture => new PictureMemo(data),
             MemoType.Text => new TextMemo(data),
@@ -211,291 +342,18 @@ public sealed class VfpMemoFile : IMemoFile
     /// </summary>
     public void Dispose()
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            _reader?.Dispose();
-            _fileStream?.Dispose();
-            _disposed = true;
+            return;
         }
-    }
-}
 
-/// <summary>
-/// dBase III memo file (.DBT) reader
-/// </summary>
-public sealed class Db3MemoFile : IMemoFile
-{
-    private readonly FileStream _fileStream;
-    private readonly BinaryReader _reader;
-    private readonly DbfReaderOptions _options;
-    private bool _disposed;
-
-    /// <summary>
-    /// Gets the memo file path
-    /// </summary>
-    public string? FilePath { get; }
-
-    /// <summary>
-    /// Gets whether the memo file is valid and accessible
-    /// </summary>
-    public bool IsValid { get; private set; }
-
-    /// <summary>
-    /// Initializes a new instance of Db3MemoFile
-    /// </summary>
-    /// <param name="filePath">The path to the DBT file</param>
-    /// <param name="options">Reader options</param>
-    public Db3MemoFile(string filePath, DbfReaderOptions options)
-    {
-        FilePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
-        _options = options ?? throw new ArgumentNullException(nameof(options));
-
-        try
+        lock (_lockObject)
         {
-            _fileStream = new FileStream(
-                filePath,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.Read,
-                _options.BufferSize
-            );
-            _reader = new BinaryReader(_fileStream);
-            IsValid = true;
-        }
-        catch (Exception ex)
-        {
-            IsValid = false;
-            _fileStream?.Dispose();
-            _reader?.Dispose();
-
-            if (!_options.IgnoreMissingMemoFile)
+            if (_disposed)
             {
-                throw new InvalidDataException($"Failed to open memo file: {ex.Message}", ex);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Gets a memo by its block index
-    /// </summary>
-    /// <param name="index">The memo block index</param>
-    /// <returns>The memo data, or null if not found</returns>
-    public byte[]? GetMemo(int index)
-    {
-        if (!IsValid || index <= 0 || _disposed)
-        {
-            return null;
-        }
-
-        try
-        {
-            const int blockSize = 512;
-            var blockPosition = (long)index * blockSize;
-
-            if (blockPosition >= _fileStream.Length)
-            {
-                return null;
+                return;
             }
 
-            _fileStream.Seek(blockPosition, SeekOrigin.Begin);
-
-            var data = new List<byte>();
-            var buffer = new byte[blockSize];
-
-            while (true)
-            {
-                var bytesRead = _fileStream.Read(buffer, 0, blockSize);
-                if (bytesRead == 0)
-                {
-                    break;
-                }
-
-                // Look for memo terminator (0x1A)
-                var terminatorIndex = Array.IndexOf(buffer, (byte)0x1A, 0, bytesRead);
-                if (terminatorIndex >= 0)
-                {
-                    // Found terminator, add data up to terminator
-                    data.AddRange(buffer.Take(terminatorIndex));
-                    break;
-                }
-
-                // No terminator found, add all data and continue
-                data.AddRange(buffer.Take(bytesRead));
-            }
-
-            return data.Count > 0 ? data.ToArray() : null;
-        }
-        catch (Exception ex)
-        {
-            if (_options.ValidateFields)
-            {
-                throw new InvalidDataException(
-                    $"Failed to read memo at index {index}: {ex.Message}",
-                    ex
-                );
-            }
-
-            return null;
-        }
-    }
-
-    /// <summary>
-    /// Disposes of the memo file resources
-    /// </summary>
-    public void Dispose()
-    {
-        if (!_disposed)
-        {
-            _reader?.Dispose();
-            _fileStream?.Dispose();
-            _disposed = true;
-        }
-    }
-}
-
-/// <summary>
-/// dBase IV memo file (.DBT) reader
-/// </summary>
-public sealed class Db4MemoFile : IMemoFile
-{
-    private readonly FileStream _fileStream;
-    private readonly BinaryReader _reader;
-    private readonly DbfReaderOptions _options;
-    private bool _disposed;
-
-    /// <summary>
-    /// dBase IV memo block header
-    /// </summary>
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    private readonly struct Db4MemoHeader(uint reserved, uint length)
-    {
-        public readonly uint Reserved = reserved; // Always 0xFF 0xFF 0x08 0x08
-        public readonly uint Length = length; // Length of memo data
-
-        public static Db4MemoHeader Read(BinaryReader reader)
-        {
-            var reserved = reader.ReadUInt32();
-            var length = reader.ReadUInt32();
-            return new Db4MemoHeader(reserved, length);
-        }
-    }
-
-    /// <summary>
-    /// Gets the memo file path
-    /// </summary>
-    public string? FilePath { get; }
-
-    /// <summary>
-    /// Gets whether the memo file is valid and accessible
-    /// </summary>
-    public bool IsValid { get; private set; }
-
-    /// <summary>
-    /// Initializes a new instance of Db4MemoFile
-    /// </summary>
-    /// <param name="filePath">The path to the DBT file</param>
-    /// <param name="options">Reader options</param>
-    public Db4MemoFile(string filePath, DbfReaderOptions options)
-    {
-        FilePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
-        _options = options ?? throw new ArgumentNullException(nameof(options));
-
-        try
-        {
-            _fileStream = new FileStream(
-                filePath,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.Read,
-                _options.BufferSize
-            );
-            _reader = new BinaryReader(_fileStream);
-            IsValid = true;
-        }
-        catch (Exception ex)
-        {
-            IsValid = false;
-            _fileStream?.Dispose();
-            _reader?.Dispose();
-
-            if (!_options.IgnoreMissingMemoFile)
-            {
-                throw new InvalidDataException($"Failed to open memo file: {ex.Message}", ex);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Gets a memo by its block index
-    /// </summary>
-    /// <param name="index">The memo block index</param>
-    /// <returns>The memo data, or null if not found</returns>
-    public byte[]? GetMemo(int index)
-    {
-        if (!IsValid || index <= 0 || _disposed)
-        {
-            return null;
-        }
-
-        try
-        {
-            const int blockSize = 512;
-            var blockPosition = (long)index * blockSize;
-
-            if (blockPosition >= _fileStream.Length)
-            {
-                return null;
-            }
-
-            _fileStream.Seek(blockPosition, SeekOrigin.Begin);
-
-            // Read memo header
-            var memoHeader = Db4MemoHeader.Read(_reader);
-
-            // Validate length
-            if (memoHeader.Length is 0 or > int.MaxValue)
-            {
-                return null;
-            }
-
-            // Read memo data
-            var data = _reader.ReadBytes((int)memoHeader.Length);
-            if (data.Length != memoHeader.Length)
-            {
-                return null;
-            }
-
-            // Remove field terminators (0x1F is common in dBase IV)
-            var terminatorIndex = Array.IndexOf(data, (byte)0x1F);
-            if (terminatorIndex >= 0)
-            {
-                Array.Resize(ref data, terminatorIndex);
-            }
-
-            return data;
-        }
-        catch (Exception ex)
-        {
-            if (_options.ValidateFields)
-            {
-                throw new InvalidDataException(
-                    $"Failed to read memo at index {index}: {ex.Message}",
-                    ex
-                );
-            }
-
-            return null;
-        }
-    }
-
-    /// <summary>
-    /// Disposes of the memo file resources
-    /// </summary>
-    public void Dispose()
-    {
-        if (!_disposed)
-        {
-            _reader?.Dispose();
             _fileStream?.Dispose();
             _disposed = true;
         }
