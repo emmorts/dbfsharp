@@ -1,13 +1,9 @@
 using DbfSharp.Core;
 using DbfSharp.Core.Enums;
 using DbfSharp.Core.Exceptions;
-using System.Linq;
 
 namespace DbfSharp.Tests;
 
-/// <summary>
-/// Basic functionality tests for DbfReader
-/// </summary>
 public class DbfReaderBasicTests
 {
     [Fact]
@@ -63,7 +59,6 @@ public class DbfReaderBasicTests
         var recordCount = 0;
         foreach (var record in reader.Records)
         {
-            Assert.NotNull(record);
             Assert.Equal(reader.Fields.Count, record.FieldCount);
             recordCount++;
 
