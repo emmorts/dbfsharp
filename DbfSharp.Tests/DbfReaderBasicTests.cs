@@ -1,6 +1,7 @@
 using DbfSharp.Core;
 using DbfSharp.Core.Enums;
 using DbfSharp.Core.Exceptions;
+using System.Linq;
 
 namespace DbfSharp.Tests;
 
@@ -246,7 +247,7 @@ public class DbfReaderBasicTests
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
 
         using var reader = DbfReader.Open(filePath);
-        var firstFieldName = reader.FieldNames.First();
+        var firstFieldName = reader.FieldNames[0];
         var field = reader.FindField(firstFieldName);
 
         Assert.NotNull(field);
@@ -270,7 +271,7 @@ public class DbfReaderBasicTests
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
 
         using var reader = DbfReader.Open(filePath);
-        var firstFieldName = reader.FieldNames.First();
+        var firstFieldName = reader.FieldNames[0];
 
         Assert.True(reader.HasField(firstFieldName));
         Assert.False(reader.HasField("NON_EXISTENT_FIELD"));
@@ -361,7 +362,7 @@ public class DbfReaderBasicTests
 
         using var reader = DbfReader.Open(filePath);
         var record = reader.Records.First();
-        var firstFieldName = reader.FieldNames.First();
+        var firstFieldName = reader.FieldNames[0];
 
         var success = record.TryGetValue(firstFieldName, out var value);
         Assert.True(success);
@@ -431,7 +432,7 @@ public class DbfReaderBasicTests
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
 
         using var reader = DbfReader.Open(filePath);
-        var firstFieldName = reader.FieldNames.First();
+        var firstFieldName = reader.FieldNames[0];
         var index = reader.GetFieldIndex(firstFieldName);
 
         Assert.Equal(0, index);
