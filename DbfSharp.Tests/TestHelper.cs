@@ -16,6 +16,7 @@ public static class TestHelper
         {
             var assemblyLocation = Assembly.GetExecutingAssembly().Location;
             var directory = Path.GetDirectoryName(assemblyLocation)!;
+
             return Path.Combine(directory, "Resources");
         }
     }
@@ -173,20 +174,21 @@ public static class TestHelper
     /// <returns>Theory data containing file names</returns>
     public static TheoryData<string> GetAllValidTestFilesTheoryData()
     {
-        var theoryData = new TheoryData<string>();
-
-        theoryData.Add(TestFiles.People);
-        theoryData.Add(TestFiles.DBase02);
-        theoryData.Add(TestFiles.DBase03);
-        theoryData.Add(TestFiles.DBase03Cyrillic);
-        theoryData.Add(TestFiles.DBase30);
-        theoryData.Add(TestFiles.DBase31);
-        theoryData.Add(TestFiles.DBase32);
-        theoryData.Add(TestFiles.DBase83);
-        theoryData.Add(TestFiles.DBase83MissingMemo);
-        theoryData.Add(TestFiles.DBase8B);
-        theoryData.Add(TestFiles.DBaseF5);
-        theoryData.Add(TestFiles.Cp1251);
+        var theoryData = new TheoryData<string>
+        {
+            TestFiles.People,
+            TestFiles.DBase02,
+            TestFiles.DBase03,
+            TestFiles.DBase03Cyrillic,
+            TestFiles.DBase30,
+            TestFiles.DBase31,
+            TestFiles.DBase32,
+            TestFiles.DBase83,
+            TestFiles.DBase83MissingMemo,
+            TestFiles.DBase8B,
+            TestFiles.DBaseF5,
+            TestFiles.Cp1251
+        };
 
         return theoryData;
     }
@@ -217,16 +219,6 @@ public static class TestHelper
             || fileName.Contains("8b")
             || fileName.Contains("8c")
             || fileName.Contains("f5")
-        );
-    }
-
-    /// <summary>
-    /// Gets theory data for Visual FoxPro files
-    /// </summary>
-    public static TheoryData<string> GetVisualFoxProTestData()
-    {
-        return GetFilteredTestFilesTheoryData(fileName =>
-            fileName.Contains("30") || fileName.Contains("31") || fileName.Contains("32")
         );
     }
 }
