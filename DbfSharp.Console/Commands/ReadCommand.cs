@@ -104,7 +104,10 @@ public sealed class ReadCommand : AsyncCommand<ReadSettings>
                 AnsiConsole.MarkupLine($"[blue]Reading DBF file:[/] {source}");
             }
 
-            using var reader = await CreateDbfReaderAsync(inputSource.Stream, settings);
+            // Determine a meaningful table name for display
+            var tableName = inputSource.IsStdin ? "stdin" : Path.GetFileNameWithoutExtension(inputSource.OriginalPath);
+
+            using var reader = await CreateDbfReaderAsync(inputSource.Stream, tableName, settings);
 
             if (settings is { Verbose: true, Quiet: false })
             {
@@ -145,6 +148,7 @@ public sealed class ReadCommand : AsyncCommand<ReadSettings>
     /// </summary>
     private static async Task<DbfReader> CreateDbfReaderAsync(
         Stream stream,
+        string tableName,
         ReadSettings settings
     )
     {
@@ -160,7 +164,7 @@ public sealed class ReadCommand : AsyncCommand<ReadSettings>
 
         if (string.IsNullOrEmpty(settings.Encoding))
         {
-            return await DbfReader.OpenAsync(stream, readerOptions);
+            return await DbfReader.OpenAsync(stream, tableName, readerOptions);
         }
 
         var encoding = TryGetEncoding(settings.Encoding);
@@ -178,7 +182,7 @@ public sealed class ReadCommand : AsyncCommand<ReadSettings>
             }
         }
 
-        return await DbfReader.OpenAsync(stream, readerOptions);
+        return await DbfReader.OpenAsync(stream, tableName, readerOptions);
     }
 
     /// <summary>
