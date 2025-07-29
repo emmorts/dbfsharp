@@ -79,15 +79,20 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
 
             var readerOptions = CreateDbfReaderOptions(settings);
 
-            using var reader = await DbfReader.OpenAsync(inputSource.Stream, readerOptions);
-            var stats = reader.GetStatistics();
+            // Determine a meaningful table name for display
+            var tableName = inputSource.IsStdin ? "stdin" : Path.GetFileNameWithoutExtension(inputSource.OriginalPath);
 
-            DisplayFileOverview(reader, stats);
+            using var reader = await DbfReader.OpenAsync(inputSource.Stream, tableName, readerOptions);
+            var stats = reader.GetStatistics();
+            
+            // Calculate file size information
+            var fileSize = GetFileSize(inputSource);
+            var calculatedSize = CalculateExpectedFileSize(reader);
 
             if (settings.ShowHeader)
             {
                 AnsiConsole.WriteLine();
-                DisplayHeaderInformation(reader);
+                DisplayHeaderInformation(reader, fileSize, calculatedSize);
             }
 
             if (settings.ShowFields)
@@ -168,35 +173,11 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
         }
     }
 
-    /// <summary>
-    /// Displays a high-level overview of the file
-    /// </summary>
-    private static void DisplayFileOverview(DbfReader reader, DbfStatistics stats)
-    {
-        var panel = new Panel(
-            Align.Left(
-                new Markup(
-                    $"[bold]File:[/] {stats.TableName}\n"
-                    + $"[bold]Version:[/] {stats.DbfVersion.GetDescription()}\n"
-                    + $"[bold]Records:[/] {stats.ActiveRecords:N0} active, {stats.DeletedRecords:N0} deleted\n"
-                    + $"[bold]Fields:[/] {stats.FieldCount}\n"
-                    + $"[bold]Encoding:[/] {stats.Encoding}\n"
-                    + $"[bold]Last Updated:[/] {stats.LastUpdateDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "Unknown"}"
-                )
-            )
-        )
-        {
-            Header = new PanelHeader("[bold blue]DBF File Overview[/]"),
-            Border = BoxBorder.Rounded,
-        };
-
-        AnsiConsole.Write(panel);
-    }
 
     /// <summary>
     /// Displays detailed header information
     /// </summary>
-    private static void DisplayHeaderInformation(DbfReader reader)
+    private static void DisplayHeaderInformation(DbfReader reader, long? actualFileSize, long expectedFileSize)
     {
         var header = reader.Header;
 
@@ -263,6 +244,34 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
             $"Code: 0x{header.LanguageDriver:X2}"
         );
 
+        if (actualFileSize.HasValue)
+        {
+            table.AddRow(
+                "File Size",
+                FormatFileSize(actualFileSize.Value),
+                $"{actualFileSize.Value:N0} bytes"
+            );
+
+            var sizeDifference = actualFileSize.Value - expectedFileSize;
+            var status = sizeDifference == 0 ? "Exact match" : 
+                        sizeDifference > 0 ? $"+{FormatFileSize(sizeDifference)} larger" : 
+                        $"{FormatFileSize(-sizeDifference)} smaller";
+
+            table.AddRow(
+                "Size vs Expected",
+                status,
+                $"Expected: {FormatFileSize(expectedFileSize)}"
+            );
+        }
+        else
+        {
+            table.AddRow(
+                "Expected File Size",
+                FormatFileSize(expectedFileSize),
+                $"{expectedFileSize:N0} bytes"
+            );
+        }
+
         AnsiConsole.Write(table);
     }
 
@@ -277,14 +286,13 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
 
         table.AddColumn("#", col => col.Width(3).RightAligned());
         table.AddColumn("Name", col => col.Width(15));
-        table.AddColumn("Type", col => col.Width(12));
+        table.AddColumn("Type", col => col.Width(15));
         table.AddColumn("Length", col => col.Width(8).RightAligned());
         table.AddColumn("Decimals", col => col.Width(8).RightAligned());
         table.AddColumn(".NET Type", col => col.Width(15));
 
         if (verbose)
         {
-            table.AddColumn("Address", col => col.Width(10).RightAligned());
             table.AddColumn("Flags", col => col.Width(8));
         }
 
@@ -307,8 +315,6 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
 
             if (verbose)
             {
-                row.Add($"0x{field.Address:X8}");
-
                 var flags = new List<string>();
                 if (field.UsesMemoFile)
                 {
@@ -333,21 +339,6 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
         }
 
         AnsiConsole.Write(table);
-
-        var typeGroups = reader.Fields.GroupBy(f => f.Type).OrderBy(g => g.Key.ToString()).ToList();
-
-        if (typeGroups.Count > 1)
-        {
-            AnsiConsole.WriteLine();
-            var typePanel = new Panel(
-                string.Join(" • ", typeGroups.Select(g => $"[bold]{g.Key}[/]: {g.Count()}"))
-            )
-            {
-                Header = new PanelHeader("[dim]Field Type Summary[/]"),
-                Border = BoxBorder.None,
-            };
-            AnsiConsole.Write(typePanel);
-        }
     }
 
     /// <summary>
@@ -483,6 +474,57 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
         }
 
         return GetSimpleTypeName(type);
+    }
+
+    /// <summary>
+    /// Gets the file size in bytes, handling both file streams and stdin
+    /// </summary>
+    private static long? GetFileSize(InputSourceResult inputSource)
+    {
+        try
+        {
+            if (inputSource.IsStdin && inputSource.TempFilePath != null)
+            {
+                return new FileInfo(inputSource.TempFilePath).Length;
+            }
+            else if (!inputSource.IsStdin && inputSource.Stream.CanSeek)
+            {
+                return inputSource.Stream.Length;
+            }
+        }
+        catch
+        {
+            // Ignore errors getting file size
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Calculates the expected file size based on header and record information
+    /// </summary>
+    private static long CalculateExpectedFileSize(DbfReader reader)
+    {
+        var header = reader.Header;
+        return header.HeaderLength + (header.RecordLength * header.NumberOfRecords);
+    }
+
+    /// <summary>
+    /// Formats a file size in bytes to a human-readable string
+    /// </summary>
+    private static string FormatFileSize(long bytes)
+    {
+        const double kb = 1024;
+        const double mb = kb * 1024;
+        const double gb = mb * 1024;
+
+        if (bytes >= gb)
+            return $"{bytes / gb:F2} GB";
+        if (bytes >= mb)
+            return $"{bytes / mb:F2} MB";
+        if (bytes >= kb)
+            return $"{bytes / kb:F2} KB";
+        
+        return $"{bytes} bytes";
     }
 
     /// <summary>
