@@ -67,6 +67,8 @@ public sealed class DbfReader : IDisposable, IEnumerable<DbfRecord>
     private DbfRecord[]? _loadedDeletedRecords;
     private bool _disposed;
 
+    private const int StackAllocThreshold = 256;
+
     /// <summary>
     /// Gets the DBF file header containing structural metadata and format information.
     /// </summary>
@@ -387,7 +389,14 @@ public sealed class DbfReader : IDisposable, IEnumerable<DbfRecord>
     public static async Task<DbfReader> OpenAsync(Stream stream, DbfReaderOptions? options = null,
         CancellationToken cancellationToken = default)
     {
+        return await OpenAsync(stream, "Unknown", options, cancellationToken);
+    }
+
+    public static async Task<DbfReader> OpenAsync(Stream stream, string tableName, DbfReaderOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
         ArgumentNullException.ThrowIfNull(stream);
+        ArgumentNullException.ThrowIfNull(tableName);
 
         if (!stream.CanRead)
         {
@@ -396,7 +405,7 @@ public sealed class DbfReader : IDisposable, IEnumerable<DbfRecord>
 
         options ??= new DbfReaderOptions();
 
-        return await CreateFromStreamAsync(stream, false, options, "Unknown", null, cancellationToken);
+        return await CreateFromStreamAsync(stream, false, options, tableName, null, cancellationToken);
     }
 
     private static DbfReader CreateFromStream(Stream stream, bool ownsStream, DbfReaderOptions options,
@@ -977,7 +986,7 @@ public sealed class DbfReader : IDisposable, IEnumerable<DbfRecord>
 
         if (_pipeReader == null)
         {
-            // Fallback to old stream-based logic if not opened with pipeline
+            // fallback to old stream-based logic if not opened with pipeline
             if (_stream.CanSeek)
             {
                 _stream.Position = Header.HeaderLength;
@@ -1017,7 +1026,9 @@ public sealed class DbfReader : IDisposable, IEnumerable<DbfRecord>
                 {
                     buffer = buffer.Slice(1);
                     if (buffer.Length < recordLength)
+                    {
                         break;
+                    }
                 }
 
                 var recordSequence = buffer.Slice(0, recordLength);
@@ -1029,7 +1040,6 @@ public sealed class DbfReader : IDisposable, IEnumerable<DbfRecord>
                 }
 
 
-                // Use the byte array version directly to avoid sequence issues
                 var recordBytes = recordSequence.ToArray();
                 yield return ParseRecord(recordBytes);
                 recordsRead++;
@@ -1050,7 +1060,6 @@ public sealed class DbfReader : IDisposable, IEnumerable<DbfRecord>
     {
         var isDeleted = recordSequence.FirstSpan[0] == '*';
         var fieldValues = new object?[Fields.Count];
-
         var dataSequence = recordSequence.Slice(1);
 
         for (var fieldIndex = 0; fieldIndex < Fields.Count; fieldIndex++)
@@ -1069,9 +1078,7 @@ public sealed class DbfReader : IDisposable, IEnumerable<DbfRecord>
 
             try
             {
-                // Always convert to byte array to ensure consistent behavior
-                var fieldBytes = fieldDataSequence.ToArray();
-                fieldValues[fieldIndex] = _fieldParser.Parse(field, fieldBytes.AsSpan(), _memoFile, Encoding, _options);
+                fieldValues[fieldIndex] = ParseFieldFromSequence(field, fieldDataSequence);
             }
             catch (Exception ex)
             {
@@ -1090,6 +1097,33 @@ public sealed class DbfReader : IDisposable, IEnumerable<DbfRecord>
         var record = new DbfRecord(this, fieldValues);
 
         return (record, isDeleted);
+    }
+
+    private object? ParseFieldFromSequence(DbfField field, in ReadOnlySequence<byte> sequence)
+    {
+        if (sequence.IsSingleSegment)
+        {
+            return _fieldParser.Parse(field, sequence.FirstSpan, _memoFile, Encoding, _options);
+        }
+
+        var length = (int)sequence.Length;
+        byte[]? rentedBuffer = null;
+        try
+        {
+            var span = length <= StackAllocThreshold
+                ? stackalloc byte[length]
+                : rentedBuffer = ArrayPool<byte>.Shared.Rent(length);
+
+            sequence.CopyTo(span);
+            return _fieldParser.Parse(field, span[..length], _memoFile, Encoding, _options);
+        }
+        finally
+        {
+            if (rentedBuffer != null)
+            {
+                ArrayPool<byte>.Shared.Return(rentedBuffer);
+            }
+        }
     }
 
     private (DbfRecord Record, bool IsDeleted) ParseRecord(byte[] recordBuffer)
