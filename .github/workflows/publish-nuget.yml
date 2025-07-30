@@ -11,43 +11,33 @@ permissions:
 jobs:
   publish-nuget:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '9.0.x'
-        
-    - name: Extract version from tag
-      id: get_version
-      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-      
-    - name: Update package version
-      shell: bash
-      run: |
-        sed -i 's|<Version>.*</Version>|<Version>${{ steps.get_version.outputs.VERSION }}</Version>|' DbfSharp.Console/DbfSharp.Console.csproj
-        sed -i 's|<Version>.*</Version>|<Version>${{ steps.get_version.outputs.VERSION }}</Version>|' DbfSharp.Core/DbfSharp.Core.csproj
-        
+
     - name: Restore dependencies
       run: dotnet restore
-      
+
     - name: Build solution
       run: dotnet build --configuration Release --no-restore
-      
+
     - name: Run tests
       run: dotnet test --configuration Release --no-build --verbosity normal
-      
+
     - name: Pack NuGet packages
       run: |
         dotnet pack DbfSharp.Console/DbfSharp.Console.csproj --configuration Release --no-build --output ./artifacts
         dotnet pack DbfSharp.Core/DbfSharp.Core.csproj --configuration Release --no-build --output ./artifacts
-      
+
     - name: Publish to NuGet
       run: dotnet nuget push ./artifacts/*.nupkg --api-key ${{ secrets.NUGET_APIKEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
-      
+
   build-executables:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -71,33 +61,22 @@ jobs:
           - os: macos-latest
             rid: osx-arm64
             artifact-name: dbfsharp-osx-arm64
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '9.0.x'
-        
-    - name: Extract version from tag
-      id: get_version
-      shell: bash
-      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-      
-    - name: Update package version
-      shell: bash
-      run: |
-        sed -i 's|<Version>.*</Version>|<Version>${{ steps.get_version.outputs.VERSION }}</Version>|' DbfSharp.Console/DbfSharp.Console.csproj
-        sed -i 's|<Version>.*</Version>|<Version>${{ steps.get_version.outputs.VERSION }}</Version>|' DbfSharp.Core/DbfSharp.Core.csproj
-        
+
     - name: Restore dependencies
       run: dotnet restore
-      
+
     - name: Publish self-contained executable
       run: dotnet publish DbfSharp.Console/DbfSharp.Console.csproj --configuration Release --runtime ${{ matrix.rid }} --self-contained true --output ./publish/${{ matrix.artifact-name }}
-      
+
     - name: Create archive
       shell: bash
       run: |
@@ -107,7 +86,7 @@ jobs:
         else
           tar -czf ${{ matrix.artifact-name }}.tar.gz ${{ matrix.artifact-name }}
         fi
-        
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -117,17 +96,17 @@ jobs:
   create-release:
     needs: [publish-nuget, build-executables]
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Extract version from tag
       id: get_version
       run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-      
+
     - name: Download all artifacts
       uses: actions/download-artifact@v4
       with:
         path: ./release-artifacts
-        
+
     - name: Create GitHub Release
       uses: ncipollo/release-action@v1
       with:
