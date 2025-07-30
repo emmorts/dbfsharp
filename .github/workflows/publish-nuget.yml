@@ -26,9 +26,10 @@ jobs:
       run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
       
     - name: Update package version
+      shell: bash
       run: |
-        sed -i "s/<Version>.*<\/Version>/<Version>${{ steps.get_version.outputs.VERSION }}<\/Version>/" DbfSharp.Console/DbfSharp.Console.csproj
-        sed -i "s/<Version>.*<\/Version>/<Version>${{ steps.get_version.outputs.VERSION }}<\/Version>/" DbfSharp.Core/DbfSharp.Core.csproj
+        sed -i 's|<Version>.*</Version>|<Version>${{ steps.get_version.outputs.VERSION }}</Version>|' DbfSharp.Console/DbfSharp.Console.csproj
+        sed -i 's|<Version>.*</Version>|<Version>${{ steps.get_version.outputs.VERSION }}</Version>|' DbfSharp.Core/DbfSharp.Core.csproj
         
     - name: Restore dependencies
       run: dotnet restore
@@ -88,8 +89,8 @@ jobs:
     - name: Update package version
       shell: bash
       run: |
-        sed -i "s/<Version>.*<\/Version>/<Version>${{ steps.get_version.outputs.VERSION }}<\/Version>/" DbfSharp.Console/DbfSharp.Console.csproj
-        sed -i "s/<Version>.*<\/Version>/<Version>${{ steps.get_version.outputs.VERSION }}<\/Version>/" DbfSharp.Core/DbfSharp.Core.csproj
+        sed -i 's|<Version>.*</Version>|<Version>${{ steps.get_version.outputs.VERSION }}</Version>|' DbfSharp.Console/DbfSharp.Console.csproj
+        sed -i 's|<Version>.*</Version>|<Version>${{ steps.get_version.outputs.VERSION }}</Version>|' DbfSharp.Core/DbfSharp.Core.csproj
         
     - name: Restore dependencies
       run: dotnet restore
