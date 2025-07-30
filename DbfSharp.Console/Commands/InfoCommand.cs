@@ -84,7 +84,7 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
 
             using var reader = await DbfReader.OpenAsync(inputSource.Stream, tableName, readerOptions);
             var stats = reader.GetStatistics();
-            
+
             // Calculate file size information
             var fileSize = GetFileSize(inputSource);
             var calculatedSize = CalculateExpectedFileSize(reader);
@@ -191,7 +191,7 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
 
         table.AddRow(
             "DBF Version",
-            header.DbfVersion.GetDescription(),
+            EscapeMarkup(header.DbfVersion.GetDescription()),
             $"Byte: 0x{header.DbVersionByte:X2}"
         );
 
@@ -240,7 +240,7 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
 
         table.AddRow(
             "Language Driver",
-            header.EncodingDescription,
+            EscapeMarkup(header.EncodingDescription),
             $"Code: 0x{header.LanguageDriver:X2}"
         );
 
@@ -253,8 +253,8 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
             );
 
             var sizeDifference = actualFileSize.Value - expectedFileSize;
-            var status = sizeDifference == 0 ? "Exact match" : 
-                        sizeDifference > 0 ? $"+{FormatFileSize(sizeDifference)} larger" : 
+            var status = sizeDifference == 0 ? "Exact match" :
+                        sizeDifference > 0 ? $"+{FormatFileSize(sizeDifference)} larger" :
                         $"{FormatFileSize(-sizeDifference)} smaller";
 
             table.AddRow(
@@ -289,7 +289,6 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
         table.AddColumn("Type", col => col.Width(15));
         table.AddColumn("Length", col => col.Width(8).RightAligned());
         table.AddColumn("Decimals", col => col.Width(8).RightAligned());
-        table.AddColumn(".NET Type", col => col.Width(15));
 
         if (verbose)
         {
@@ -299,18 +298,15 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
         var fieldIndex = 1;
         foreach (var field in reader.Fields)
         {
-            var netType = GetFriendlyTypeName(field.ExpectedNetType, field.SupportsNull);
-
             var row = new List<string>
             {
                 fieldIndex.ToString(),
-                field.Name,
-                $"{field.Type} ({(char)field.Type})",
+                EscapeMarkup(field.Name),
+                EscapeMarkup($"{field.Type} ({(char)field.Type})"),
                 field.ActualLength.ToString(),
                 field.Type is FieldType.Numeric or FieldType.Float
                     ? field.ActualDecimalCount.ToString()
-                    : "-",
-                netType,
+                    : "-"
             };
 
             if (verbose)
@@ -397,7 +393,7 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
         var fieldsToShow = reader.FieldNames.Take(5).ToArray();
         foreach (var fieldName in fieldsToShow)
         {
-            table.AddColumn(fieldName);
+            table.AddColumn(EscapeMarkup(fieldName));
         }
 
         if (reader.FieldNames.Count > 5)
@@ -448,32 +444,10 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
         )
         {
             Header = new PanelHeader("[bold blue]Memo File Information[/]"),
-            Border = BoxBorder.Rounded,
+            Border = BoxBorder.Rounded
         };
 
         AnsiConsole.Write(panel);
-    }
-
-    /// <summary>
-    /// Gets a friendly display name for a .NET type, handling nullable types properly
-    /// </summary>
-    private static string GetFriendlyTypeName(Type type, bool supportsNull)
-    {
-        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
-        {
-            var underlyingType = Nullable.GetUnderlyingType(type);
-            if (underlyingType != null)
-            {
-                return GetSimpleTypeName(underlyingType) + "?";
-            }
-        }
-
-        if (supportsNull && !type.IsValueType)
-        {
-            return GetSimpleTypeName(type) + "?";
-        }
-
-        return GetSimpleTypeName(type);
     }
 
     /// <summary>
@@ -483,13 +457,12 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
     {
         try
         {
-            if (inputSource.IsStdin && inputSource.TempFilePath != null)
+            switch (inputSource)
             {
-                return new FileInfo(inputSource.TempFilePath).Length;
-            }
-            else if (!inputSource.IsStdin && inputSource.Stream.CanSeek)
-            {
-                return inputSource.Stream.Length;
+                case { IsStdin: true, TempFilePath: not null }:
+                    return new FileInfo(inputSource.TempFilePath).Length;
+                case { IsStdin: false, Stream.CanSeek: true }:
+                    return inputSource.Stream.Length;
             }
         }
         catch
@@ -518,33 +491,21 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
         const double gb = mb * 1024;
 
         if (bytes >= gb)
-            return $"{bytes / gb:F2} GB";
-        if (bytes >= mb)
-            return $"{bytes / mb:F2} MB";
-        if (bytes >= kb)
-            return $"{bytes / kb:F2} KB";
-        
-        return $"{bytes} bytes";
-    }
-
-    /// <summary>
-    /// Gets a simple, friendly name for common .NET types
-    /// </summary>
-    private static string GetSimpleTypeName(Type type)
-    {
-        return type.Name switch
         {
-            "String" => "String",
-            "Int32" => "Int32",
-            "Decimal" => "Decimal",
-            "DateTime" => "DateTime",
-            "Boolean" => "Boolean",
-            "Single" => "Single",
-            "Double" => "Double",
-            "Int64" => "Int64",
-            "Byte[]" => "Byte[]",
-            _ => type.Name,
-        };
+            return $"{bytes / gb:F2} GB";
+        }
+
+        if (bytes >= mb)
+        {
+            return $"{bytes / mb:F2} MB";
+        }
+
+        if (bytes >= kb)
+        {
+            return $"{bytes / kb:F2} KB";
+        }
+
+        return $"{bytes} bytes";
     }
 
     /// <summary>
@@ -564,7 +525,15 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
             bool b => b ? "True" : "False",
             InvalidValue => "[red]<invalid>[/]",
             byte[] bytes => $"[dim]<{bytes.Length} bytes>[/]",
-            _ => value.ToString()?.Replace("[", "[[").Replace("]", "]]") ?? "[dim]NULL[/]",
+            _ => value.ToString()?.Replace("[", "[[").Replace("]", "]]") ?? "[dim]NULL[/]"
         };
+    }
+
+    /// <summary>
+    /// Escapes markup characters in strings (to prevent Spectre.Console parsing errors)
+    /// </summary>
+    private static string EscapeMarkup(string? text)
+    {
+        return text?.Replace("[", "[[").Replace("]", "]]") ?? string.Empty;
     }
 }

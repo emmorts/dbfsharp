@@ -17,7 +17,7 @@ public enum OutputFormat
     Csv,
     Tsv,
     Json,
-    Excel,
+    Excel
 }
 
 /// <summary>
@@ -159,7 +159,7 @@ public sealed class ReadCommand : AsyncCommand<ReadSettings>
             IgnoreMissingMemoFile = settings.IgnoreMissingMemo,
             ValidateFields = false,
             CharacterDecodeFallback = null,
-            SkipDeletedRecords = !settings.ShowDeleted,
+            SkipDeletedRecords = !settings.ShowDeleted
         };
 
         if (string.IsNullOrEmpty(settings.Encoding))
