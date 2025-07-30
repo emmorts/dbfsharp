@@ -23,7 +23,6 @@ public static class FormatterFactory
             OutputFormat.Csv => CsvFormatter.Csv(options),
             OutputFormat.Tsv => CsvFormatter.Tsv(options),
             OutputFormat.Json => new JsonFormatter(options),
-            OutputFormat.Excel => new ExcelFormatter(options),
             _ => throw new ArgumentException(
                 $"Unsupported output format: {format}",
                 nameof(format)
@@ -74,16 +73,6 @@ public static class FormatterFactory
     }
 
     /// <summary>
-    /// Determines if the specified format requires file output (cannot write to stdout)
-    /// </summary>
-    /// <param name="format">The output format to check</param>
-    /// <returns>True if the format requires file output</returns>
-    public static bool RequiresFileOutput(OutputFormat format)
-    {
-        return format == OutputFormat.Excel;
-    }
-
-    /// <summary>
     /// Gets the recommended file extension for the specified format
     /// </summary>
     /// <param name="format">The output format</param>
@@ -96,7 +85,6 @@ public static class FormatterFactory
             OutputFormat.Csv => ".csv",
             OutputFormat.Tsv => ".tsv",
             OutputFormat.Json => ".json",
-            OutputFormat.Excel => ".xlsx",
             _ => ".txt",
         };
     }

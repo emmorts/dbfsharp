@@ -16,8 +16,7 @@ public enum OutputFormat
     Table,
     Csv,
     Tsv,
-    Json,
-    Excel
+    Json
 }
 
 /// <summary>
@@ -30,7 +29,7 @@ public sealed class ReadSettings : CommandSettings
     public string? FilePath { get; set; }
 
     [CommandOption("-f|--format")]
-    [Description("Output format (table, csv, tsv, json, excel)")]
+    [Description("Output format (table, csv, tsv, json)")]
     [DefaultValue(OutputFormat.Table)]
     public OutputFormat Format { get; set; } = OutputFormat.Table;
 
@@ -116,14 +115,6 @@ public sealed class ReadCommand : AsyncCommand<ReadSettings>
 
             var records = await GetRecordsToDisplayAsync(reader, settings);
             var fieldsToDisplay = GetFieldsToDisplay(settings, reader);
-
-            if (FormatterFactory.RequiresFileOutput(settings.Format) && settings.OutputPath == null)
-            {
-                AnsiConsole.MarkupLine(
-                    $"[red]Error:[/] {settings.Format} format requires an output file. Use -o/--output to specify a file path."
-                );
-                return 1;
-            }
 
             await FormatAndOutputAsync(records, fieldsToDisplay, reader, settings);
 
@@ -371,7 +362,7 @@ public sealed class ReadCommand : AsyncCommand<ReadSettings>
         infoTable.AddRow("Field Count", stats.FieldCount.ToString());
         infoTable.AddRow("Record Length", $"{stats.RecordLength} bytes");
         infoTable.AddRow("Encoding", stats.Encoding);
-        infoTable.AddRow("Memo File", stats.HasMemoFile ? (stats.MemoFilePath ?? "Yes") : "No");
+        infoTable.AddRow("Memo File", stats.HasMemoFile ? stats.MemoFilePath ?? "Yes" : "No");
 
         AnsiConsole.Write(infoTable);
         AnsiConsole.WriteLine();
