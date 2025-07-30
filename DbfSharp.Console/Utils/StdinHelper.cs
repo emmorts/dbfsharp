@@ -58,27 +58,6 @@ public static class StdinHelper
     }
 
     /// <summary>
-    /// Legacy method maintained for backward compatibility
-    /// </summary>
-    /// <param name="filePath">The file path argument (may be null or empty)</param>
-    /// <returns>A tuple containing the file path to use and whether it's a temporary file</returns>
-    [Obsolete("Use ResolveInputSourceAsync for better performance. This method will be removed in a future version.")]
-    public static async Task<(string FilePath, bool IsTemporary)> ResolveFilePathAsync(string? filePath)
-    {
-        var inputSource = await ResolveInputSourceAsync(filePath);
-
-        if (inputSource is { IsStdin: true, TempFilePath: null })
-        {
-            // Need to create temp file for legacy compatibility
-            var tempFile = await CreateTemporaryFileFromStreamAsync(inputSource.Stream);
-            await inputSource.Stream.DisposeAsync();
-            return (tempFile, true);
-        }
-
-        return (inputSource.TempFilePath ?? inputSource.OriginalPath!, inputSource.IsTemporary);
-    }
-
-    /// <summary>
     /// Checks if stdin has data available (i.e., data is being piped in)
     /// </summary>
     /// <returns>True if stdin has data available</returns>
@@ -186,28 +165,5 @@ public static class StdinHelper
             }
             throw;
         }
-    }
-
-    /// <summary>
-    /// Legacy method maintained for backward compatibility
-    /// </summary>
-    [Obsolete("Use CreateTemporaryFileFromStreamAsync for better performance")]
-    private static async Task<string> CreateTemporaryFileFromStdinAsync(string extension = ".dbf")
-    {
-        await using var stdin = System.Console.OpenStandardInput();
-
-        return await CreateTemporaryFileFromStreamAsync(stdin, extension);
-    }
-
-    /// <summary>
-    /// Legacy method maintained for backward compatibility
-    /// </summary>
-    [Obsolete("Direct stream processing is more efficient than reading entire stdin into memory")]
-    private static async Task<byte[]> ReadStdinAsBytesAsync()
-    {
-        await using var stdin = System.Console.OpenStandardInput();
-        using var memoryStream = new MemoryStream();
-        await stdin.CopyToAsync(memoryStream);
-        return memoryStream.ToArray();
     }
 }
