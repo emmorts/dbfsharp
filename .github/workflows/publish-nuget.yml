@@ -46,7 +46,7 @@ jobs:
           - os: ubuntu-latest
             rid: linux-x64
             artifact-name: dbfsharp-linux-x64
-          - os: ubuntu-latest
+          - os: ubuntu-24.04-arm64
             rid: linux-arm64
             artifact-name: dbfsharp-linux-arm64
           - os: windows-latest
@@ -55,7 +55,7 @@ jobs:
           - os: windows-latest
             rid: win-arm64
             artifact-name: dbfsharp-win-arm64
-          - os: macos-latest
+          - os: macos-13
             rid: osx-x64
             artifact-name: dbfsharp-osx-x64
           - os: macos-latest
