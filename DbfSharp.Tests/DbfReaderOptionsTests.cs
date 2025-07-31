@@ -14,7 +14,7 @@ public class DbfReaderOptionsTests
     {
         var options = new DbfReaderOptions();
 
-        Assert.Null(options.Encoding);
+        Assert.Equal(options.Encoding, Encoding.UTF8);
         Assert.True(options.IgnoreCase);
         Assert.False(options.LowerCaseFieldNames);
         Assert.False(options.IgnoreMissingMemoFile);
@@ -247,7 +247,7 @@ public class DbfReaderOptionsTests
 
         var result = options.ToString();
 
-        Assert.Equal("Default", result);
+        Assert.Equal("Encoding=Unicode (UTF-8)", result);
     }
 
     [Fact]
