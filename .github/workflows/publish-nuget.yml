@@ -32,7 +32,7 @@ jobs:
 
     - name: Pack NuGet packages
       run: |
-        dotnet pack DbfSharp.Console/DbfSharp.Console.csproj --configuration Release --no-build --output ./artifacts
+        dotnet pack DbfSharp.ConsoleAot/DbfSharp.ConsoleAot.csproj --configuration Release --no-build --output ./artifacts
         dotnet pack DbfSharp.Core/DbfSharp.Core.csproj --configuration Release --no-build --output ./artifacts
 
     - name: Publish to NuGet
@@ -75,13 +75,13 @@ jobs:
       run: dotnet restore
 
     - name: Publish self-contained executable
-      run: dotnet publish DbfSharp.Console/DbfSharp.Console.csproj --configuration Release --runtime ${{ matrix.rid }} --self-contained true --output ./publish/${{ matrix.artifact-name }}
+      run: dotnet publish DbfSharp.ConsoleAot/DbfSharp.ConsoleAot.csproj --configuration Release --runtime ${{ matrix.rid }} --self-contained true --output ./publish/${{ matrix.artifact-name }}
 
     - name: Create archive (Windows)
       if: startsWith(matrix.rid, 'win-')
       shell: pwsh
       run: Compress-Archive -Path ./publish/${{ matrix.artifact-name }} -DestinationPath ./publish/${{ matrix.artifact-name }}.zip
-      
+
     - name: Create archive (Unix)
       if: "!startsWith(matrix.rid, 'win-')"
       shell: bash

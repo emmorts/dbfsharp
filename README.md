@@ -1,145 +1,250 @@
-# DbfSharp
+# DbfSharp.Core
 
-![GitHub License](https://img.shields.io/github/license/emmorts/DbfSharp)
+A high-performance, memory-efficient, and fully-featured .NET library for reading dBase (DBF) files. DbfSharp.Core provides a modern, intuitive API for accessing data from legacy DBF files, with robust support for various formats, memo files, and character encodings. It is designed for speed, efficiency, and ease of use, leveraging modern .NET features like `Span<T>` and `IAsyncEnumerable<T>`.
 
-Yet another DBF file reader, but this one is mine. I built it primarily to make my own life easier. I often find myself needing to quickly peek into various `.dbf` files, validate their structure, or just export them to something more readable like CSV or JSON.
+## Features
 
-This project is split into two main parts:
+* **Comprehensive DBF Format Support**: Natively supports a wide range of DBF versions, including dBase II, dBase III+, dBase IV, FoxPro, Visual FoxPro, and more.
+* **High Performance**: Optimized for speed with efficient parsing logic and minimal memory allocations.
+* **Memory Efficient**: By default, records are streamed from the file, ensuring minimal memory consumption even with gigabyte-sized files. An optional "loaded" mode allows for in-memory random access and LINQ operations.
+* **Full Memo File Support**: Reads from `.dbt` and `.fpt` memo files, correctly handling large text fields and binary data types like Picture, Object, and General fields.
+* **Encoding Detection**: Tries to guess the correct character encoding from the DBF file's language driver byte (that is rarely sufficient though, so explicitly providing encoding is highly recommended).
+* **Modern and Extensible API**: The library is built with modern C\# features, with extensibility in mind.
+* **Asynchronous and Synchronous APIs**: Provides both `async` and synchronous methods for file operations.
+* **Metadata and Statistics**: Access file header information, field definitions, and statistics like record counts (active and deleted), file size, etc.
 
-1.  `DbfSharp.Core`: A high-performance, memory-efficient .NET library for reading DBF files.
-2.  `DbfSharp.Console`: A cross-platform .NET command-line tool built on top of the core library.
+-----
 
-Most people will probably just use the CLI tool.
-
-## The CLI Tool: `dbfsharp`
-
-This is the quick and dirty way to get stuff done. For more detailed documentation, see the [DbfSharp.Console README](/DbfSharp.Console/README.md).
+## Getting Started
 
 ### Installation
 
-It's a .NET tool, so installation is a one-liner (perhaps I'll eventually add it to a brew tap or something, but for now, this is the easiest way):
+Install the DbfSharp.Core library from NuGet Package Manager.
 
-```bash
-dotnet tool install -g DbfSharp
-````
-
-### Usage
-
-Once installed, you can call it directly from your terminal.
-
-**1. Get info about a file:**
-
-This is great for a first look. It tells you the version, number of records, encoding, and field definitions.
-
-```bash
-dbfsharp info my_data.dbf
+```shell
+dotnet add package DbfSharp.Core
 ```
 
-**2. Read and display data:**
+### Basic Usage
 
-You can dump the contents straight to your console. It defaults to a nice table view.
-
-```bash
-# Show the first 100 records in a table
-dbfsharp read my_data.dbf --limit 100
-
-# Select specific columns
-dbfsharp read my_data.dbf --fields NAME,SALARY,EMAIL
-```
-
-**3. Export to other formats:**
-
-You can pipe the output to a file or just view it directly.
-
-```bash
-# Export the whole file to CSV
-dbfsharp read my_data.dbf --format csv > data.csv
-
-# Quietly export 10 first rows to JSON
-dbfsharp read my_data.dbf --limit 10 --format json --quiet > data.json
-
-# You can even pipe data into it from stdin
-cat my_data.dbf | dbfsharp read --format tsv
-```
-
-**Supported formats:** `table`, `csv`, `tsv`, `json`, and `excel`. Note that for Excel, you *must* specify an output file with `--output`.
-
-## Compatibility
-
-The library aims to support a wide range of DBF formats. Here's a summary of the tested versions.
-
-| Version          | Description                         | Version Byte | Memo Support |
-| :--------------- |:------------------------------------| :----------- | :----------- |
-| **dBase II** | dBASE II (pain in the !$#*)         | `0x02`       | None         |
-| **dBase III Plus** | FoxBASE+/dBase III PLUS, no memo    | `0x03`       | None         |
-| **dBase III Plus** | FoxBASE+/dBase III PLUS, with memo  | `0x83`       | `.dbt`       |
-| **dBase IV** | dBASE IV with memo                  | `0x8B`       | `.dbt`       |
-| **dBase IV SQL** | dBASE IV SQL table files, no memo   | `0x43`       | None         |
-| **dBase IV SQL** | dBASE IV SQL table files, with memo | `0xCB`       | `.dbt`       |
-| **FoxPro** | FoxPro 2.x (or earlier) with memo   | `0xF5`       | `.fpt`       |
-| **Visual FoxPro**| Visual FoxPro                       | `0x30`       | `.fpt`       |
-| **Visual FoxPro**| VFP with autoincrement              | `0x31`       | `.fpt`       |
-| **Visual FoxPro**| VFP with Varchar/Varbinary          | `0x32`       | `.fpt`       |
-
-## The Core Library: `DbfSharp.Core`
-
-If you need to read DBF files from your own .NET application, you can use the core library directly. It's built with performance in mind, using modern .NET features like `System.IO.Pipelines` and `Span<T>`. For more detailed documentation, see the [DbfSharp.Core README](https://www.google.com/search?q=/DbfSharp.Core/README.md).
-
-### Quick Start
-
-Here's a basic example of how to read records.
+The most common way to use the library is to open a file and stream its records.
 
 ```csharp
 using DbfSharp.Core;
+using System.Text;
 
-// Open the DBF file. By default, it streams records.
-using var reader = DbfReader.Open("path/to/your/data.dbf");
-
-foreach (var record in reader.Records)
+// configure options if needed, e.g., to specify an encoding
+var options = new DbfReaderOptions
 {
-    // Access fields by name (case-insensitive by default)
-    var name = record.GetValue<string>("NAME");
-    var birthDate = record.GetValue<DateTime?>("BIRTHDATE");
-    var salary = record.GetValue<decimal?>("SALARY");
+    Encoding = Encoding.GetEncoding("windows-1252")
+};
 
-    Console.WriteLine($"{name}, born {birthDate:yyyy-MM-dd}, salary: {salary:C}");
+// asynchronously open and read a DBF file
+await using var reader = await DbfReader.CreateAsync("data.dbf", options);
 
-    // Or access by index for a little extra speed
-    var id = record[0];
+// asynchronously iterate over records
+await foreach (var record in reader.ReadRecordsAsync())
+{
+    // access fields by name with type-specific getters
+    var name = record.GetString("NAME");
+    var birthDate = record.GetDateTime("BIRTHDATE");
+    var salary = record.GetDecimal("SALARY");
+    var isMember = record.GetBoolean("IS_MEMBER");
+
+    Console.WriteLine($"Name: {name}, Born: {birthDate:d}, Salary: {salary:C}, Member: {isMember}");
 }
 ```
 
-### Configuration
+-----
 
-You can control the reader's behavior with `DbfReaderOptions`.
+## Usage Examples
+
+### Synchronous Reading
+
+For console applications or scripts, you can use the synchronous API.
+
+```csharp
+using var reader = DbfReader.Create("data.dbf");
+
+foreach (var record in reader.Records)
+{
+    // access fields by index for maximum performance
+    var id = record[0];
+    var name = record[1] as string;
+
+    Console.WriteLine($"ID: {id}, Name: {name}");
+}
+```
+
+### Loaded Mode for Random Access and LINQ
+
+If you need to perform multiple passes over the data or require random access, you can load all records into memory.
+
+```csharp
+await using var reader = await DbfReader.CreateAsync("analysis.dbf");
+await reader.LoadAsync(); // load all active records into memory
+
+// now you can access records by index
+var firstRecord = reader[0];
+var lastRecord = reader[reader.Count - 1];
+
+// you can also use LINQ to query the in-memory records
+var highEarners = reader.Records
+    .Where(r => r.GetDecimal("SALARY") > 75000m)
+    .OrderBy(r => r.GetString("NAME"))
+    .ToList();
+
+Console.WriteLine($"Found {highEarners.Count} high earners.");
+```
+
+### Working with Deleted Records
+
+DBF files mark records for deletion instead of removing them immediately. You can control whether to include or exclude these records.
 
 ```csharp
 var options = new DbfReaderOptions
 {
-    // Load all records into memory for faster random access
-    LoadOnOpen = true,
-
-    // Don't throw an error if a .dbt or .fpt file is missing
-    IgnoreMissingMemoFile = true,
-
-    // Override the auto-detected encoding
-    Encoding = System.Text.Encoding.GetEncoding("windows-1252")
+    // set to false to include deleted records in the 'Records' collection
+    SkipDeletedRecords = false
 };
 
-using var reader = DbfReader.Open("data.dbf", options);
+await using var reader = await DbfReader.CreateAsync("data.dbf", options);
 
-// Now you can access records by index because LoadOnOpen = true
-var firstRecord = reader[0];
-var lastRecord = reader[reader.Count - 1];
+// records marked for deletion will now be included in `reader.ReadRecordsAsync()` enumeration
+// you can also access only the deleted records.
+await foreach (var deletedRecord in reader.ReadDeletedRecordsAsync())
+{
+    Console.WriteLine($"Deleted Record ID: {deletedRecord.GetInt32("ID")}");
+}
 ```
 
-## Why?
+### Accessing Metadata and Statistics
 
-Honestly, I've used other DBF libraries and tools, but I wanted something that was:
+You can inspect the DBF file's structure and get summary statistics.
 
-  * Written in modern C\# with a focus on performance.
-  * Worked seamlessly across Windows, Linux, and macOS.
-  * Had a simple, scriptable CLI that I could use in my daily workflow.
-  * Was easy to extend if I ever came across a weird, non-standard DBF file.
+```csharp
+await using var reader = await DbfReader.CreateAsync("data.dbf");
 
-This tool solves my problem. Maybe it will solve yours too.
+DbfStatistics stats = reader.GetStatistics();
+Console.WriteLine(stats.ToString());
+
+// get header information
+DbfHeader header = reader.Header;
+Console.WriteLine($"DBF Version: {header.DbfVersion.GetDescription()}");
+Console.WriteLine($"Last Updated: {header.LastUpdateDate}");
+
+// inspect field definitions
+Console.WriteLine("\nFields:");
+foreach (DbfField field in reader.Fields)
+{
+    Console.WriteLine($"- {field.Name} ({field.Type}), Length: {field.ActualLength}");
+}
+```
+
+-----
+
+## Configuration
+
+Customize the reader's behavior using `DbfReaderOptions`.
+
+| Property                | Description                                                                                              | Default       |
+| ----------------------- | -------------------------------------------------------------------------------------------------------- | ------------- |
+| `Encoding`              | Character encoding for text fields. If `null`, it's auto-detected from the file's header.       | `null`        |
+| `IgnoreCase`            | Perform case-insensitive field name lookups.                                                | `true`        |
+| `LowerCaseFieldNames`   | Convert all field names to lowercase upon reading.                                          | `false`       |
+| `IgnoreMissingMemoFile` | If `true`, continues reading even if a required memo file (`.dbt` or `.fpt`) is missing.        | `false`       |
+| `TrimStrings`           | Trim trailing whitespace from character fields.                                               | `true`        |
+| `ValidateFields`        | If `true`, throws an exception if field data is malformed. If `false`, returns an `InvalidValue` object. | `true` |
+| `SkipDeletedRecords`    | If `true`, excludes records marked for deletion from the `Records` enumeration.           | `true`        |
+| `MaxRecords`            | Limits the total number of records read. Useful for sampling large files.                 | `null` (no limit) |
+| `BufferSize`            | The buffer size in bytes for file I/O operations.                                               | `65536`       |
+| `CustomFieldParser`     | Provide a custom parser for specialized field handling.                                         | `null`        |
+
+### Preset Configurations
+
+For convenience, `DbfReaderOptions` provides static methods to create optimized settings for common scenarios.
+
+* **For Maximum Performance:** Ideal for large files where read speed is critical.
+
+  ```csharp
+  var perfOptions = DbfReaderOptions.CreatePerformanceOptimized();
+  // disables validation and string trimming, uses a larger buffer
+  await using var reader = await DbfReader.CreateAsync("large_file.dbf", perfOptions);
+  ```
+
+* **For Minimal Memory Usage:** Best for memory-constrained environments.
+
+  ```csharp
+  var memOptions = DbfReaderOptions.CreateMemoryOptimized();
+  // uses a smaller buffer and ensures streaming is prioritized
+  await using var reader = await DbfReader.CreateAsync("huge_file.dbf", memOptions);
+  ```
+
+* **For Maximum Compatibility:** Use this for problematic or non-standard files.
+
+  ```csharp
+  var compatOptions = DbfReaderOptions.CreateCompatibilityOptimized();
+  // ignores missing memo files, disables validation, and uses fallback decoding
+  await using var reader = await DbfReader.CreateAsync("old_file.dbf", compatOptions);
+  ```
+
+-----
+
+## Error Handling
+
+The library provides specific exceptions to handle common file and parsing errors.
+
+```csharp
+try
+{
+    var options = new DbfReaderOptions { ValidateFields = true };
+    await using var reader = await DbfReader.CreateAsync("non_existent.dbf", options);
+
+    await foreach (var record in reader.ReadRecordsAsync())
+    {
+        // some processing logic here
+    }
+}
+catch (DbfNotFoundException ex)
+{
+    // DBF file itself was not found
+    Console.WriteLine($"File not found: {ex.FilePath}");
+}
+catch (MissingMemoFileException ex)
+{
+    // a required .dbt or .fpt file is missing
+    Console.WriteLine($"Memo file missing for {ex.DbfFilePath}. Expected at: {ex.MemoFilePath}");
+}
+catch (FieldParseException ex)
+{
+    // thrown when 'ValidateFields' is true and data cannot be parsed
+    Console.WriteLine($"Parse error in field '{ex.FieldName}' ({ex.FieldType}): {ex.Message}");
+    Console.WriteLine($"Raw Data: {Convert.ToHexString(ex.RawData)}");
+}
+catch (DbfException ex)
+{
+    // general DBF-related error
+    Console.WriteLine($"A DBF error occurred: {ex.Message}");
+}
+```
+
+### Handling Invalid Values without Exceptions
+
+If you set `ValidateFields = false`, the reader will not throw a `FieldParseException`. Instead, it will return an `InvalidValue` object for any field that cannot be parsed. This allows you to continue processing a file even if it contains corrupted data.
+
+```csharp
+var options = new DbfReaderOptions { ValidateFields = false };
+await using var reader = await DbfReader.CreateAsync("corrupted_data.dbf", options);
+
+await foreach (var record in reader.ReadRecordsAsync())
+{
+    if (record["SALARY"] is InvalidValue invalid)
+    {
+        Console.WriteLine($"Could not parse SALARY. Error: {invalid.ErrorMessage}");
+    }
+    else
+    {
+        Console.WriteLine($"Salary: {record.GetDecimal("SALARY")}");
+    }
+}
+```
