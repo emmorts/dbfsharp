@@ -9,7 +9,7 @@ set -e
 
 remote="$1"
 url="$2"
-PROJECT_FILE="DbfSharp.Console/DbfSharp.Console.csproj"
+PROJECT_FILE="DbfSharp.ConsoleAot/DbfSharp.ConsoleAot.csproj"
 
 # Check if we're in the right directory
 if [ ! -f "$PROJECT_FILE" ]; then
