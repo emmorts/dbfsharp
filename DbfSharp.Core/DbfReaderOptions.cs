@@ -12,7 +12,7 @@ public record DbfReaderOptions
     /// Gets or sets the character encoding to use for text fields.
     /// If null, the encoding will be auto-detected from the language driver byte in the header.
     /// </summary>
-    public Encoding? Encoding { get; set; }
+    public Encoding? Encoding { get; set; } = Encoding.UTF8;
 
     /// <summary>
     /// Gets or sets whether field name lookups should be case-insensitive.
@@ -25,12 +25,6 @@ public record DbfReaderOptions
     /// Default is false to preserve original casing.
     /// </summary>
     public bool LowerCaseFieldNames { get; set; } = false;
-
-    /// <summary>
-    /// Gets or sets whether to load all records into memory when opening the file.
-    /// If false (default), records will be streamed from disk as needed.
-    /// </summary>
-    public bool LoadOnOpen { get; set; } = false;
 
     /// <summary>
     /// Gets or sets whether to ignore missing memo files instead of throwing an exception.
@@ -108,7 +102,6 @@ public record DbfReaderOptions
     {
         return new DbfReaderOptions
         {
-            LoadOnOpen = false,
             EnableStringInterning = true, // reduce memory for repeated field names
             BufferSize = 128 * 1024,
             UseMemoryMapping = Environment.Is64BitProcess,
@@ -125,7 +118,6 @@ public record DbfReaderOptions
     {
         return new DbfReaderOptions
         {
-            LoadOnOpen = false,
             EnableStringInterning = true,
             BufferSize = 16 * 1024,
             UseMemoryMapping = false,
@@ -171,11 +163,6 @@ public record DbfReaderOptions
         if (LowerCaseFieldNames)
         {
             options.Add("LowerCaseNames");
-        }
-
-        if (LoadOnOpen)
-        {
-            options.Add("LoadOnOpen");
         }
 
         if (IgnoreMissingMemoFile)

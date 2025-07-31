@@ -249,7 +249,7 @@ public readonly struct DbfField
 
                 pipeReader.AdvanceTo(position, result.Buffer.End);
 
-                if (result.IsCompleted || (terminator != null))
+                if (result.IsCompleted || terminator != null)
                 {
                     break;
                 }
@@ -636,6 +636,17 @@ public readonly struct DbfField
         return new DbfField(name, fieldType, 0, length, decimalCount, 0, 0, 0, 0, 0, 0, 0);
     }
 
+    /// <summary>
+    /// Creates a DbfField instance from a byte array
+    /// </summary>
+    /// <param name="bytes">The byte array containing the field descriptor</param>
+    /// <param name="encoding">The encoding to use for the field name</param>
+    /// <param name="lowerCaseName">Whether to convert the field name to lower case</param>
+    /// <returns>A DbfField instance</returns>
+    /// <exception cref="ArgumentException">
+    /// Thrown if the byte array length is not equal to the expected size
+    /// or if a null terminator is encountered in the field definition
+    /// </exception>
     public static DbfField FromBytes(
         ReadOnlySpan<byte> bytes,
         Encoding encoding,

@@ -1,13 +1,15 @@
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Runtime.CompilerServices;
+using DbfSharp.Core.Memo;
 
 namespace DbfSharp.Core;
 
 /// <summary>
 /// Represents a single record from a DBF file with high-performance access patterns
 /// </summary>
-public readonly struct DbfRecord : IEnumerable<KeyValuePair<string, object?>>
+public readonly record struct DbfRecord : IEnumerable<KeyValuePair<string, object?>>
 {
     private readonly DbfReader _reader;
     private readonly object?[] _values;
@@ -82,33 +84,207 @@ public readonly struct DbfRecord : IEnumerable<KeyValuePair<string, object?>>
         }
     }
 
+    #region Type-Specific Getters
+
     /// <summary>
-    /// Gets a strongly-typed value by field index
+    /// Gets the value of the specified field as a string.
     /// </summary>
-    /// <typeparam name="T">The expected type</typeparam>
-    /// <param name="index">The zero-based field index</param>
-    /// <returns>The field value cast to the specified type</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown when index is out of range</exception>
-    /// <exception cref="InvalidCastException">Thrown when the value cannot be cast to the specified type</exception>
-    public T GetValue<T>(int index)
+    /// <param name="index">The zero-based index of the field.</param>
+    /// <returns>The string value of the field.</returns>
+    /// <exception cref="InvalidCastException">Thrown if the field value is not a string.</exception>
+    public string? GetString(int index)
     {
-        var value = this[index];
-        return ConvertValue<T>(value);
+        return (string?)this[index];
     }
 
     /// <summary>
-    /// Gets a strongly-typed value by field name
+    /// Gets the value of the specified field as a string.
     /// </summary>
-    /// <typeparam name="T">The expected type</typeparam>
-    /// <param name="fieldName">The field name</param>
-    /// <returns>The field value cast to the specified type</returns>
-    /// <exception cref="ArgumentException">Thrown when field name is not found</exception>
-    /// <exception cref="InvalidCastException">Thrown when the value cannot be cast to the specified type</exception>
-    public T GetValue<T>(string fieldName)
+    /// <param name="fieldName">The name of the field.</param>
+    /// <returns>The string value of the field.</returns>
+    /// <exception cref="InvalidCastException">Thrown if the field value is not a string.</exception>
+    public string? GetString(string fieldName)
     {
-        var value = this[fieldName];
-        return ConvertValue<T>(value);
+        return (string?)this[fieldName];
     }
+
+    /// <summary>
+    /// Gets the value of the specified field as a nullable boolean.
+    /// </summary>
+    /// <param name="index">The zero-based index of the field.</param>
+    /// <returns>The nullable boolean value of the field.</returns>
+    /// <exception cref="InvalidCastException">Thrown if the field value is not a nullable boolean.</exception>
+    public bool? GetBoolean(int index)
+    {
+        return (bool?)this[index];
+    }
+
+    /// <summary>
+    /// Gets the value of the specified field as a nullable boolean.
+    /// </summary>
+    /// <param name="fieldName">The name of the field.</param>
+    /// <returns>The nullable boolean value of the field.</returns>
+    /// <exception cref="InvalidCastException">Thrown if the field value is not a nullable boolean.</exception>
+    public bool? GetBoolean(string fieldName)
+    {
+        return (bool?)this[fieldName];
+    }
+
+    /// <summary>
+    /// Gets the value of the specified field as a nullable DateTime.
+    /// </summary>
+    /// <param name="index">The zero-based index of the field.</param>
+    /// <returns>The nullable DateTime value of the field.</returns>
+    /// <exception cref="InvalidCastException">Thrown if the field value is not a nullable DateTime.</exception>
+    public DateTime? GetDateTime(int index)
+    {
+        return (DateTime?)this[index];
+    }
+
+    /// <summary>
+    /// Gets the value of the specified field as a nullable DateTime.
+    /// </summary>
+    /// <param name="fieldName">The name of the field.</param>
+    /// <returns>The nullable DateTime value of the field.</returns>
+    /// <exception cref="InvalidCastException">Thrown if the field value is not a nullable DateTime.</exception>
+    public DateTime? GetDateTime(string fieldName)
+    {
+        return (DateTime?)this[fieldName];
+    }
+
+    /// <summary>
+    /// Gets the value of the specified field as a nullable decimal.
+    /// </summary>
+    /// <param name="index">The zero-based index of the field.</param>
+    /// <returns>The nullable decimal value of the field.</returns>
+    /// <exception cref="InvalidCastException">Thrown if the field value is not a nullable decimal.</exception>
+    public decimal? GetDecimal(int index)
+    {
+        return (decimal?)this[index];
+    }
+
+    /// <summary>
+    /// Gets the value of the specified field as a nullable decimal.
+    /// </summary>
+    /// <param name="fieldName">The name of the field.</param>
+    /// <returns>The nullable decimal value of the field.</returns>
+    /// <exception cref="InvalidCastException">Thrown if the field value is not a nullable decimal.</exception>
+    public decimal? GetDecimal(string fieldName)
+    {
+        return (decimal?)this[fieldName];
+    }
+
+    /// <summary>
+    /// Gets the value of the specified field as a nullable double.
+    /// </summary>
+    /// <param name="index">The zero-based index of the field.</param>
+    /// <returns>The nullable double value of the field.</returns>
+    /// <exception cref="InvalidCastException">Thrown if the field value is not a nullable double.</exception>
+    public double? GetDouble(int index)
+    {
+        return (double?)this[index];
+    }
+
+    /// <summary>
+    /// Gets the value of the specified field as a nullable double.
+    /// </summary>
+    /// <param name="fieldName">The name of the field.</param>
+    /// <returns>The nullable double value of the field.</returns>
+    /// <exception cref="InvalidCastException">Thrown if the field value is not a nullable double.</exception>
+    public double? GetDouble(string fieldName)
+    {
+        return (double?)this[fieldName];
+    }
+
+    /// <summary>
+    /// Gets the value of the specified field as a nullable float.
+    /// </summary>
+    /// <param name="index">The zero-based index of the field.</param>
+    /// <returns>The nullable float value of the field.</returns>
+    /// <exception cref="InvalidCastException">Thrown if the field value is not a nullable float.</exception>
+    public float? GetFloat(int index)
+    {
+        return (float?)this[index];
+    }
+
+    /// <summary>
+    /// Gets the value of the specified field as a nullable float.
+    /// </summary>
+    /// <param name="fieldName">The name of the field.</param>
+    /// <returns>The nullable float value of the field.</returns>
+    /// <exception cref="InvalidCastException">Thrown if the field value is not a nullable float.</exception>
+    public float? GetFloat(string fieldName)
+    {
+        return (float?)this[fieldName];
+    }
+
+    /// <summary>
+    /// Gets the value of the specified field as a nullable Int32.
+    /// </summary>
+    /// <param name="index">The zero-based index of the field.</param>
+    /// <returns>The nullable Int32 value of the field.</returns>
+    /// <exception cref="InvalidCastException">Thrown if the field value is not a nullable Int32.</exception>
+    public int? GetInt32(int index)
+    {
+        return (int?)this[index];
+    }
+
+    /// <summary>
+    /// Gets the value of the specified field as a nullable Int32.
+    /// </summary>
+    /// <param name="fieldName">The name of the field.</param>
+    /// <returns>The nullable Int32 value of the field.</returns>
+    /// <exception cref="InvalidCastException">Thrown if the field value is not a nullable Int32.</exception>
+    public int? GetInt32(string fieldName)
+    {
+        return (int?)this[fieldName];
+    }
+
+    /// <summary>
+    /// Gets the value of the specified field as a byte array.
+    /// </summary>
+    /// <param name="index">The zero-based index of the field.</param>
+    /// <returns>The byte array value of the field.</returns>
+    /// <exception cref="InvalidCastException">Thrown if the field value is not a byte array.</exception>
+    public byte[]? GetByteArray(int index)
+    {
+        return (byte[]?)this[index];
+    }
+
+    /// <summary>
+    /// Gets the value of the specified field as a byte array.
+    /// </summary>
+    /// <param name="fieldName">The name of the field.</param>
+    /// <returns>The byte array value of the field.</returns>
+    /// <exception cref="InvalidCastException">Thrown if the field value is not a byte array.</exception>
+    public byte[]? GetByteArray(string fieldName)
+    {
+        return (byte[]?)this[fieldName];
+    }
+
+    /// <summary>
+    /// Gets the value of the specified field as a MemoData object.
+    /// </summary>
+    /// <param name="index">The zero-based index of the field.</param>
+    /// <returns>The MemoData value of the field.</returns>
+    /// <exception cref="InvalidCastException">Thrown if the field value is not a MemoData object.</exception>
+    public MemoData? GetMemo(int index)
+    {
+        return (MemoData?)this[index];
+    }
+
+    /// <summary>
+    /// Gets the value of the specified field as a MemoData object.
+    /// </summary>
+    /// <param name="fieldName">The name of the field.</param>
+    /// <returns>The MemoData value of the field.</returns>
+    /// <exception cref="InvalidCastException">Thrown if the field value is not a MemoData object.</exception>
+    public MemoData? GetMemo(string fieldName)
+    {
+        return (MemoData?)this[fieldName];
+    }
+
+    #endregion
 
     /// <summary>
     /// Tries to get a value by field name
@@ -136,32 +312,6 @@ public readonly struct DbfRecord : IEnumerable<KeyValuePair<string, object?>>
     }
 
     /// <summary>
-    /// Tries to get a strongly-typed value by field name
-    /// </summary>
-    /// <typeparam name="T">The expected type</typeparam>
-    /// <param name="fieldName">The field name</param>
-    /// <param name="value">The field value if found and convertible</param>
-    /// <returns>True if the field was found and convertible, false otherwise</returns>
-    public bool TryGetValue<T>(string fieldName, [MaybeNullWhen(false)] out T value)
-    {
-        if (TryGetValue(fieldName, out var rawValue))
-        {
-            try
-            {
-                value = ConvertValue<T>(rawValue);
-                return true;
-            }
-            catch
-            {
-                // Conversion failed
-            }
-        }
-
-        value = default;
-        return false;
-    }
-
-    /// <summary>
     /// Tries to get a value by field index
     /// </summary>
     /// <param name="index">The zero-based field index</param>
@@ -179,31 +329,77 @@ public readonly struct DbfRecord : IEnumerable<KeyValuePair<string, object?>>
         return false;
     }
 
-    /// <summary>
-    /// Tries to get a strongly-typed value by field index
-    /// </summary>
-    /// <typeparam name="T">The expected type</typeparam>
-    /// <param name="index">The zero-based field index</param>
-    /// <param name="value">The field value if found and convertible</param>
-    /// <returns>True if the index was valid and value convertible, false otherwise</returns>
-    public bool TryGetValue<T>(int index, [MaybeNullWhen(false)] out T value)
-    {
-        if (TryGetValue(index, out var rawValue))
-        {
-            try
-            {
-                value = ConvertValue<T>(rawValue);
-                return true;
-            }
-            catch
-            {
-                // Conversion failed
-            }
-        }
+    #region Type-Specific TryGet...
 
-        value = default;
+    /// <summary>
+    /// Tries to get the value of the specified field as a string.
+    /// </summary>
+    /// <param name="index">The zero-based index of the field.</param>
+    /// <param name="value">When this method returns, contains the string value of the field, if the retrieval succeeds; otherwise, the default value for the type of the value parameter. This parameter is passed uninitialized.</param>
+    /// <returns>true if the value is successfully retrieved and is of the specified type; otherwise, false.</returns>
+    public bool TryGetString(int index, [MaybeNullWhen(false)] out string? value)
+    {
+        if (TryGetValue(index, out var rawValue) && rawValue is string stringValue)
+        {
+            value = stringValue;
+            return true;
+        }
+        value = null;
         return false;
     }
+
+    /// <summary>
+    /// Tries to get the value of the specified field as a string.
+    /// </summary>
+    /// <param name="fieldName">The name of the field.</param>
+    /// <param name="value">When this method returns, contains the string value of the field, if the retrieval succeeds; otherwise, the default value for the type of the value parameter. This parameter is passed uninitialized.</param>
+    /// <returns>true if the value is successfully retrieved and is of the specified type; otherwise, false.</returns>
+    public bool TryGetString(string fieldName, [MaybeNullWhen(false)] out string? value)
+    {
+        if (TryGetValue(fieldName, out var rawValue) && rawValue is string stringValue)
+        {
+            value = stringValue;
+            return true;
+        }
+        value = null;
+        return false;
+    }
+
+    /// <summary>
+    /// Tries to get the value of the specified field as a nullable boolean.
+    /// </summary>
+    /// <param name="index">The zero-based index of the field.</param>
+    /// <param name="value">When this method returns, contains the boolean value of the field, if the retrieval succeeds; otherwise, the default value. This parameter is passed uninitialized.</param>
+    /// <returns>true if the value is successfully retrieved and is of the specified type; otherwise, false.</returns>
+    public bool TryGetBoolean(int index, [MaybeNullWhen(false)] out bool? value)
+    {
+        if (TryGetValue(index, out var rawValue) && rawValue is bool boolValue)
+        {
+            value = boolValue;
+            return true;
+        }
+        value = null;
+        return false;
+    }
+
+    /// <summary>
+    /// Tries to get the value of the specified field as a nullable boolean.
+    /// </summary>
+    /// <param name="fieldName">The name of the field.</param>
+    /// <param name="value">When this method returns, contains the boolean value of the field, if the retrieval succeeds; otherwise, the default value. This parameter is passed uninitialized.</param>
+    /// <returns>true if the value is successfully retrieved and is of the specified type; otherwise, false.</returns>
+    public bool TryGetBoolean(string fieldName, [MaybeNullWhen(false)] out bool? value)
+    {
+        if (TryGetValue(fieldName, out var rawValue) && rawValue is bool boolValue)
+        {
+            value = boolValue;
+            return true;
+        }
+        value = null;
+        return false;
+    }
+
+    #endregion
 
     /// <summary>
     /// Checks if a field with the specified name exists
@@ -237,7 +433,7 @@ public readonly struct DbfRecord : IEnumerable<KeyValuePair<string, object?>>
     /// <returns>A dictionary with field names as keys and values as values</returns>
     public Dictionary<string, object?> ToDictionary()
     {
-        if (_reader.FieldNames == null || _values == null)
+        if (_values == null)
         {
             return new Dictionary<string, object?>();
         }
@@ -266,7 +462,7 @@ public readonly struct DbfRecord : IEnumerable<KeyValuePair<string, object?>>
     /// <returns>An enumerator of key-value pairs</returns>
     public IEnumerator<KeyValuePair<string, object?>> GetEnumerator()
     {
-        if (_reader.FieldNames == null || _values == null)
+        if (_values == null)
         {
             yield break;
         }
@@ -298,46 +494,11 @@ public readonly struct DbfRecord : IEnumerable<KeyValuePair<string, object?>>
     }
 
     /// <summary>
-    /// Converts a value to the specified type with support for DBF-specific conversions
-    /// </summary>
-    /// <typeparam name="T">The target type</typeparam>
-    /// <param name="value">The value to convert</param>
-    /// <returns>The converted value</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static T ConvertValue<T>(object? value)
-    {
-        if (value is T directCast)
-        {
-            return directCast;
-        }
-
-        if (value == null)
-        {
-            if (default(T) == null)
-            {
-                return default!;
-            }
-
-            throw new InvalidCastException($"Cannot convert null to non-nullable type {typeof(T)}");
-        }
-
-        // Handle common conversions
-        try
-        {
-            return (T)Convert.ChangeType(value, typeof(T));
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidCastException($"Cannot convert value of type {value.GetType()} to {typeof(T)}", ex);
-        }
-    }
-
-    /// <summary>
     /// Returns a string representation of this record
     /// </summary>
     public override string ToString()
     {
-        if (_reader.FieldNames == null || _values == null)
+        if (_values == null)
         {
             return "Empty DBF Record";
         }
@@ -345,84 +506,17 @@ public readonly struct DbfRecord : IEnumerable<KeyValuePair<string, object?>>
         var fields = new string[_reader.FieldNames.Count];
         for (var i = 0; i < _reader.FieldNames.Count; i++)
         {
-            var valueStr = _values[i]?.ToString() ?? "null";
+            var valueStr = _values[i] switch
+            {
+                null => "null",
+                DateTime dt => dt.ToString(CultureInfo.CurrentCulture),
+                byte[] bytes => $"byte[{bytes.Length}]",
+                _ => _values[i]!.ToString()
+            };
+
             fields[i] = $"{_reader.FieldNames[i]}={valueStr}";
         }
 
         return $"DBF Record: {{{string.Join(", ", fields)}}}";
-    }
-
-    /// <summary>
-    /// Determines equality based on field values
-    /// </summary>
-    public override bool Equals(object? obj)
-    {
-        return obj is DbfRecord other && Equals(other);
-    }
-
-    /// <summary>
-    /// Determines equality based on field values
-    /// </summary>
-    private bool Equals(DbfRecord other)
-    {
-        if (_values == null && other._values == null)
-        {
-            return true;
-        }
-
-        if (_values == null || other._values == null)
-        {
-            return false;
-        }
-
-        if (_values.Length != other._values.Length)
-        {
-            return false;
-        }
-
-        for (var i = 0; i < _values.Length; i++)
-        {
-            if (!Equals(_values[i], other._values[i]))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /// <summary>
-    /// Gets a hash code based on field values
-    /// </summary>
-    public override int GetHashCode()
-    {
-        if (_values == null)
-        {
-            return 0;
-        }
-
-        var hash = new HashCode();
-        foreach (var value in _values)
-        {
-            hash.Add(value);
-        }
-
-        return hash.ToHashCode();
-    }
-
-    /// <summary>
-    /// Equality operator
-    /// </summary>
-    public static bool operator ==(DbfRecord left, DbfRecord right)
-    {
-        return left.Equals(right);
-    }
-
-    /// <summary>
-    /// Inequality operator
-    /// </summary>
-    public static bool operator !=(DbfRecord left, DbfRecord right)
-    {
-        return !left.Equals(right);
     }
 }

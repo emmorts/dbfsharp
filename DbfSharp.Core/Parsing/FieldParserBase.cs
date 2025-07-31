@@ -100,7 +100,7 @@ public abstract class FieldParserBase : IFieldParser
         {
             var chars = maxCharCount <= StackAllocThreshold
                 ? stackalloc char[maxCharCount]
-                : (rentedBuffer = ArrayPool<char>.Shared.Rent(maxCharCount));
+                : rentedBuffer = ArrayPool<char>.Shared.Rent(maxCharCount);
 
             var charCount = decoder.GetChars(data, chars, flush: true);
             return new string(chars[..charCount]);

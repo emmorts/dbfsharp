@@ -51,7 +51,7 @@ public class FieldParser : FieldParserBase
             { FieldType.Currency, (p, f, d, m, e, o) => p.ParseCurrency(f, d, e, o) },
             { FieldType.Binary, (p, f, d, m, e, o) => p.ParseBinary(f, d, m, e, o) },
             { FieldType.General, (p, f, d, m, e, o) => ParseGeneral(f, d, m, e, o) },
-            { FieldType.Picture, (p, f, d, m, e, o) => p.ParsePicture(f, d, m, e, o) },
+            { FieldType.Picture, (p, f, d, m, e, o) => ParsePicture(f, d, m, e, o) },
             { FieldType.Varchar, (p, f, d, m, e, o) => p.ParseVarchar(f, d, e, o) },
             { FieldType.Autoincrement, (p, f, d, m, e, o) => p.ParseAutoincrement(f, d, e, o) },
             { FieldType.TimestampAlternate, (p, f, d, m, e, o) => p.ParseTimestamp(f, d, e, o) },
@@ -455,7 +455,7 @@ public class FieldParser : FieldParserBase
     /// <summary>
     /// Parses a general/OLE field (G) - binary data in memo file
     /// </summary>
-    private static byte[]? ParseGeneral(
+    private static MemoData? ParseGeneral(
         DbfField field,
         ReadOnlySpan<byte> data,
         IMemoFile? memoFile,
@@ -469,13 +469,15 @@ public class FieldParser : FieldParserBase
             return null;
         }
 
-        return memoFile.GetMemo(memoIndex);
+        var memoData = memoFile.GetMemo(memoIndex);
+
+        return memoData;
     }
 
     /// <summary>
     /// Parses a picture field (P) - binary image data in memo file
     /// </summary>
-    private object? ParsePicture(
+    private static MemoData? ParsePicture(
         DbfField field,
         ReadOnlySpan<byte> data,
         IMemoFile? memoFile,

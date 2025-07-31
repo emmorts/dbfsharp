@@ -1,31 +1,37 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Optimize>true</Optimize>
-    <InvariantGlobalization>true</InvariantGlobalization>
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <Optimize>true</Optimize>
+        <OptimizationPreference>Speed</OptimizationPreference>
+        <IsAotCompatible>true</IsAotCompatible>
+        <InvariantGlobalization>true</InvariantGlobalization>
 
-    <PackageId>DbfSharp.Core</PackageId>
-    <Version>0.1.7</Version>
-    <Title>DbfSharp.Core</Title>
-    <Authors>emmorts</Authors>
-    <Description>A high-performance, memory-efficient .NET library for reading DBF files. Supports various DBF formats including dBase II, III, IV, FoxPro, and Visual FoxPro with memo file support.</Description>
-    <PackageProjectUrl>https://github.com/emmorts/DbfSharp</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/emmorts/DbfSharp</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageTags>dbf;dbase;foxpro;database;reader;xbase</PackageTags>
-    <Copyright>Copyright (c) 2025 emmorts</Copyright>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(AllowUnsafeBlocks)' == 'true'">
-    <DefineConstants>$(DefineConstants);UNSAFE_ENABLED</DefineConstants>
-  </PropertyGroup>
-  <ItemGroup>
-    <None Include="..\README.md" Pack="true" PackagePath="\" />
-  </ItemGroup>
+        <PackageId>DbfSharp.Core</PackageId>
+        <Version>0.2.0</Version>
+        <Title>DbfSharp.Core</Title>
+        <Authors>emmorts</Authors>
+        <Description>A high-performance, memory-efficient .NET library for reading DBF files. Supports various DBF formats including dBase II, III, IV, FoxPro, and Visual FoxPro with memo file support.</Description>
+        <PackageProjectUrl>https://github.com/emmorts/DbfSharp</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/emmorts/DbfSharp</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageTags>dbf;dbase;foxpro;database;reader;xbase</PackageTags>
+        <Copyright>Copyright (c) 2025 emmorts</Copyright>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+        <LangVersion>latest</LangVersion>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(AllowUnsafeBlocks)' == 'true'">
+        <DefineConstants>$(DefineConstants);UNSAFE_ENABLED</DefineConstants>
+    </PropertyGroup>
+    <ItemGroup>
+        <None Include="..\README.md" Pack="true" PackagePath="\"/>
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.7"/>
+    </ItemGroup>
 </Project>
