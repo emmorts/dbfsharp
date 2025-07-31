@@ -478,7 +478,7 @@ public sealed class InfoCommand : AsyncCommand<InfoSettings>
     private static long CalculateExpectedFileSize(DbfReader reader)
     {
         var header = reader.Header;
-        return header.HeaderLength + (header.RecordLength * header.NumberOfRecords);
+        return header.HeaderLength + header.RecordLength * header.NumberOfRecords;
     }
 
     /// <summary>
