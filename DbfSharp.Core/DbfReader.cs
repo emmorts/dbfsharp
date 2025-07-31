@@ -1001,6 +1001,11 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
             await CastAndDispose(_memoFile);
         }
 
+        if (_pipeReader != null)
+        {
+            await _pipeReader.CompleteAsync();
+        }
+
         if (_pipeWriterTask != null)
         {
             try
