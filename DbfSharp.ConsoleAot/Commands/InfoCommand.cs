@@ -316,7 +316,7 @@ public static class InfoCommand
 
     private static void DisplayPerformanceInformation(long actualFileSize, long expectedFileSize)
     {
-        var table = new ConsoleTableWriter("\nPerformance Information", "Metric", "Value");
+        var table = new ConsoleTableWriter("\nPerformance Information", "Metric", "Value", "Details");
 
         var memoryEstimate = FileSize.EstimateMemoryUsage(actualFileSize);
         table.AddRow("Estimated Memory Usage", FileSize.Format(memoryEstimate), "Approximate processing requirement");
