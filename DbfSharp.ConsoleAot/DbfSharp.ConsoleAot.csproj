@@ -6,9 +6,6 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <InvariantGlobalization>true</InvariantGlobalization>
-        <!-- AOT configuration for publish scenarios -->
-        <PublishAot Condition="'$(RuntimeIdentifier)' != ''">true</PublishAot>
-        <PublishTrimmed Condition="'$(RuntimeIdentifier)' != ''">true</PublishTrimmed>
         <OptimizationPreference>Speed</OptimizationPreference>
         <!-- .NET Tool configuration -->
         <PackAsTool>true</PackAsTool>
@@ -25,6 +22,11 @@
         <LangVersion>default</LangVersion>
     </PropertyGroup>
 
+    <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+        <PublishAot>true</PublishAot>
+        <PublishTrimmed>true</PublishTrimmed>
+    </PropertyGroup>
+
     <ItemGroup>
       <PackageReference Include="ConsoleAppFramework" Version="5.5.0">
         <PrivateAssets>all</PrivateAssets>
@@ -34,6 +36,10 @@
 
     <ItemGroup>
       <ProjectReference Include="..\DbfSharp.Core\DbfSharp.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
 
 </Project>
