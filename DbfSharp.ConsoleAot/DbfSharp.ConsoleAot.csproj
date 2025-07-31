@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <InvariantGlobalization>true</InvariantGlobalization>
+        <!-- AOT configuration -->
+        <PublishAot>true</PublishAot>
+        <PublishTrimmed>true</PublishTrimmed>
+        <OptimizationPreference>Speed</OptimizationPreference>
+        <!-- .NET Tool configuration -->
+        <PackAsTool>true</PackAsTool>
+        <ToolCommandName>dbfsharp</ToolCommandName>
+        <PackageId>DbfSharp</PackageId>
+        <Version>0.2.0</Version>
+        <Authors>Tomas Stropus</Authors>
+        <Description>Cross-platform command-line tool for reading and processing DBF (dBASE) database files</Description>
+        <PackageTags>dbf;dbase;database;cli;tool</PackageTags>
+        <PackageProjectUrl>https://github.com/emmorts/DbfSharp</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/emmorts/DbfSharp</RepositoryUrl>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <LangVersion>default</LangVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="ConsoleAppFramework" Version="5.5.0">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\DbfSharp.Core\DbfSharp.Core.csproj" />
+    </ItemGroup>
+
+</Project>
