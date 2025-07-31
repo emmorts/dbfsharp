@@ -6,9 +6,9 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <InvariantGlobalization>true</InvariantGlobalization>
-        <!-- AOT configuration -->
-        <PublishAot>true</PublishAot>
-        <PublishTrimmed>true</PublishTrimmed>
+        <!-- AOT configuration for publish scenarios -->
+        <PublishAot Condition="'$(RuntimeIdentifier)' != ''">true</PublishAot>
+        <PublishTrimmed Condition="'$(RuntimeIdentifier)' != ''">true</PublishTrimmed>
         <OptimizationPreference>Speed</OptimizationPreference>
         <!-- .NET Tool configuration -->
         <PackAsTool>true</PackAsTool>
