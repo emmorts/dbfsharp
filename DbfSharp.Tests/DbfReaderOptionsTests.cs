@@ -17,7 +17,6 @@ public class DbfReaderOptionsTests
         Assert.Null(options.Encoding);
         Assert.True(options.IgnoreCase);
         Assert.False(options.LowerCaseFieldNames);
-        Assert.False(options.LoadOnOpen);
         Assert.False(options.IgnoreMissingMemoFile);
         Assert.True(options.EnableStringInterning);
         Assert.True(options.TrimStrings);
@@ -33,9 +32,10 @@ public class DbfReaderOptionsTests
     public void LoadOnOpen_True_ShouldLoadRecordsImmediately()
     {
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
-        var options = new DbfReaderOptions { LoadOnOpen = true };
 
-        using var reader = DbfReader.Open(filePath, options);
+        using var reader = DbfReader.Create(filePath);
+
+        reader.Load();
 
         Assert.True(reader.IsLoaded);
         Assert.True(reader.Count > 0);
@@ -47,7 +47,9 @@ public class DbfReaderOptionsTests
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
         var options = new DbfReaderOptions { LowerCaseFieldNames = true };
 
-        using var reader = DbfReader.Open(filePath, options);
+        using var reader = DbfReader.Create(filePath, options);
+
+        reader.Load();
 
         foreach (var name in reader.FieldNames)
         {
@@ -62,7 +64,9 @@ public class DbfReaderOptionsTests
         var customEncoding = Encoding.UTF8;
         var options = new DbfReaderOptions { Encoding = customEncoding };
 
-        using var reader = DbfReader.Open(filePath, options);
+        using var reader = DbfReader.Create(filePath, options);
+
+        reader.Load();
 
         Assert.Equal(customEncoding, reader.Encoding);
     }
@@ -74,7 +78,8 @@ public class DbfReaderOptionsTests
         const int maxRecords = 2;
         var options = new DbfReaderOptions { MaxRecords = maxRecords };
 
-        using var reader = DbfReader.Open(filePath, options);
+        using var reader = DbfReader.Create(filePath, options);
+
         var records = reader.Records.ToList();
 
         Assert.True(records.Count <= maxRecords);
@@ -86,7 +91,7 @@ public class DbfReaderOptionsTests
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.DBase83MissingMemo);
         var options = new DbfReaderOptions { IgnoreMissingMemoFile = true };
 
-        using var reader = DbfReader.Open(filePath, options);
+        using var reader = DbfReader.Create(filePath, options);
         Assert.NotNull(reader);
 
         // Should be able to read records without errors
@@ -101,8 +106,11 @@ public class DbfReaderOptionsTests
         var optionsWithTrim = new DbfReaderOptions { TrimStrings = true };
         var optionsWithoutTrim = new DbfReaderOptions { TrimStrings = false };
 
-        using var readerWithTrim = DbfReader.Open(filePath, optionsWithTrim);
-        using var readerWithoutTrim = DbfReader.Open(filePath, optionsWithoutTrim);
+        using var readerWithTrim = DbfReader.Create(filePath, optionsWithTrim);
+        using var readerWithoutTrim = DbfReader.Create(filePath, optionsWithoutTrim);
+
+        readerWithTrim.Load();
+        readerWithoutTrim.Load();
 
         var recordWithTrim = readerWithTrim.Records.First();
         var recordWithoutTrim = readerWithoutTrim.Records.First();
@@ -131,7 +139,7 @@ public class DbfReaderOptionsTests
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
         var options = new DbfReaderOptions { RawMode = true };
 
-        using var reader = DbfReader.Open(filePath, options);
+        using var reader = DbfReader.Create(filePath, options);
         var record = reader.Records.First();
 
         for (var i = 0; i < record.FieldCount; i++)
@@ -147,7 +155,7 @@ public class DbfReaderOptionsTests
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.InvalidValue);
         var options = new DbfReaderOptions { ValidateFields = false };
 
-        using var reader = DbfReader.Open(filePath, options);
+        using var reader = DbfReader.Create(filePath, options);
         Assert.NotNull(reader);
 
         // Should be able to read records even with invalid field values
@@ -163,7 +171,6 @@ public class DbfReaderOptionsTests
             Encoding = Encoding.UTF8,
             IgnoreCase = false,
             LowerCaseFieldNames = true,
-            LoadOnOpen = true,
             IgnoreMissingMemoFile = true,
             TrimStrings = false,
             MaxRecords = 100,
@@ -176,7 +183,6 @@ public class DbfReaderOptionsTests
         Assert.Equal(original.Encoding, clone.Encoding);
         Assert.Equal(original.IgnoreCase, clone.IgnoreCase);
         Assert.Equal(original.LowerCaseFieldNames, clone.LowerCaseFieldNames);
-        Assert.Equal(original.LoadOnOpen, clone.LoadOnOpen);
         Assert.Equal(original.IgnoreMissingMemoFile, clone.IgnoreMissingMemoFile);
         Assert.Equal(original.TrimStrings, clone.TrimStrings);
         Assert.Equal(original.MaxRecords, clone.MaxRecords);
@@ -188,7 +194,6 @@ public class DbfReaderOptionsTests
     {
         var options = DbfReaderOptions.CreatePerformanceOptimized();
 
-        Assert.False(options.LoadOnOpen); // Stream for memory efficiency
         Assert.True(options.EnableStringInterning); // Reduce memory
         Assert.True(options.BufferSize > 65536); // Larger buffer
         Assert.False(options.ValidateFields); // Skip validation for speed
@@ -200,7 +205,6 @@ public class DbfReaderOptionsTests
     {
         var options = DbfReaderOptions.CreateMemoryOptimized();
 
-        Assert.False(options.LoadOnOpen); // Never load all records
         Assert.True(options.EnableStringInterning); // Reduce string duplication
         Assert.True(options.BufferSize < 65536); // Smaller buffer
         Assert.False(options.UseMemoryMapping); // Don't map entire file
@@ -225,7 +229,6 @@ public class DbfReaderOptionsTests
     {
         var options = new DbfReaderOptions
         {
-            LoadOnOpen = true,
             LowerCaseFieldNames = true,
             MaxRecords = 1000,
         };
@@ -233,7 +236,6 @@ public class DbfReaderOptionsTests
         var result = options.ToString();
 
         Assert.False(string.IsNullOrEmpty(result));
-        Assert.Contains("LoadOnOpen", result);
         Assert.Contains("LowerCaseNames", result);
         Assert.Contains("MaxRecords=1000", result);
     }
@@ -255,8 +257,8 @@ public class DbfReaderOptionsTests
         var optionsIncludeDeleted = new DbfReaderOptions { SkipDeletedRecords = false };
         var optionsSkipDeleted = new DbfReaderOptions { SkipDeletedRecords = true };
 
-        using var readerIncludeDeleted = DbfReader.Open(filePath, optionsIncludeDeleted);
-        using var readerSkipDeleted = DbfReader.Open(filePath, optionsSkipDeleted);
+        using var readerIncludeDeleted = DbfReader.Create(filePath, optionsIncludeDeleted);
+        using var readerSkipDeleted = DbfReader.Create(filePath, optionsSkipDeleted);
 
         var recordsIncludeDeleted = readerIncludeDeleted.Records.Count();
         var recordsSkipDeleted = readerSkipDeleted.Records.Count();

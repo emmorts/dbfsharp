@@ -11,7 +11,7 @@ public class DbfReaderBasicTests
     {
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
 
-        using var reader = DbfReader.Open(filePath);
+        using var reader = DbfReader.Create(filePath);
 
         Assert.NotNull(reader);
         Assert.False(reader.IsLoaded); // Default is streaming mode
@@ -25,7 +25,7 @@ public class DbfReaderBasicTests
     {
         const string filePath = "non_existent_file.dbf";
 
-        var exception = Assert.Throws<DbfNotFoundException>(() => DbfReader.Open(filePath));
+        var exception = Assert.Throws<DbfNotFoundException>(() => DbfReader.Create(filePath));
         Assert.Equal(filePath, exception.FilePath);
     }
 
@@ -35,7 +35,7 @@ public class DbfReaderBasicTests
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
         using var fileStream = File.OpenRead(filePath);
 
-        using var reader = DbfReader.Open(fileStream);
+        using var reader = DbfReader.Create(fileStream);
 
         Assert.NotNull(reader);
         Assert.NotEmpty(reader.Fields);
@@ -48,7 +48,7 @@ public class DbfReaderBasicTests
     {
         var filePath = TestHelper.GetTestFilePath(fileName);
 
-        using var reader = DbfReader.Open(
+        using var reader = DbfReader.Create(
             filePath,
             new DbfReaderOptions { IgnoreMissingMemoFile = true }
         );
@@ -75,7 +75,7 @@ public class DbfReaderBasicTests
     {
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
 
-        using var reader = DbfReader.Open(filePath);
+        using var reader = DbfReader.Create(filePath);
 
         Assert.NotEqual(default, reader.Header);
         Assert.True(reader.Header.NumberOfRecords > 0);
@@ -103,7 +103,7 @@ public class DbfReaderBasicTests
 
         var filePath = TestHelper.GetTestFilePath(fileName);
 
-        using var reader = DbfReader.Open(
+        using var reader = DbfReader.Create(
             filePath,
             new DbfReaderOptions { IgnoreMissingMemoFile = !hasMemo }
         );
@@ -116,7 +116,7 @@ public class DbfReaderBasicTests
     {
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
 
-        using var reader = DbfReader.Open(filePath);
+        using var reader = DbfReader.Create(filePath);
 
         Assert.NotEmpty(reader.Fields);
         Assert.NotEmpty(reader.FieldNames);
@@ -135,7 +135,7 @@ public class DbfReaderBasicTests
     {
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
 
-        using var reader = DbfReader.Open(filePath);
+        using var reader = DbfReader.Create(filePath);
         var records = reader.Records.Take(10).ToList();
 
         Assert.NotEmpty(records);
@@ -153,7 +153,7 @@ public class DbfReaderBasicTests
     {
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
 
-        using var reader = DbfReader.Open(filePath);
+        using var reader = DbfReader.Create(filePath);
         var firstRecord = reader.Records.First();
 
         // Test index-based access
@@ -183,7 +183,7 @@ public class DbfReaderBasicTests
     {
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
 
-        using var reader = DbfReader.Open(filePath);
+        using var reader = DbfReader.Create(filePath);
         var stats = reader.GetStatistics();
 
         Assert.NotNull(stats);
@@ -203,7 +203,7 @@ public class DbfReaderBasicTests
     {
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
 
-        using var reader = DbfReader.Open(filePath);
+        using var reader = DbfReader.Create(filePath);
         Assert.False(reader.IsLoaded);
 
         reader.Load();
@@ -227,7 +227,7 @@ public class DbfReaderBasicTests
     {
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
 
-        using var reader = DbfReader.Open(filePath);
+        using var reader = DbfReader.Create(filePath);
         reader.Load();
         Assert.True(reader.IsLoaded);
 
@@ -241,7 +241,7 @@ public class DbfReaderBasicTests
     {
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
 
-        using var reader = DbfReader.Open(filePath);
+        using var reader = DbfReader.Create(filePath);
         var firstFieldName = reader.FieldNames[0];
         var field = reader.FindField(firstFieldName);
 
@@ -254,7 +254,7 @@ public class DbfReaderBasicTests
     {
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
 
-        using var reader = DbfReader.Open(filePath);
+        using var reader = DbfReader.Create(filePath);
         var field = reader.FindField("NON_EXISTENT_FIELD");
 
         Assert.Null(field);
@@ -265,7 +265,7 @@ public class DbfReaderBasicTests
     {
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
 
-        using var reader = DbfReader.Open(filePath);
+        using var reader = DbfReader.Create(filePath);
         var firstFieldName = reader.FieldNames[0];
 
         Assert.True(reader.HasField(firstFieldName));
@@ -277,7 +277,7 @@ public class DbfReaderBasicTests
     {
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
 
-        using var reader = DbfReader.Open(filePath);
+        using var reader = DbfReader.Create(filePath);
         var str = reader.ToString();
 
         Assert.False(string.IsNullOrEmpty(str));
@@ -289,7 +289,7 @@ public class DbfReaderBasicTests
     public void Dispose_ShouldCleanupResources()
     {
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
-        var reader = DbfReader.Open(filePath);
+        var reader = DbfReader.Create(filePath);
 
         reader.Dispose();
 
@@ -301,7 +301,7 @@ public class DbfReaderBasicTests
     {
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.DBase30);
 
-        using var reader = DbfReader.Open(filePath);
+        using var reader = DbfReader.Create(filePath);
         var record = reader.Records.First();
 
         // Test generic access for different field types
@@ -311,12 +311,12 @@ public class DbfReaderBasicTests
             {
                 case FieldType.Character:
                 case FieldType.Varchar:
-                    var stringValue = record.GetValue<string>(field.Name);
+                    var stringValue = record.GetString(field.Name);
                     Assert.True(stringValue is null or string);
                     break;
 
                 case FieldType.Date:
-                    var dateValue = record.GetValue<DateTime?>(field.Name);
+                    var dateValue = record.GetDateTime(field.Name);
                     Assert.True(dateValue is null or DateTime);
                     break;
 
@@ -329,22 +329,22 @@ public class DbfReaderBasicTests
                     break;
 
                 case FieldType.Logical:
-                    var boolValue = record.GetValue<bool?>(field.Name);
+                    var boolValue = record.GetBoolean(field.Name);
                     Assert.True(boolValue is null or bool);
                     // Can be null or bool
                     break;
                 case FieldType.Memo:
-                    var memoValue = record.GetValue<string>(field.Name);
+                    var memoValue = record.GetString(field.Name);
                     Assert.True(memoValue is null or string);
                     break;
                 case FieldType.Timestamp:
                 case FieldType.TimestampAlternate:
-                    var timestampValue = record.GetValue<DateTime?>(field.Name);
+                    var timestampValue = record.GetDateTime(field.Name);
                     Assert.True(timestampValue is null or DateTime);
                     break;
                 default:
                     // For other types, just check if we can get a value
-                    var value = record.GetValue<object>(field.Name);
+                    var value = record[field.Name];
                     break;
             }
         }
@@ -355,7 +355,7 @@ public class DbfReaderBasicTests
     {
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
 
-        using var reader = DbfReader.Open(filePath);
+        using var reader = DbfReader.Create(filePath);
         var record = reader.Records.First();
         var firstFieldName = reader.FieldNames[0];
 
@@ -373,7 +373,7 @@ public class DbfReaderBasicTests
     {
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
 
-        using var reader = DbfReader.Open(filePath);
+        using var reader = DbfReader.Create(filePath);
         var record = reader.Records.First();
         var dictionary = record.ToDictionary();
 
@@ -391,7 +391,7 @@ public class DbfReaderBasicTests
     {
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
 
-        using var reader = DbfReader.Open(filePath);
+        using var reader = DbfReader.Create(filePath);
         var deletedRecords = reader.DeletedRecords.Take(10).ToList();
 
         // May have deleted records or not, both are valid
@@ -409,7 +409,7 @@ public class DbfReaderBasicTests
     {
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
 
-        using var reader = DbfReader.Open(filePath);
+        using var reader = DbfReader.Create(filePath);
         reader.Load(); // Load to enable count properties
 
         var activeCount = reader.Count;
@@ -426,7 +426,7 @@ public class DbfReaderBasicTests
     {
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
 
-        using var reader = DbfReader.Open(filePath);
+        using var reader = DbfReader.Create(filePath);
         var firstFieldName = reader.FieldNames[0];
         var index = reader.GetFieldIndex(firstFieldName);
 
