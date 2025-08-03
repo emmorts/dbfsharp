@@ -2,16 +2,21 @@
 
 A high-performance, memory-efficient DBF (dBase) file reader for .NET with support for all major DBF versions and memo files.
 
+## Installation
+
+```bash
+dotnet add package DbfSharp.Core
+```
+
 ## Features
 
-- **Complete DBF Format Support**: Supports all major DBF versions (dBase III, IV, Visual FoxPro, etc.)
-- **High Performance**: Optimized for speed with streaming and loaded access patterns
-- **Memory Efficient**: Streaming by default, optional loading for random access
-- **Memo File Support**: FPT, DBT files for large text and binary data
-- **Extensible**: Plugin architecture for custom field parsers
-- **Modern C#**: Leverages Span<T>, Memory<T>, and latest .NET features
-- **Thread-Safe**: Safe for concurrent read operations
-- **Comprehensive**: Support for all standard field types and character encodings
+- Support for all major DBF versions (dBase III, IV, Visual FoxPro, etc.)
+- High performance with streaming and loaded access patterns
+- Memory efficient streaming by default, optional loading for random access
+- Full memo file support (FPT, DBT files) for large text and binary data
+- Plugin architecture for custom field parsers
+- Modern C# with Span<T>, Memory<T>, and latest .NET features
+- Support for all standard field types and character encodings
 
 ## Quick Start
 
@@ -33,6 +38,19 @@ foreach (var record in reader.Records)
 }
 ```
 
+### Async Operations
+
+```csharp
+// Async file operations
+using var reader = await DbfReader.OpenAsync("data.dbf");
+
+await foreach (var record in reader.ReadRecordsAsync())
+{
+    var name = record.GetValue<string>("NAME");
+    Console.WriteLine($"Processing: {name}");
+}
+```
+
 ### Performance Optimized
 
 ```csharp
@@ -42,7 +60,6 @@ using var reader = DbfReader.Open("large_file.dbf", options);
 
 foreach (var record in reader.Records)
 {
-    // Process records with maximum performance
     var id = record[0]; // Access by index for speed
     var name = record["NAME"]; // Access by name
 }
@@ -69,17 +86,17 @@ foreach (var record in reader.Records)
 using var reader = DbfReader.Open("analysis.dbf");
 reader.Load();
 
-// Now you can access records by index
+// Access records by index
 var firstRecord = reader[0];
 var lastRecord = reader[reader.Count - 1];
 
-// Or use LINQ
+// Use LINQ for queries
 var highSalaries = reader.Records
     .Where(r => r.GetValue<decimal?>("SALARY") > 50000)
     .ToList();
 ```
 
-## Configuration Options
+## Configuration
 
 ### DbfReaderOptions
 
@@ -194,7 +211,24 @@ catch (FieldParseException ex)
 }
 ```
 
-### Statistics and Metadata
+### Working with Deleted Records
+
+```csharp
+var options = new DbfReaderOptions
+{
+    SkipDeletedRecords = false // Include deleted records
+};
+
+using var reader = DbfReader.Open("data.dbf", options);
+
+// Access only deleted records
+await foreach (var deletedRecord in reader.ReadDeletedRecordsAsync())
+{
+    Console.WriteLine($"Deleted Record ID: {deletedRecord.GetValue<int>("ID")}");
+}
+```
+
+### Metadata and Statistics
 
 ```csharp
 using var reader = DbfReader.Open("data.dbf");
@@ -202,59 +236,27 @@ var stats = reader.GetStatistics();
 
 Console.WriteLine($"Table: {stats.TableName}");
 Console.WriteLine($"Version: {stats.DbfVersion}");
-Console.WriteLine($"Records: {stats.ActiveRecords:N0} active, {stats.DeletedRecords:N0} deleted");
+Console.WriteLine($"Records: {stats.TotalRecords:N0}");
 Console.WriteLine($"Fields: {stats.FieldCount}");
 Console.WriteLine($"Encoding: {stats.Encoding}");
 Console.WriteLine($"Last Updated: {stats.LastUpdateDate}");
+
+// Inspect field definitions
+foreach (DbfField field in reader.Fields)
+{
+    Console.WriteLine($"- {field.Name} ({field.Type}), Length: {field.ActualLength}");
+}
 ```
 
-## Performance Optimization
+## Performance
 
-### Enabling Unsafe Code (Optional)
+### Optimization Tips
 
-For maximum performance, you can enable unsafe code compilation:
+- Use streaming for large files (don't call `Load()` unless you need random access)
+- Adjust buffer size for better I/O performance
+- Use memory mapping for large files on 64-bit systems
+- Limit record count with `MaxRecords` for sampling large files
 
-1. Add to your project file:
-```xml
-<PropertyGroup>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-</PropertyGroup>
-```
+### Benchmarks
 
-2. Reference the NuGet package and use unsafe extensions:
-```csharp
-// This will automatically use unsafe optimizations when available
-using var reader = DbfReader.Open("data.dbf", DbfReaderOptions.CreatePerformanceOptimized());
-```
-
-### Memory Management Tips
-
-1. **Use streaming for large files**: Don't call `Load()` unless you need random access
-2. **Enable string interning**: Reduces memory for repeated field names
-3. **Adjust buffer size**: Larger buffers improve I/O performance
-4. **Use memory mapping**: Enable for large files on 64-bit systems
-5. **Limit record count**: Use `MaxRecords` for sampling large files
-
-### Performance Benchmarks
-
-Typical performance on modern hardware:
-
-- **Streaming**: 100,000+ records/second
-- **Memory usage**: <100MB for 1M records (streaming mode)
-- **Startup time**: <50ms for header parsing
-- **Large files**: 1GB+ files supported efficiently
-
-## Compatibility
-
-- **.NET 6.0+**: Primary target framework
-- **All platforms**: Windows, Linux, macOS
-- **DBF versions**: dBase III, IV, Visual FoxPro, FoxBase
-- **Character encodings**: Automatic detection, 50+ code pages supported
-
-## License
-
-MIT License - see LICENSE file for details.
-
-## Contributing
-
-Contributions welcome! Please see CONTRIBUTING.md for guidelines.
+TBD

@@ -27,11 +27,11 @@ dotnet add package DbfSharp.Core
 ```csharp
 using DbfSharp.Core;
 
-using var reader = DbfReader.Open("data.dbf");
+using var reader = DbfReader.Create("data.dbf");
 foreach (var record in reader.Records)
 {
-    var name = record.GetValue<string>("NAME");
-    var birthDate = record.GetValue<DateTime?>("BIRTHDATE");
+    var name = record.GetString("NAME");
+    var birthDate = record.GetDateTime("BIRTHDATE");
     Console.WriteLine($"{name}, born {birthDate}");
 }
 ```
