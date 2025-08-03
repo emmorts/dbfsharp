@@ -10,7 +10,7 @@
         <InvariantGlobalization>true</InvariantGlobalization>
 
         <PackageId>DbfSharp.Core</PackageId>
-        <Version>0.2.2</Version>
+        <Version>0.2.3</Version>
         <Title>DbfSharp.Core</Title>
         <Authors>emmorts</Authors>
         <Description>A high-performance, memory-efficient .NET library for reading DBF files. Supports various DBF formats including dBase II, III, IV, FoxPro, and Visual FoxPro with memo file support.</Description>
@@ -19,6 +19,7 @@
         <RepositoryType>git</RepositoryType>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageIcon>dbfsharp.jpg</PackageIcon>
         <PackageTags>dbf;dbase;foxpro;database;reader;xbase</PackageTags>
         <Copyright>Copyright (c) 2025 emmorts</Copyright>
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
@@ -29,7 +30,8 @@
         <DefineConstants>$(DefineConstants);UNSAFE_ENABLED</DefineConstants>
     </PropertyGroup>
     <ItemGroup>
-        <None Include="..\README.md" Pack="true" PackagePath="\"/>
+        <None Include="README.md" Pack="true" PackagePath="\"/>
+        <None Include="..\assets\dbfsharp.jpg" Pack="true" PackagePath="\"/>
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.7"/>
