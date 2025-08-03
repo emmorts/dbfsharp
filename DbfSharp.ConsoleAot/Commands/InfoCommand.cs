@@ -88,6 +88,13 @@ public static class InfoCommand
 
             await using var reader =
                 await DbfReader.CreateAsync(inputSource.Stream, readerOptions, cancellationToken);
+
+            // Subscribe to warnings if not in quiet mode
+            if (!settings.Quiet)
+            {
+                reader.Warning += (sender, e) => Console.WriteLine($"Warning: {e.Message}");
+            }
+
             var dbfStats = reader.GetStatistics();
 
             var fileSize = inputSource.GetFileSize();
@@ -103,9 +110,9 @@ public static class InfoCommand
                 DisplayFieldInformation(reader, settings.Verbose);
             }
 
-            if (settings.ShowStats)
+            if (settings is { ShowStats: true, Verbose: true })
             {
-                await DisplayRecordStatisticsAsync(reader, settings.Verbose, cancellationToken);
+                await DisplaySampleDataAsync(reader, cancellationToken);
             }
 
             if (settings.ShowMemo && dbfStats.HasMemoFile)
@@ -139,7 +146,7 @@ public static class InfoCommand
         {
             options = options with { Encoding = EncodingResolver.Resolve(settings.Encoding) };
         }
-        else
+        else if (!validationResult.IsValid)
         {
             if (settings.Quiet)
             {
@@ -176,8 +183,6 @@ public static class InfoCommand
         if (actualFileSize.HasValue)
         {
             table.AddRow("File Size", FileSize.Format(actualFileSize.Value), $"{actualFileSize.Value:N0} bytes");
-            var sizeDifference = FileSize.FormatSizeDifference(actualFileSize.Value, expectedFileSize);
-            table.AddRow("Size vs Expected", sizeDifference, $"Expected: {FileSize.Format(expectedFileSize)}");
         }
         else
         {
@@ -234,23 +239,6 @@ public static class InfoCommand
         table.Print(TableBorderStyles.Rounded);
     }
 
-    private static async Task DisplayRecordStatisticsAsync(DbfReader reader, bool verbose,
-        CancellationToken cancellationToken)
-    {
-        var stats = reader.GetStatistics();
-        var table = new ConsoleTableWriter("\nRecord Statistics", "Metric", "Count", "Percentage");
-        table.AddRow("Total Records", stats.TotalRecords.ToString("N0"), "100.0%");
-        table.AddRow("Active Records", stats.ActiveRecords.ToString("N0"),
-            $"{(stats.TotalRecords > 0 ? stats.ActiveRecords * 100.0 / stats.TotalRecords : 0):F1}%");
-        table.AddRow("Deleted Records", stats.DeletedRecords.ToString("N0"),
-            $"{(stats.TotalRecords > 0 ? stats.DeletedRecords * 100.0 / stats.TotalRecords : 0):F1}%");
-        table.Print(TableBorderStyles.Rounded);
-
-        if (verbose && stats.ActiveRecords > 0)
-        {
-            await DisplaySampleDataAsync(reader, cancellationToken);
-        }
-    }
 
     private static async Task DisplaySampleDataAsync(DbfReader reader, CancellationToken cancellationToken)
     {
@@ -260,7 +248,11 @@ public static class InfoCommand
             var count = 0;
             await foreach (var record in reader.ReadRecordsAsync(cancellationToken))
             {
-                if (count >= 3) break;
+                if (count >= 3)
+                {
+                    break;
+                }
+
                 sampleRecords.Add(record);
                 count++;
             }

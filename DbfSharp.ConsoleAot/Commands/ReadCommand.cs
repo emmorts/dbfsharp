@@ -162,7 +162,7 @@ public static class ReadCommand
         {
             readerOptions = readerOptions with { Encoding = EncodingResolver.Resolve(settings.Encoding) };
         }
-        else if (!settings.Quiet)
+        else if (!validationResult.IsValid && !settings.Quiet)
         {
             Console.WriteLine($"Warning: {validationResult.ErrorMessage}");
 
@@ -172,7 +172,15 @@ public static class ReadCommand
             }
         }
 
-        return await DbfReader.CreateAsync(stream, readerOptions);
+        var reader = await DbfReader.CreateAsync(stream, readerOptions);
+        
+        // Subscribe to warnings if not in quiet mode
+        if (!settings.Quiet)
+        {
+            reader.Warning += (sender, e) => Console.WriteLine($"Warning: {e.Message}");
+        }
+        
+        return reader;
     }
 
     private static async Task<List<DbfRecord>> GetRecordsToDisplayAsync(DbfReader reader, ReadConfiguration settings,

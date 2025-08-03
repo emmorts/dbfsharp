@@ -13,6 +13,7 @@ public static class EncodingResolver
         ["utf-8"] = "UTF-8",
         ["ascii"] = "ASCII",
         ["ansi"] = "Windows-1252",
+        ["cp1251"] = "Windows-1251",
         ["cp1252"] = "Windows-1252",
         ["windows1252"] = "Windows-1252",
         ["iso88591"] = "ISO-8859-1",

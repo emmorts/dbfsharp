@@ -113,7 +113,10 @@ public sealed class TableFormatter : IDbfFormatter
     /// </summary>
     private static void OptimizeColumnWidths(int[] columnWidths, List<string[]> sampleRecords)
     {
-        if (sampleRecords.Count == 0) return;
+        if (sampleRecords.Count == 0)
+        {
+            return;
+        }
 
         for (var colIndex = 0; colIndex < columnWidths.Length; colIndex++)
         {
