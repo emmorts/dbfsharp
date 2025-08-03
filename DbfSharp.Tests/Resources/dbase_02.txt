@@ -1,0 +1,44 @@
+Analyzing DBF file: dbase_02.dbf
+
+Header Information
+╭──────────────────┬───────────────────────────────┬───────────────────────────╮
+│ Property         │ Value                         │ Details                   │
+├──────────────────┼───────────────────────────────┼───────────────────────────┤
+│ DBF Version      │ dBASE II / FoxBASE            │ Byte: 0x02                │
+│ Last Update      │ Unknown                       │ Raw: 00/00/00             │
+│ Header Length    │ 8 bytes                       │ Fields area: -25 bytes    │
+│ Record Length    │ 1 bytes                       │ Including deletion flag   │
+│ Total Records    │ 9                             │ Including deleted records │
+│ MDX Index        │ None                          │ Flag: 0x00                │
+│ Encryption       │ Encrypted                     │ Flag: 0x52                │
+│ Language Driver  │ plain ol' ascii               │ Code: 0x00                │
+│ File Size        │ 2.00 KB                       │ 2,048 bytes               │
+│ Size vs Expected │ +1.98 KB larger than expected │ Expected: 17 bytes        │
+╰──────────────────┴───────────────────────────────┴───────────────────────────╯
+
+Field Definitions
+╭───┬──────┬──────┬────────┬──────────┬───────╮
+│ # │ Name │ Type │ Length │ Decimals │ Flags │
+├───┼──────┼──────┼────────┼──────────┼───────┤
+╰───┴──────┴──────┴────────┴──────────┴───────╯
+
+Sample Data (first 3 records)
+╭╮
+│
+│
+│
+╰╯
+
+Performance Information
+╭───────────────────────────┬──────────┬────────────────────────────────────╮
+│ Metric                    │ Value    │ Details                            │
+├───────────────────────────┼──────────┼────────────────────────────────────┤
+│ Estimated Memory Usage    │ 6.00 KB  │ Approximate processing requirement │
+│ Size Difference           │ 11947.1% │ May indicate corruption            │
+│ Processing Recommendation │ Optimal  │ Good performance expected          │
+╰───────────────────────────┴──────────┴────────────────────────────────────╯
+
+Performance Summary for Analyze DBF File:
+  Elapsed Time: 00:00.049
+  Memory Used: 0.0 MB
+  Peak Working Set: 25.0 MB

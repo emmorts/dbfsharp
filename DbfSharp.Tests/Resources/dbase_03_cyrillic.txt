@@ -1,0 +1,47 @@
+Analyzing DBF file: dbase_03_cyrillic.dbf
+
+Header Information
+╭──────────────────┬────────────────────────────────────┬───────────────────────────╮
+│ Property         │ Value                              │ Details                   │
+├──────────────────┼────────────────────────────────────┼───────────────────────────┤
+│ DBF Version      │ FoxBASE+/dBase III plus, no memory │ Byte: 0x03                │
+│ Last Update      │ 2024-04-11                         │ Raw: 124/04/11            │
+│ Header Length    │ 97 bytes                           │ Fields area: 64 bytes     │
+│ Record Length    │ 41 bytes                           │ Including deletion flag   │
+│ Total Records    │ 2                                  │ Including deleted records │
+│ MDX Index        │ None                               │ Flag: 0x00                │
+│ Encryption       │ None                               │ Flag: 0x00                │
+│ Language Driver  │ UTF-8 Unicode                      │ Code: 0xF0                │
+│ File Size        │ 180 bytes                          │ 180 bytes                 │
+│ Size vs Expected │ +1 byte larger than expected       │ Expected: 179 bytes       │
+╰──────────────────┴────────────────────────────────────┴───────────────────────────╯
+
+Field Definitions
+╭───┬───────┬───────────────┬────────┬──────────┬───────╮
+│ # │ Name  │ Type          │ Length │ Decimals │ Flags │
+├───┼───────┼───────────────┼────────┼──────────┼───────┤
+│ 1 │ ШАР   │ Character (C) │ 25     │ -        │       │
+│ 2 │ ПЛОЩА │ Numeric (N)   │ 15     │ 2        │       │
+╰───┴───────┴───────────────┴────────┴──────────┴───────╯
+
+Sample Data (first 3 records)
+╭───────┬───────╮
+│ ШАР   │ ПЛОЩА │
+├───────┼───────┤
+│ Номер │ 36.30 │
+│ Культ │ 99.99 │
+╰───────┴───────╯
+
+Performance Information
+╭───────────────────────────┬───────────┬────────────────────────────────────╮
+│ Metric                    │ Value     │ Details                            │
+├───────────────────────────┼───────────┼────────────────────────────────────┤
+│ Estimated Memory Usage    │ 540 bytes │ Approximate processing requirement │
+│ Size Difference           │ 0.6%      │ May indicate corruption            │
+│ Processing Recommendation │ Optimal   │ Good performance expected          │
+╰───────────────────────────┴───────────┴────────────────────────────────────╯
+
+Performance Summary for Analyze DBF File:
+  Elapsed Time: 00:00.051
+  Memory Used: 0.0 MB
+  Peak Working Set: 25.0 MB

@@ -1,0 +1,78 @@
+Analyzing DBF file: dbase_03.dbf
+
+Warning: Duplicate field name detected: 'Point_ID'. Only the first occurrence will be accessible via FindField().
+Header Information
+╭──────────────────┬────────────────────────────────────┬───────────────────────────╮
+│ Property         │ Value                              │ Details                   │
+├──────────────────┼────────────────────────────────────┼───────────────────────────┤
+│ DBF Version      │ FoxBASE+/dBase III plus, no memory │ Byte: 0x03                │
+│ Last Update      │ 2005-07-13                         │ Raw: 05/07/13             │
+│ Header Length    │ 1025 bytes                         │ Fields area: 992 bytes    │
+│ Record Length    │ 590 bytes                          │ Including deletion flag   │
+│ Total Records    │ 14                                 │ Including deleted records │
+│ MDX Index        │ None                               │ Flag: 0x00                │
+│ Encryption       │ None                               │ Flag: 0x00                │
+│ Language Driver  │ plain ol' ascii                    │ Code: 0x00                │
+│ File Size        │ 9.07 KB                            │ 9,286 bytes               │
+│ Size vs Expected │ +1 byte larger than expected       │ Expected: 9.07 KB         │
+╰──────────────────┴────────────────────────────────────┴───────────────────────────╯
+
+Field Definitions
+╭────┬────────────┬───────────────┬────────┬──────────┬───────╮
+│ #  │ Name       │ Type          │ Length │ Decimals │ Flags │
+├────┼────────────┼───────────────┼────────┼──────────┼───────┤
+│ 1  │ Point_ID   │ Character (C) │ 12     │ -        │       │
+│ 2  │ Type       │ Character (C) │ 20     │ -        │       │
+│ 3  │ Shape      │ Character (C) │ 20     │ -        │       │
+│ 4  │ Circular_D │ Character (C) │ 20     │ -        │       │
+│ 5  │ Non_circul │ Character (C) │ 60     │ -        │       │
+│ 6  │ Flow_prese │ Character (C) │ 20     │ -        │       │
+│ 7  │ Condition  │ Character (C) │ 20     │ -        │       │
+│ 8  │ Comments   │ Character (C) │ 60     │ -        │       │
+│ 9  │ Date_Visit │ Date (D)      │ 8      │ -        │       │
+│ 10 │ Time       │ Character (C) │ 10     │ -        │       │
+│ 11 │ Max_PDOP   │ Numeric (N)   │ 5      │ 1        │       │
+│ 12 │ Max_HDOP   │ Numeric (N)   │ 5      │ 1        │       │
+│ 13 │ Corr_Type  │ Character (C) │ 36     │ -        │       │
+│ 14 │ Rcvr_Type  │ Character (C) │ 36     │ -        │       │
+│ 15 │ GPS_Date   │ Date (D)      │ 8      │ -        │       │
+│ 16 │ GPS_Time   │ Character (C) │ 10     │ -        │       │
+│ 17 │ Update_Sta │ Character (C) │ 36     │ -        │       │
+│ 18 │ Feat_Name  │ Character (C) │ 20     │ -        │       │
+│ 19 │ Datafile   │ Character (C) │ 20     │ -        │       │
+│ 20 │ Unfilt_Pos │ Numeric (N)   │ 10     │ 0        │       │
+│ 21 │ Filt_Pos   │ Numeric (N)   │ 10     │ 0        │       │
+│ 22 │ Data_Dicti │ Character (C) │ 20     │ -        │       │
+│ 23 │ GPS_Week   │ Numeric (N)   │ 6      │ 0        │       │
+│ 24 │ GPS_Second │ Numeric (N)   │ 12     │ 3        │       │
+│ 25 │ GPS_Height │ Numeric (N)   │ 16     │ 3        │       │
+│ 26 │ Vert_Prec  │ Numeric (N)   │ 16     │ 1        │       │
+│ 27 │ Horz_Prec  │ Numeric (N)   │ 16     │ 1        │       │
+│ 28 │ Std_Dev    │ Numeric (N)   │ 16     │ 6        │       │
+│ 29 │ Northing   │ Numeric (N)   │ 16     │ 3        │       │
+│ 30 │ Easting    │ Numeric (N)   │ 16     │ 3        │       │
+│ 31 │ Point_ID   │ Numeric (N)   │ 9      │ 0        │       │
+╰────┴────────────┴───────────────┴────────┴──────────┴───────╯
+
+Sample Data (first 3 records)
+╭──────────┬──────┬──────────┬────────────┬────────────┬──────────╮
+│ Point_ID │ Type │ Shape    │ Circular_D │ Non_circul │ ...      │
+├──────────┼──────┼──────────┼────────────┼────────────┼──────────┤
+│ 0507121  │ CMP  │ circular │ 12         │ <empty>    │ +26 more │
+│ 0507122  │ CMP  │ circular │ 12         │ <empty>    │ +26 more │
+│ 0507123  │ CMP  │ circular │ 12         │ <empty>    │ +26 more │
+╰──────────┴──────┴──────────┴────────────┴────────────┴──────────╯
+
+Performance Information
+╭───────────────────────────┬──────────┬────────────────────────────────────╮
+│ Metric                    │ Value    │ Details                            │
+├───────────────────────────┼──────────┼────────────────────────────────────┤
+│ Estimated Memory Usage    │ 27.21 KB │ Approximate processing requirement │
+│ Size Difference           │ 0.0%     │ May indicate corruption            │
+│ Processing Recommendation │ Optimal  │ Good performance expected          │
+╰───────────────────────────┴──────────┴────────────────────────────────────╯
+
+Performance Summary for Analyze DBF File:
+  Elapsed Time: 00:00.056
+  Memory Used: 0.0 MB
+  Peak Working Set: 26.0 MB

@@ -1,0 +1,61 @@
+Analyzing DBF file: dbase_83.dbf
+
+Header Information
+╭──────────────────┬────────────────────────────────────┬───────────────────────────╮
+│ Property         │ Value                              │ Details                   │
+├──────────────────┼────────────────────────────────────┼───────────────────────────┤
+│ DBF Version      │ FoxBASE+/dBASE III PLUS, with memo │ Byte: 0x83                │
+│ Last Update      │ 2003-12-18                         │ Raw: 103/12/18            │
+│ Header Length    │ 513 bytes                          │ Fields area: 480 bytes    │
+│ Record Length    │ 805 bytes                          │ Including deletion flag   │
+│ Total Records    │ 67                                 │ Including deleted records │
+│ MDX Index        │ None                               │ Flag: 0x00                │
+│ Encryption       │ None                               │ Flag: 0x00                │
+│ Language Driver  │ plain ol' ascii                    │ Code: 0x00                │
+│ File Size        │ 53.17 KB                           │ 54,449 bytes              │
+│ Size vs Expected │ +1 byte larger than expected       │ Expected: 53.17 KB        │
+╰──────────────────┴────────────────────────────────────┴───────────────────────────╯
+
+Field Definitions
+╭────┬───────────┬───────────────┬────────┬──────────┬───────╮
+│ #  │ Name      │ Type          │ Length │ Decimals │ Flags │
+├────┼───────────┼───────────────┼────────┼──────────┼───────┤
+│ 1  │ ID        │ Numeric (N)   │ 19     │ 0        │       │
+│ 2  │ CATCOUNT  │ Numeric (N)   │ 19     │ 0        │       │
+│ 3  │ AGRPCOUNT │ Numeric (N)   │ 19     │ 0        │       │
+│ 4  │ PGRPCOUNT │ Numeric (N)   │ 19     │ 0        │       │
+│ 5  │ ORDER     │ Numeric (N)   │ 19     │ 0        │       │
+│ 6  │ CODE      │ Character (C) │ 50     │ -        │       │
+│ 7  │ NAME      │ Character (C) │ 100    │ -        │       │
+│ 8  │ THUMBNAIL │ Character (C) │ 254    │ -        │       │
+│ 9  │ IMAGE     │ Character (C) │ 254    │ -        │       │
+│ 10 │ PRICE     │ Numeric (N)   │ 13     │ 2        │       │
+│ 11 │ COST      │ Numeric (N)   │ 13     │ 2        │       │
+│ 12 │ DESC      │ Memo (M)      │ 10     │ -        │ Memo  │
+│ 13 │ WEIGHT    │ Numeric (N)   │ 13     │ 2        │       │
+│ 14 │ TAXABLE   │ Logical (L)   │ 1      │ -        │       │
+│ 15 │ ACTIVE    │ Logical (L)   │ 1      │ -        │       │
+╰────┴───────────┴───────────────┴────────┴──────────┴───────╯
+
+Sample Data (first 3 records)
+╭────┬──────────┬───────────┬───────────┬───────┬──────────╮
+│ ID │ CATCOUNT │ AGRPCOUNT │ PGRPCOUNT │ ORDER │ ...      │
+├────┼──────────┼───────────┼───────────┼───────┼──────────┤
+│ 87 │ 2        │ NULL      │ NULL      │ 87    │ +10 more │
+│ 26 │ 3        │ NULL      │ NULL      │ 26    │ +10 more │
+│ 27 │ 3        │ NULL      │ NULL      │ 27    │ +10 more │
+╰────┴──────────┴───────────┴───────────┴───────┴──────────╯
+
+Performance Information
+╭───────────────────────────┬───────────┬────────────────────────────────────╮
+│ Metric                    │ Value     │ Details                            │
+├───────────────────────────┼───────────┼────────────────────────────────────┤
+│ Estimated Memory Usage    │ 159.52 KB │ Approximate processing requirement │
+│ Size Difference           │ 0.0%      │ May indicate corruption            │
+│ Processing Recommendation │ Optimal   │ Good performance expected          │
+╰───────────────────────────┴───────────┴────────────────────────────────────╯
+
+Performance Summary for Analyze DBF File:
+  Elapsed Time: 00:00.057
+  Memory Used: 0.0 MB
+  Peak Working Set: 26.0 MB

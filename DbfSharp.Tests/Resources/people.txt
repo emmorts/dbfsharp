@@ -1,0 +1,47 @@
+Analyzing DBF file: people.dbf
+
+Header Information
+╭──────────────────┬────────────────────────────────────┬───────────────────────────╮
+│ Property         │ Value                              │ Details                   │
+├──────────────────┼────────────────────────────────────┼───────────────────────────┤
+│ DBF Version      │ FoxBASE+/dBase III plus, no memory │ Byte: 0x03                │
+│ Last Update      │ 2014-08-02                         │ Raw: 114/08/02            │
+│ Header Length    │ 97 bytes                           │ Fields area: 64 bytes     │
+│ Record Length    │ 25 bytes                           │ Including deletion flag   │
+│ Total Records    │ 3                                  │ Including deleted records │
+│ MDX Index        │ None                               │ Flag: 0x00                │
+│ Encryption       │ None                               │ Flag: 0x00                │
+│ Language Driver  │ plain ol' ascii                    │ Code: 0x00                │
+│ File Size        │ 173 bytes                          │ 173 bytes                 │
+│ Size vs Expected │ +1 byte larger than expected       │ Expected: 172 bytes       │
+╰──────────────────┴────────────────────────────────────┴───────────────────────────╯
+
+Field Definitions
+╭───┬───────────┬───────────────┬────────┬──────────┬───────╮
+│ # │ Name      │ Type          │ Length │ Decimals │ Flags │
+├───┼───────────┼───────────────┼────────┼──────────┼───────┤
+│ 1 │ NAME      │ Character (C) │ 16     │ -        │       │
+│ 2 │ BIRTHDATE │ Date (D)      │ 8      │ -        │       │
+╰───┴───────────┴───────────────┴────────┴──────────┴───────╯
+
+Sample Data (first 3 records)
+╭───────┬────────────╮
+│ NAME  │ BIRTHDATE  │
+├───────┼────────────┤
+│ Alice │ 1987-03-01 │
+│ Bob   │ 1980-11-12 │
+╰───────┴────────────╯
+
+Performance Information
+╭───────────────────────────┬───────────┬────────────────────────────────────╮
+│ Metric                    │ Value     │ Details                            │
+├───────────────────────────┼───────────┼────────────────────────────────────┤
+│ Estimated Memory Usage    │ 519 bytes │ Approximate processing requirement │
+│ Size Difference           │ 0.6%      │ May indicate corruption            │
+│ Processing Recommendation │ Optimal   │ Good performance expected          │
+╰───────────────────────────┴───────────┴────────────────────────────────────╯
+
+Performance Summary for Analyze DBF File:
+  Elapsed Time: 00:00.051
+  Memory Used: 0.0 MB
+  Peak Working Set: 25.0 MB

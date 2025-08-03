@@ -1,0 +1,57 @@
+Analyzing DBF file: dbase_31.dbf
+
+Header Information
+╭──────────────────┬──────────────────────────────────────┬───────────────────────────╮
+│ Property         │ Value                                │ Details                   │
+├──────────────────┼──────────────────────────────────────┼───────────────────────────┤
+│ DBF Version      │ Visual FoxPro, autoincrement enabled │ Byte: 0x31                │
+│ Last Update      │ 2002-08-02                           │ Raw: 02/08/02             │
+│ Header Length    │ 648 bytes                            │ Fields area: 615 bytes    │
+│ Record Length    │ 95 bytes                             │ Including deletion flag   │
+│ Total Records    │ 77                                   │ Including deleted records │
+│ MDX Index        │ Present                              │ Flag: 0x01                │
+│ Encryption       │ None                                 │ Flag: 0x00                │
+│ Language Driver  │ Windows ANSI                         │ Code: 0x03                │
+│ File Size        │ 7.78 KB                              │ 7,963 bytes               │
+│ Size vs Expected │ Exact match                          │ Expected: 7.78 KB         │
+╰──────────────────┴──────────────────────────────────────┴───────────────────────────╯
+
+Field Definitions
+╭────┬────────────┬───────────────┬────────┬──────────┬───────╮
+│ #  │ Name       │ Type          │ Length │ Decimals │ Flags │
+├────┼────────────┼───────────────┼────────┼──────────┼───────┤
+│ 1  │ PRODUCTID  │ Integer (I)   │ 4      │ -        │ Set   │
+│ 2  │ PRODUCTNAM │ Character (C) │ 40     │ -        │       │
+│ 3  │ SUPPLIERID │ Integer (I)   │ 4      │ -        │       │
+│ 4  │ CATEGORYID │ Integer (I)   │ 4      │ -        │       │
+│ 5  │ QUANTITYPE │ Character (C) │ 20     │ -        │       │
+│ 6  │ UNITPRICE  │ Currency (Y)  │ 8      │ -        │       │
+│ 7  │ UNITSINSTO │ Integer (I)   │ 4      │ -        │       │
+│ 8  │ UNITSONORD │ Integer (I)   │ 4      │ -        │       │
+│ 9  │ REORDERLEV │ Integer (I)   │ 4      │ -        │       │
+│ 10 │ DISCONTINU │ Logical (L)   │ 1      │ -        │       │
+│ 11 │ _NullFlags │ Flags (0)     │ 1      │ -        │       │
+╰────┴────────────┴───────────────┴────────┴──────────┴───────╯
+
+Sample Data (first 3 records)
+╭───────────┬───────────────┬────────────┬────────────┬─────────────────────┬─────────╮
+│ PRODUCTID │ PRODUCTNAM    │ SUPPLIERID │ CATEGORYID │ QUANTITYPE          │ ...     │
+├───────────┼───────────────┼────────────┼────────────┼─────────────────────┼─────────┤
+│ 1         │ Chai          │ 1          │ 1          │ 10 boxes x 20 bags  │ +6 more │
+│ 2         │ Chang         │ 1          │ 1          │ 24 - 12 oz bottles  │ +6 more │
+│ 3         │ Aniseed Syrup │ 1          │ 2          │ 12 - 550 ml bottles │ +6 more │
+╰───────────┴───────────────┴────────────┴────────────┴─────────────────────┴─────────╯
+
+Performance Information
+╭───────────────────────────┬──────────┬────────────────────────────────────╮
+│ Metric                    │ Value    │ Details                            │
+├───────────────────────────┼──────────┼────────────────────────────────────┤
+│ Estimated Memory Usage    │ 23.33 KB │ Approximate processing requirement │
+│ Size Difference           │ 0.0%     │ Perfect match                      │
+│ Processing Recommendation │ Optimal  │ Good performance expected          │
+╰───────────────────────────┴──────────┴────────────────────────────────────╯
+
+Performance Summary for Analyze DBF File:
+  Elapsed Time: 00:00.053
+  Memory Used: 0.0 MB
+  Peak Working Set: 25.0 MB

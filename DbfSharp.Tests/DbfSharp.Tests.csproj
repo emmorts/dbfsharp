@@ -23,9 +23,6 @@
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Resources\" />
-  </ItemGroup>
-  <ItemGroup>
     <None Update="Resources\invalid_value.dbf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

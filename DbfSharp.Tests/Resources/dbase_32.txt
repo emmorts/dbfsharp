@@ -1,0 +1,46 @@
+Analyzing DBF file: dbase_32.dbf
+
+Header Information
+╭──────────────────┬────────────────────────────────────────────────────┬───────────────────────────╮
+│ Property         │ Value                                              │ Details                   │
+├──────────────────┼────────────────────────────────────────────────────┼───────────────────────────┤
+│ DBF Version      │ Visual FoxPro with field type Varchar or Varbinary │ Byte: 0x32                │
+│ Last Update      │ 2012-01-29                                         │ Raw: 12/01/29             │
+│ Header Length    │ 360 bytes                                          │ Fields area: 327 bytes    │
+│ Record Length    │ 252 bytes                                          │ Including deletion flag   │
+│ Total Records    │ 1                                                  │ Including deleted records │
+│ MDX Index        │ None                                               │ Flag: 0x00                │
+│ Encryption       │ None                                               │ Flag: 0x00                │
+│ Language Driver  │ Windows ANSI                                       │ Code: 0x03                │
+│ File Size        │ 613 bytes                                          │ 613 bytes                 │
+│ Size vs Expected │ +1 byte larger than expected                       │ Expected: 612 bytes       │
+╰──────────────────┴────────────────────────────────────────────────────┴───────────────────────────╯
+
+Field Definitions
+╭───┬────────────┬─────────────┬────────┬──────────┬───────╮
+│ # │ Name       │ Type        │ Length │ Decimals │ Flags │
+├───┼────────────┼─────────────┼────────┼──────────┼───────┤
+│ 1 │ NAME       │ Varchar (V) │ 250    │ -        │       │
+│ 2 │ _NullFlags │ Flags (0)   │ 1      │ -        │       │
+╰───┴────────────┴─────────────┴────────┴──────────┴───────╯
+
+Sample Data (first 3 records)
+╭──────────────────────┬────────────╮
+│ NAME                 │ _NullFlags │
+├──────────────────────┼────────────┤
+│ Bad Meets Evil   ... │ <1 bytes>  │
+╰──────────────────────┴────────────╯
+
+Performance Information
+╭───────────────────────────┬─────────┬────────────────────────────────────╮
+│ Metric                    │ Value   │ Details                            │
+├───────────────────────────┼─────────┼────────────────────────────────────┤
+│ Estimated Memory Usage    │ 1.80 KB │ Approximate processing requirement │
+│ Size Difference           │ 0.2%    │ May indicate corruption            │
+│ Processing Recommendation │ Optimal │ Good performance expected          │
+╰───────────────────────────┴─────────┴────────────────────────────────────╯
+
+Performance Summary for Analyze DBF File:
+  Elapsed Time: 00:00.053
+  Memory Used: 0.0 MB
+  Peak Working Set: 25.0 MB

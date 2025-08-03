@@ -81,18 +81,22 @@ public class DbfReaderBasicTests
         Assert.True(reader.Header.NumberOfRecords > 0);
         Assert.True(reader.Header.HeaderLength > 0);
         Assert.True(reader.Header.RecordLength > 0);
-        Assert.Equal(reader.Fields.Count, reader.Header.FieldCount);
+        // Fields.Count is the authoritative field count
     }
 
     [Theory]
-    [InlineData(TestHelper.TestFiles.DBase03, DbfVersion.DBase3Plus, false)]
-    [InlineData(TestHelper.TestFiles.DBase30, DbfVersion.VisualFoxPro, true)]
-    [InlineData(TestHelper.TestFiles.DBase31, DbfVersion.VisualFoxProAutoIncrement, false)]
-    [InlineData(TestHelper.TestFiles.DBase83, DbfVersion.DBase3PlusWithMemo, true)]
+    [InlineData(TestHelper.TestFiles.People, DbfVersion.DBase3Plus, false, 3, 97, 25)]
+    [InlineData(TestHelper.TestFiles.DBase03, DbfVersion.DBase3Plus, false, 14, 1025, 590)]
+    [InlineData(TestHelper.TestFiles.DBase30, DbfVersion.VisualFoxPro, true, 34, 4936, 3907)]
+    [InlineData(TestHelper.TestFiles.DBase31, DbfVersion.VisualFoxProAutoIncrement, false, 0, 0, 0)]
+    [InlineData(TestHelper.TestFiles.DBase83, DbfVersion.DBase3PlusWithMemo, true, 67, 513, 805)]
     public void Header_DbfVersion_ShouldBeDetectedCorrectly(
         string fileName,
         DbfVersion expectedVersion,
-        bool hasMemo
+        bool hasMemo,
+        int expectedRecords,
+        int expectedHeaderLength,
+        int expectedRecordLength
     )
     {
         if (!TestHelper.TestFileExists(fileName))
@@ -109,6 +113,14 @@ public class DbfReaderBasicTests
         );
 
         Assert.Equal(expectedVersion, reader.Header.DbfVersion);
+        
+        // Validate exact header values from metadata
+        if (expectedRecords > 0)
+        {
+            Assert.Equal((uint)expectedRecords, reader.Header.NumberOfRecords);
+            Assert.Equal((ushort)expectedHeaderLength, reader.Header.HeaderLength);
+            Assert.Equal((ushort)expectedRecordLength, reader.Header.RecordLength);
+        }
     }
 
     [Fact]

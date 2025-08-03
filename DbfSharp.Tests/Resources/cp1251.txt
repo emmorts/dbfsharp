@@ -1,0 +1,48 @@
+Analyzing DBF file: cp1251.dbf
+
+Header Information
+╭──────────────────┬──────────────────────────────┬───────────────────────────╮
+│ Property         │ Value                        │ Details                   │
+├──────────────────┼──────────────────────────────┼───────────────────────────┤
+│ DBF Version      │ Visual FoxPro                │ Byte: 0x30                │
+│ Last Update      │ 2003-10-07                   │ Raw: 03/10/07             │
+│ Header Length    │ 360 bytes                    │ Fields area: 327 bytes    │
+│ Record Length    │ 105 bytes                    │ Including deletion flag   │
+│ Total Records    │ 4                            │ Including deleted records │
+│ MDX Index        │ Present                      │ Flag: 0x01                │
+│ Encryption       │ None                         │ Flag: 0x00                │
+│ Language Driver  │ Russian Windows              │ Code: 0xC9                │
+│ File Size        │ 781 bytes                    │ 781 bytes                 │
+│ Size vs Expected │ +1 byte larger than expected │ Expected: 780 bytes       │
+╰──────────────────┴──────────────────────────────┴───────────────────────────╯
+
+Field Definitions
+╭───┬──────┬───────────────┬────────┬──────────┬───────╮
+│ # │ Name │ Type          │ Length │ Decimals │ Flags │
+├───┼──────┼───────────────┼────────┼──────────┼───────┤
+│ 1 │ RN   │ Numeric (N)   │ 4      │ 0        │       │
+│ 2 │ NAME │ Character (C) │ 100    │ -        │       │
+╰───┴──────┴───────────────┴────────┴──────────┴───────╯
+
+Sample Data (first 3 records)
+╭────┬──────────────────────╮
+│ RN │ NAME                 │
+├────┼──────────────────────┤
+│ 1  │ амбулаторно-полик... │
+│ 2  │ больничное           │
+│ 3  │ НИИ                  │
+╰────┴──────────────────────╯
+
+Performance Information
+╭───────────────────────────┬─────────┬────────────────────────────────────╮
+│ Metric                    │ Value   │ Details                            │
+├───────────────────────────┼─────────┼────────────────────────────────────┤
+│ Estimated Memory Usage    │ 2.29 KB │ Approximate processing requirement │
+│ Size Difference           │ 0.1%    │ May indicate corruption            │
+│ Processing Recommendation │ Optimal │ Good performance expected          │
+╰───────────────────────────┴─────────┴────────────────────────────────────╯
+
+Performance Summary for Analyze DBF File:
+  Elapsed Time: 00:00.051
+  Memory Used: 0.0 MB
+  Peak Working Set: 25.0 MB

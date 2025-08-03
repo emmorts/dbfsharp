@@ -1,0 +1,191 @@
+Analyzing DBF file: dbase_30.dbf
+
+Header Information
+╭──────────────────┬──────────────────────────────┬───────────────────────────╮
+│ Property         │ Value                        │ Details                   │
+├──────────────────┼──────────────────────────────┼───────────────────────────┤
+│ DBF Version      │ Visual FoxPro                │ Byte: 0x30                │
+│ Last Update      │ 2006-09-09                   │ Raw: 06/09/09             │
+│ Header Length    │ 4936 bytes                   │ Fields area: 4903 bytes   │
+│ Record Length    │ 3907 bytes                   │ Including deletion flag   │
+│ Total Records    │ 34                           │ Including deleted records │
+│ MDX Index        │ Present                      │ Flag: 0x03                │
+│ Encryption       │ None                         │ Flag: 0x00                │
+│ Language Driver  │ Windows ANSI                 │ Code: 0x03                │
+│ File Size        │ 134.55 KB                    │ 137,775 bytes             │
+│ Size vs Expected │ +1 byte larger than expected │ Expected: 134.54 KB       │
+╰──────────────────┴──────────────────────────────┴───────────────────────────╯
+
+Field Definitions
+╭─────┬────────────┬───────────────┬────────┬──────────┬───────╮
+│ #   │ Name       │ Type          │ Length │ Decimals │ Flags │
+├─────┼────────────┼───────────────┼────────┼──────────┼───────┤
+│ 1   │ ACCESSNO   │ Character (C) │ 15     │ -        │       │
+│ 2   │ ACQVALUE   │ Numeric (N)   │ 12     │ 2        │       │
+│ 3   │ APPNOTES   │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 4   │ APPRAISOR  │ Character (C) │ 75     │ -        │       │
+│ 5   │ CABINET    │ Character (C) │ 25     │ -        │       │
+│ 6   │ CAPTION    │ Character (C) │ 30     │ -        │       │
+│ 7   │ CAT        │ Character (C) │ 1      │ -        │       │
+│ 8   │ CATBY      │ Character (C) │ 25     │ -        │       │
+│ 9   │ CATDATE    │ Date (D)      │ 8      │ -        │       │
+│ 10  │ CATTYPE    │ Character (C) │ 15     │ -        │       │
+│ 11  │ CLASSES    │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 12  │ COLLECTION │ Character (C) │ 75     │ -        │       │
+│ 13  │ CONDDATE   │ Date (D)      │ 8      │ -        │       │
+│ 14  │ CONDEXAM   │ Character (C) │ 25     │ -        │       │
+│ 15  │ CONDITION  │ Character (C) │ 35     │ -        │       │
+│ 16  │ CONDNOTES  │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 17  │ CONTAINER  │ Character (C) │ 40     │ -        │       │
+│ 18  │ COPYRIGHT  │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 19  │ CREATOR    │ Character (C) │ 80     │ -        │       │
+│ 20  │ CREDIT     │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 21  │ CURVALMAX  │ Numeric (N)   │ 12     │ 2        │       │
+│ 22  │ CURVALUE   │ Numeric (N)   │ 12     │ 2        │       │
+│ 23  │ DATASET    │ Character (C) │ 15     │ -        │       │
+│ 24  │ DATE       │ Character (C) │ 50     │ -        │       │
+│ 25  │ DESCRIP    │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 26  │ DIMNOTES   │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 27  │ DISPVALUE  │ Character (C) │ 10     │ -        │       │
+│ 28  │ DRAWER     │ Character (C) │ 20     │ -        │       │
+│ 29  │ EARLYDATE  │ Numeric (N)   │ 4      │ 0        │       │
+│ 30  │ EVENT      │ Character (C) │ 80     │ -        │       │
+│ 31  │ EXHIBITID  │ Character (C) │ 36     │ -        │       │
+│ 32  │ EXHIBITNO  │ Numeric (N)   │ 7      │ 0        │       │
+│ 33  │ EXHLABEL1  │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 34  │ EXHLABEL2  │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 35  │ EXHLABEL3  │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 36  │ EXHLABEL4  │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 37  │ EXHSTART   │ Date (D)      │ 8      │ -        │       │
+│ 38  │ FILMSIZE   │ Character (C) │ 35     │ -        │       │
+│ 39  │ FLAGDATE   │ Timestamp (T) │ 8      │ -        │       │
+│ 40  │ FLAGNOTES  │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 41  │ FLAGREASON │ Character (C) │ 20     │ -        │       │
+│ 42  │ FRAME      │ Character (C) │ 75     │ -        │       │
+│ 43  │ FRAMENO    │ Character (C) │ 25     │ -        │       │
+│ 44  │ GPARENT    │ Character (C) │ 45     │ -        │       │
+│ 45  │ HOMELOC    │ Character (C) │ 60     │ -        │       │
+│ 46  │ IMAGEFILE  │ Character (C) │ 60     │ -        │       │
+│ 47  │ IMAGENO    │ Numeric (N)   │ 3      │ 0        │       │
+│ 48  │ INSCOMP    │ Character (C) │ 30     │ -        │       │
+│ 49  │ INSDATE    │ Date (D)      │ 8      │ -        │       │
+│ 50  │ INSPHONE   │ Character (C) │ 25     │ -        │       │
+│ 51  │ INSPREMIUM │ Character (C) │ 20     │ -        │       │
+│ 52  │ INSREP     │ Character (C) │ 30     │ -        │       │
+│ 53  │ INSVALUE   │ Numeric (N)   │ 10     │ 2        │       │
+│ 54  │ INVNBY     │ Character (C) │ 25     │ -        │       │
+│ 55  │ INVNDATE   │ Date (D)      │ 8      │ -        │       │
+│ 56  │ LATEDATE   │ Numeric (N)   │ 4      │ 0        │       │
+│ 57  │ LEGAL      │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 58  │ LOANCOND   │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 59  │ LOANDATE   │ Date (D)      │ 8      │ -        │       │
+│ 60  │ LOANDUE    │ Date (D)      │ 8      │ -        │       │
+│ 61  │ LOANID     │ Character (C) │ 36     │ -        │       │
+│ 62  │ LOANINNO   │ Character (C) │ 15     │ -        │       │
+│ 63  │ MAINTCYCLE │ Character (C) │ 10     │ -        │       │
+│ 64  │ MAINTDATE  │ Date (D)      │ 8      │ -        │       │
+│ 65  │ MAINTNOTE  │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 66  │ MEDIUM     │ Character (C) │ 75     │ -        │       │
+│ 67  │ NEGLOC     │ Character (C) │ 60     │ -        │       │
+│ 68  │ NEGNO      │ Character (C) │ 25     │ -        │       │
+│ 69  │ NOTES      │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 70  │ OBJECTID   │ Character (C) │ 25     │ -        │       │
+│ 71  │ OBJNAME    │ Character (C) │ 40     │ -        │       │
+│ 72  │ OLDNO      │ Character (C) │ 25     │ -        │       │
+│ 73  │ ORIGCOPY   │ Character (C) │ 15     │ -        │       │
+│ 74  │ OTHERNO    │ Character (C) │ 25     │ -        │       │
+│ 75  │ OUTDATE    │ Date (D)      │ 8      │ -        │       │
+│ 76  │ PARENT     │ Character (C) │ 40     │ -        │       │
+│ 77  │ PEOPLE     │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 78  │ PLACE      │ Character (C) │ 100    │ -        │       │
+│ 79  │ POLICYNO   │ Character (C) │ 20     │ -        │       │
+│ 80  │ PRINTSIZE  │ Character (C) │ 35     │ -        │       │
+│ 81  │ PROCESS    │ Character (C) │ 75     │ -        │       │
+│ 82  │ PROVENANCE │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 83  │ PUBNOTES   │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 84  │ RECAS      │ Character (C) │ 20     │ -        │       │
+│ 85  │ RECDATE    │ Character (C) │ 10     │ -        │       │
+│ 86  │ RECFROM    │ Character (C) │ 120    │ -        │       │
+│ 87  │ RELATION   │ Character (C) │ 36     │ -        │       │
+│ 88  │ RELNOTES   │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 89  │ ROOM       │ Character (C) │ 25     │ -        │       │
+│ 90  │ SGFLAG     │ Character (C) │ 1      │ -        │       │
+│ 91  │ SHELF      │ Character (C) │ 20     │ -        │       │
+│ 92  │ SITE       │ Character (C) │ 40     │ -        │       │
+│ 93  │ SITENO     │ Character (C) │ 12     │ -        │       │
+│ 94  │ SLIDENO    │ Character (C) │ 25     │ -        │       │
+│ 95  │ STATUS     │ Character (C) │ 20     │ -        │       │
+│ 96  │ STATUSBY   │ Character (C) │ 25     │ -        │       │
+│ 97  │ STATUSDATE │ Date (D)      │ 8      │ -        │       │
+│ 98  │ STERMS     │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 99  │ STUDIO     │ Character (C) │ 60     │ -        │       │
+│ 100 │ SUBJECTS   │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 101 │ TCABINET   │ Character (C) │ 25     │ -        │       │
+│ 102 │ TCONTAINER │ Character (C) │ 40     │ -        │       │
+│ 103 │ TDRAWER    │ Character (C) │ 20     │ -        │       │
+│ 104 │ TEMPAUTHOR │ Character (C) │ 25     │ -        │       │
+│ 105 │ TEMPBY     │ Character (C) │ 25     │ -        │       │
+│ 106 │ TEMPDATE   │ Date (D)      │ 8      │ -        │       │
+│ 107 │ TEMPLOC    │ Character (C) │ 60     │ -        │       │
+│ 108 │ TEMPNOTES  │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 109 │ TEMPREASON │ Character (C) │ 50     │ -        │       │
+│ 110 │ TEMPUNTIL  │ Character (C) │ 10     │ -        │       │
+│ 111 │ TITLE      │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 112 │ TITLESORT  │ Character (C) │ 100    │ -        │       │
+│ 113 │ TROOM      │ Character (C) │ 25     │ -        │       │
+│ 114 │ TSHELF     │ Character (C) │ 20     │ -        │       │
+│ 115 │ TWALL      │ Character (C) │ 20     │ -        │       │
+│ 116 │ UDF1       │ Character (C) │ 75     │ -        │       │
+│ 117 │ UDF10      │ Character (C) │ 75     │ -        │       │
+│ 118 │ UDF11      │ Character (C) │ 20     │ -        │       │
+│ 119 │ UDF12      │ Character (C) │ 20     │ -        │       │
+│ 120 │ UDF13      │ Numeric (N)   │ 12     │ 0        │       │
+│ 121 │ UDF14      │ Numeric (N)   │ 12     │ 2        │       │
+│ 122 │ UDF15      │ Numeric (N)   │ 12     │ 2        │       │
+│ 123 │ UDF16      │ Numeric (N)   │ 12     │ 3        │       │
+│ 124 │ UDF17      │ Numeric (N)   │ 12     │ 3        │       │
+│ 125 │ UDF18      │ Date (D)      │ 8      │ -        │       │
+│ 126 │ UDF19      │ Date (D)      │ 8      │ -        │       │
+│ 127 │ UDF20      │ Date (D)      │ 8      │ -        │       │
+│ 128 │ UDF21      │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 129 │ UDF22      │ Memo (M)      │ 4      │ -        │ Memo  │
+│ 130 │ UDF2       │ Character (C) │ 75     │ -        │       │
+│ 131 │ UDF3       │ Character (C) │ 75     │ -        │       │
+│ 132 │ UDF4       │ Character (C) │ 75     │ -        │       │
+│ 133 │ UDF5       │ Character (C) │ 75     │ -        │       │
+│ 134 │ UDF6       │ Character (C) │ 75     │ -        │       │
+│ 135 │ UDF7       │ Character (C) │ 75     │ -        │       │
+│ 136 │ UDF8       │ Character (C) │ 75     │ -        │       │
+│ 137 │ UDF9       │ Character (C) │ 75     │ -        │       │
+│ 138 │ UPDATED    │ Timestamp (T) │ 8      │ -        │       │
+│ 139 │ UPDATEDBY  │ Character (C) │ 25     │ -        │       │
+│ 140 │ VALUEDATE  │ Date (D)      │ 8      │ -        │       │
+│ 141 │ WALL       │ Character (C) │ 20     │ -        │       │
+│ 142 │ WEBINCLUDE │ Logical (L)   │ 1      │ -        │       │
+│ 143 │ ZSORTER    │ Character (C) │ 69     │ -        │       │
+│ 144 │ ZSORTERX   │ Character (C) │ 44     │ -        │       │
+│ 145 │ PPID       │ Character (C) │ 36     │ -        │       │
+╰─────┴────────────┴───────────────┴────────┴──────────┴───────╯
+
+Sample Data (first 3 records)
+╭──────────┬──────────┬──────────┬───────────┬────────────────┬───────────╮
+│ ACCESSNO │ ACQVALUE │ APPNOTES │ APPRAISOR │ CABINET        │ ...       │
+├──────────┼──────────┼──────────┼───────────┼────────────────┼───────────┤
+│ 1999.1   │ NULL     │ NULL     │ <empty>   │ File Cabinet 2 │ +140 more │
+│ 1999.1   │ 0.00     │ NULL     │ <empty>   │ File Cabinet 2 │ +140 more │
+│ 1999.1   │ 0.00     │ NULL     │ <empty>   │ File Cabinet 2 │ +140 more │
+╰──────────┴──────────┴──────────┴───────────┴────────────────┴───────────╯
+
+Performance Information
+╭───────────────────────────┬───────────┬────────────────────────────────────╮
+│ Metric                    │ Value     │ Details                            │
+├───────────────────────────┼───────────┼────────────────────────────────────┤
+│ Estimated Memory Usage    │ 403.64 KB │ Approximate processing requirement │
+│ Size Difference           │ 0.0%      │ May indicate corruption            │
+│ Processing Recommendation │ Optimal   │ Good performance expected          │
+╰───────────────────────────┴───────────┴────────────────────────────────────╯
+
+Performance Summary for Analyze DBF File:
+  Elapsed Time: 00:00.068
+  Memory Used: 0.0 MB
+  Peak Working Set: 26.0 MB

@@ -1,0 +1,52 @@
+Analyzing DBF file: dbase_8b.dbf
+
+Header Information
+╭──────────────────┬──────────────────────────────┬───────────────────────────╮
+│ Property         │ Value                        │ Details                   │
+├──────────────────┼──────────────────────────────┼───────────────────────────┤
+│ DBF Version      │ dBASE IV with memo           │ Byte: 0x8B                │
+│ Last Update      │ 2000-06-12                   │ Raw: 100/06/12            │
+│ Header Length    │ 225 bytes                    │ Fields area: 192 bytes    │
+│ Record Length    │ 160 bytes                    │ Including deletion flag   │
+│ Total Records    │ 10                           │ Including deleted records │
+│ MDX Index        │ None                         │ Flag: 0x00                │
+│ Encryption       │ None                         │ Flag: 0x00                │
+│ Language Driver  │ plain ol' ascii              │ Code: 0x00                │
+│ File Size        │ 1.78 KB                      │ 1,826 bytes               │
+│ Size vs Expected │ +1 byte larger than expected │ Expected: 1.78 KB         │
+╰──────────────────┴──────────────────────────────┴───────────────────────────╯
+
+Field Definitions
+╭───┬───────────┬───────────────┬────────┬──────────┬───────╮
+│ # │ Name      │ Type          │ Length │ Decimals │ Flags │
+├───┼───────────┼───────────────┼────────┼──────────┼───────┤
+│ 1 │ CHARACTER │ Character (C) │ 100    │ -        │       │
+│ 2 │ NUMERICAL │ Numeric (N)   │ 20     │ 2        │       │
+│ 3 │ DATE      │ Date (D)      │ 8      │ -        │       │
+│ 4 │ LOGICAL   │ Logical (L)   │ 1      │ -        │       │
+│ 5 │ FLOAT     │ Float (F)     │ 20     │ 18       │       │
+│ 6 │ MEMO      │ Memo (M)      │ 10     │ -        │ Memo  │
+╰───┴───────────┴───────────────┴────────┴──────────┴───────╯
+
+Sample Data (first 3 records)
+╭───────────┬───────────┬────────────┬─────────┬───────────┬─────────╮
+│ CHARACTER │ NUMERICAL │ DATE       │ LOGICAL │ FLOAT     │ ...     │
+├───────────┼───────────┼────────────┼─────────┼───────────┼─────────┤
+│ One       │ 1.00      │ 1970-01-01 │ True    │ 1.2345679 │ +1 more │
+│ Two       │ 2.00      │ 1970-12-31 │ True    │ 2         │ +1 more │
+│ Three     │ 3.00      │ 1980-01-01 │ NULL    │ 3         │ +1 more │
+╰───────────┴───────────┴────────────┴─────────┴───────────┴─────────╯
+
+Performance Information
+╭───────────────────────────┬─────────┬────────────────────────────────────╮
+│ Metric                    │ Value   │ Details                            │
+├───────────────────────────┼─────────┼────────────────────────────────────┤
+│ Estimated Memory Usage    │ 5.35 KB │ Approximate processing requirement │
+│ Size Difference           │ 0.1%    │ May indicate corruption            │
+│ Processing Recommendation │ Optimal │ Good performance expected          │
+╰───────────────────────────┴─────────┴────────────────────────────────────╯
+
+Performance Summary for Analyze DBF File:
+  Elapsed Time: 00:00.058
+  Memory Used: 0.0 MB
+  Peak Working Set: 26.0 MB
