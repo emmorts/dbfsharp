@@ -58,6 +58,32 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
     private readonly Task? _pipeWriterTask;
 
     private DbfRecord[]? _loadedRecords;
+
+    private EventHandler<DbfWarningEventArgs>? _warning;
+    private bool _warningsRaised;
+
+    /// <summary>
+    /// Event raised when a warning condition is detected (e.g., duplicate field names)
+    /// </summary>
+    public event EventHandler<DbfWarningEventArgs>? Warning
+    {
+        add
+        {
+            _warning += value;
+            // Raise deferred warnings when first event handler is attached
+            if (!_warningsRaised)
+            {
+                _warningsRaised = true;
+                RaiseDeferredWarnings();
+            }
+        }
+        remove
+        {
+            _warning -= value;
+        }
+    }
+
+    private readonly List<string>? _duplicateFields;
     private DbfRecord[]? _loadedDeletedRecords;
     private bool _disposed;
 
@@ -207,9 +233,55 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
 
         _fieldIndexMap =
             new Dictionary<string, int>(options.IgnoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+        var duplicateFields = new List<string>();
+
         for (var i = 0; i < fieldNames.Length; i++)
         {
-            _fieldIndexMap[fieldNames[i]] = i;
+            // Only map the first occurrence of each field name to avoid overwriting duplicates
+            if (!_fieldIndexMap.ContainsKey(fieldNames[i]))
+            {
+                _fieldIndexMap[fieldNames[i]] = i;
+            }
+            else
+            {
+                // Track duplicate field names
+                if (!duplicateFields.Contains(fieldNames[i]))
+                {
+                    duplicateFields.Add(fieldNames[i]);
+                }
+            }
+        }
+
+        // Store duplicate fields for later warning (after event handlers can be attached)
+        if (duplicateFields.Count > 0)
+        {
+            _duplicateFields = duplicateFields;
+        }
+    }
+
+    /// <summary>
+    /// Raises the Warning event
+    /// </summary>
+    /// <param name="e">The warning event arguments</param>
+    private void OnWarning(DbfWarningEventArgs e)
+    {
+        _warning?.Invoke(this, e);
+    }
+
+    /// <summary>
+    /// Checks for and raises warnings that were deferred during construction
+    /// </summary>
+    internal void RaiseDeferredWarnings()
+    {
+        if (_duplicateFields is { Count: > 0 })
+        {
+            var duplicateList = string.Join(", ", _duplicateFields.Select(name => $"'{name}'"));
+            var message = _duplicateFields.Count == 1
+                ? $"Duplicate field name detected: {duplicateList}. Only the first occurrence will be accessible via FindField()."
+                : $"Duplicate field names detected: {duplicateList}. Only the first occurrence of each will be accessible via FindField().";
+
+            OnWarning(new DbfWarningEventArgs(message, DbfWarningType.DuplicateFieldNames,
+                $"{_duplicateFields.Count} duplicate field name(s) found"));
         }
     }
 
@@ -315,7 +387,7 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
             DbfField[] fields;
             try
             {
-                fields = DbfField.ReadFields(reader, header.Encoding, header.FieldCount, options.LowerCaseFieldNames,
+                fields = DbfField.ReadFields(reader, header.Encoding, 0, options.LowerCaseFieldNames,
                     header.DbfVersion);
                 if (fields.Length == 0 && header.HeaderLength > DbfHeader.Size + 1)
                 {
@@ -331,7 +403,11 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
 
             if (fields.Length == 0)
             {
-                throw new DbfException("No valid field definitions found in DBF file");
+                // Zero fields is valid for some DBF files, but the record length should be minimal (typically 1 byte for deletion marker)
+                if (header.RecordLength == 0)
+                {
+                    throw new DbfException("DBF file has no field definitions and invalid record length");
+                }
             }
 
             if (header.DbfVersion == DbfVersion.DBase2)
@@ -381,12 +457,16 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
 
             var header = await DbfHeader.ReadAsync(pipeReader, cancellationToken);
 
-            var fields = await DbfField.ReadFieldsAsync(pipeReader, header.Encoding, header.FieldCount,
-                options.LowerCaseFieldNames, header.DbfVersion, cancellationToken);
+            var fields = await DbfField.ReadFieldsAsync(pipeReader, header.Encoding, 0,
+                options.LowerCaseFieldNames, header.DbfVersion, header.HeaderLength, cancellationToken);
 
             if (fields.Length == 0)
             {
-                throw new DbfException("No valid field definitions found in DBF file");
+                // Zero fields is valid for some DBF files, but the record length should be minimal (typically 1 byte for deletion marker)
+                if (header.RecordLength == 0)
+                {
+                    throw new DbfException("DBF file has no field definitions and invalid record length");
+                }
             }
 
             if (header.DbfVersion == DbfVersion.DBase2)
@@ -410,13 +490,54 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
                 }
             }
 
+            // For seekable streams, position to record data
             if (stream.CanSeek)
             {
                 stream.Position = header.HeaderLength;
             }
+            else
+            {
+                // For non-seekable streams using pipe, we need to advance the pipe reader
+                // to skip any remaining padding after field definitions
+                var consumedBytes = DbfHeader.Size + fields.Length * DbfField.Size + 1; // +1 for terminator
+                var remainingToSkip = header.HeaderLength - consumedBytes;
 
-            return new DbfReader(stream, ownsStream, header, fields, options, memoFile, tableName, pipeReader,
-                writingTask);
+
+                if (remainingToSkip > 0)
+                {
+                    // Read and discard the padding bytes
+                    while (remainingToSkip > 0)
+                    {
+                        var paddingResult = await pipeReader.ReadAsync(cancellationToken);
+                        var paddingBuffer = paddingResult.Buffer;
+
+                        if (paddingBuffer.IsEmpty && paddingResult.IsCompleted)
+                        {
+                            break;
+                        }
+
+                        var toSkip = Math.Min(remainingToSkip, (int)paddingBuffer.Length);
+                        var skipPosition = paddingBuffer.GetPosition(toSkip);
+                        pipeReader.AdvanceTo(skipPosition);
+                        remainingToSkip -= toSkip;
+
+
+                        if (paddingResult.IsCompleted)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // For seekable streams, we don't need the pipe reader for record enumeration
+            // since we can use the properly positioned stream directly
+            var readerPipeReader = stream.CanSeek ? null : pipeReader;
+            var readerPipeTask = stream.CanSeek ? null : writingTask;
+
+
+            return new DbfReader(stream, ownsStream, header, fields, options, memoFile, tableName, readerPipeReader,
+                readerPipeTask);
         }
         catch
         {
@@ -759,14 +880,8 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
                     break;
                 }
 
-                if (buffer.FirstSpan[0] == 0x0D)
-                {
-                    buffer = buffer.Slice(1);
-                    if (buffer.Length < recordLength)
-                    {
-                        continue;
-                    }
-                }
+                // Note: Header terminator skipping is now handled in ReadFieldsAsync method
+                // No need to skip 0x0D bytes here as we should already be positioned at record data
 
                 var recordSequence = buffer.Slice(0, recordLength);
                 if (recordSequence.FirstSpan[0] == EofMarker) // EOF marker
@@ -795,42 +910,121 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
     {
         var isDeleted = recordSequence.FirstSpan[0] == '*';
         var fieldValues = new object?[Fields.Count];
-        var dataSequence = recordSequence.Slice(1);
+        var recordData = recordSequence.Slice(1); // Skip deletion flag
 
-        for (var fieldIndex = 0; fieldIndex < Fields.Count; fieldIndex++)
+        // Visual FoxPro uses the Address field for field positioning, but only if addresses are meaningful
+        var useAddressBasedParsing = Header.DbfVersion.IsVisualFoxPro() && HasMeaningfulAddresses();
+
+        if (useAddressBasedParsing)
         {
-            var field = Fields[fieldIndex];
-            var fieldLength = field.ActualLength;
-
-            if (dataSequence.Length < fieldLength)
+            // Address-based parsing: use field Address property for positioning
+            for (var fieldIndex = 0; fieldIndex < Fields.Count; fieldIndex++)
             {
-                fieldValues[fieldIndex] =
-                    new InvalidValue(Array.Empty<byte>(), field, "Record is shorter than expected.");
-                continue;
-            }
+                var field = Fields[fieldIndex];
+                var fieldLength = field.ActualLength;
+                var fieldOffset = (int)field.Address - 1; // Address is 1-based, convert to 0-based
 
-            var fieldDataSequence = dataSequence.Slice(0, fieldLength);
-
-            try
-            {
-                fieldValues[fieldIndex] = ParseFieldFromSequence(field, fieldDataSequence);
-            }
-            catch (Exception ex)
-            {
-                if (_options.ValidateFields)
+                if (recordData.Length < fieldOffset + fieldLength)
                 {
-                    throw new FieldParseException(field.Name, field.Type.ToString(), fieldDataSequence.ToArray(),
-                        $"Failed to parse field: {ex.Message}");
+                    fieldValues[fieldIndex] =
+                        new InvalidValue(Array.Empty<byte>(), field, "Record is shorter than expected for field address.");
+                    continue;
                 }
 
-                fieldValues[fieldIndex] = new InvalidValue(fieldDataSequence.ToArray(), field, ex.Message);
-            }
+                var fieldDataSequence = recordData.Slice(fieldOffset, fieldLength);
 
-            dataSequence = dataSequence.Slice(fieldLength);
+
+                try
+                {
+                    fieldValues[fieldIndex] = ParseFieldFromSequence(field, fieldDataSequence);
+                }
+                catch (Exception ex)
+                {
+                    if (_options.ValidateFields)
+                    {
+                        throw new FieldParseException(field.Name, field.Type.ToString(), fieldDataSequence.ToArray(),
+                            $"Failed to parse field: {ex.Message}");
+                    }
+
+                    fieldValues[fieldIndex] = new InvalidValue(fieldDataSequence.ToArray(), field, ex.Message);
+                }
+            }
+        }
+        else
+        {
+            // Sequential parsing: fields are tightly packed
+            var dataSequence = recordData;
+
+
+            for (var fieldIndex = 0; fieldIndex < Fields.Count; fieldIndex++)
+            {
+                var field = Fields[fieldIndex];
+                var fieldLength = field.ActualLength;
+
+                if (dataSequence.Length < fieldLength)
+                {
+                    fieldValues[fieldIndex] =
+                        new InvalidValue(Array.Empty<byte>(), field, "Record is shorter than expected.");
+                    continue;
+                }
+
+                var fieldDataSequence = dataSequence.Slice(0, fieldLength);
+
+
+                try
+                {
+                    fieldValues[fieldIndex] = ParseFieldFromSequence(field, fieldDataSequence);
+                }
+                catch (Exception ex)
+                {
+                    if (_options.ValidateFields)
+                    {
+                        throw new FieldParseException(field.Name, field.Type.ToString(), fieldDataSequence.ToArray(),
+                            $"Failed to parse field: {ex.Message}");
+                    }
+
+                    fieldValues[fieldIndex] = new InvalidValue(fieldDataSequence.ToArray(), field, ex.Message);
+                }
+
+                dataSequence = dataSequence.Slice(fieldLength);
+            }
         }
 
         var record = new DbfRecord(this, fieldValues);
         return (record, isDeleted);
+    }
+
+    private bool HasMeaningfulAddresses()
+    {
+        // Check if the field addresses form a valid sequential pattern
+        // If addresses are 0 or don't form a proper sequence, fall back to sequential parsing
+
+        if (Fields.Count == 0) return false;
+
+        // Check if any field has address 0 (indicates addresses not used)
+        if (Fields.Any(f => f.Address == 0)) return false;
+
+        // Check if addresses form a proper sequence (each field starts where the previous ends)
+        uint expectedAddress = 1; // Addresses are 1-based
+
+        for (var i = 0; i < Fields.Count; i++)
+        {
+            if (Fields[i].Address != expectedAddress)
+            {
+                return false; // Address doesn't match expected sequential position
+            }
+            expectedAddress += (uint)Fields[i].ActualLength;
+        }
+
+        // Additional validation: ensure the total calculated record length matches header
+        var calculatedRecordLength = (int)expectedAddress - 1; // -1 because addresses are 1-based
+        if (calculatedRecordLength != Header.RecordLength - 1) // -1 for deletion flag
+        {
+            return false; // Record length mismatch indicates addresses are unreliable
+        }
+
+
+        return true;
     }
 
     private object? ParseFieldFromSequence(DbfField field, in ReadOnlySequence<byte> sequence)

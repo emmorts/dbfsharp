@@ -33,6 +33,9 @@ public enum DbfVersion : byte
     /// <summary>dBASE IV with memo</summary>
     DBase4WithMemo = 0x8B,
 
+    /// <summary>dBASE IV with memo (variant)</summary>
+    DBase4WithMemoVariant = 0x8C,
+
     /// <summary>dBASE IV SQL table files, with memo</summary>
     DBase4SqlTableWithMemo = 0xCB,
 
@@ -72,6 +75,7 @@ public static class DbfVersionExtensions
             DbfVersion.DBase4SqlSystem => "dBASE IV SQL system files, no memo",
             DbfVersion.DBase3PlusWithMemo => "FoxBASE+/dBASE III PLUS, with memo",
             DbfVersion.DBase4WithMemo => "dBASE IV with memo",
+            DbfVersion.DBase4WithMemoVariant => "dBASE IV with memo (variant)",
             DbfVersion.DBase4SqlTableWithMemo => "dBASE IV SQL table files, with memo",
             DbfVersion.FoxPro2WithMemo => "FoxPro 2.x (or earlier) with memo",
             DbfVersion.HiPerSix => "HiPer-Six format with SMT memo file",
@@ -91,6 +95,7 @@ public static class DbfVersionExtensions
         {
             DbfVersion.DBase3PlusWithMemo => true,
             DbfVersion.DBase4WithMemo => true,
+            DbfVersion.DBase4WithMemoVariant => true,
             DbfVersion.DBase4SqlTableWithMemo => true,
             DbfVersion.FoxPro2WithMemo => true,
             DbfVersion.HiPerSix => true,

@@ -196,7 +196,7 @@ public class FieldParser : FieldParserBase
         }
 
         var text = Encoding.ASCII.GetString(trimmed);
-        if (float.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var result))
+        if (float.TryParse(text, NumberStyles.Float | NumberStyles.AllowParentheses, CultureInfo.InvariantCulture, out var result))
         {
             return result;
         }
@@ -303,6 +303,7 @@ public class FieldParser : FieldParserBase
             return null;
         }
 
+
         // Replace comma with dot for decimal separator (some locales use comma)
         text = text.Replace(',', '.');
 
@@ -312,7 +313,7 @@ public class FieldParser : FieldParserBase
             if (
                 int.TryParse(
                     text,
-                    NumberStyles.Integer,
+                    NumberStyles.Integer | NumberStyles.AllowParentheses,
                     CultureInfo.InvariantCulture,
                     out var intResult
                 )
@@ -322,11 +323,11 @@ public class FieldParser : FieldParserBase
             }
         }
 
-        // Try decimal
+        // Try decimal with support for parentheses (accounting format)
         if (
             decimal.TryParse(
                 text,
-                NumberStyles.Number,
+                NumberStyles.Number | NumberStyles.AllowParentheses,
                 CultureInfo.InvariantCulture,
                 out var decimalResult
             )
@@ -335,6 +336,17 @@ public class FieldParser : FieldParserBase
             return decimalResult;
         }
 
+        // Debug output for cp1251.dbf issue
+        if (text.Contains("db.d"))
+        {
+            var bytesStr = string.Join(" ", data.ToArray().Select(b => $"{b:X2}"));
+            var trimmedBytesStr = string.Join(" ", trimmed.ToArray().Select(b => $"{b:X2}"));
+            Console.WriteLine($"[DEBUG] FieldParser.ParseNumeric - Field {field.Name}: Invalid data 'db.d' found");
+            Console.WriteLine($"[DEBUG] Original bytes: [{bytesStr}]");
+            Console.WriteLine($"[DEBUG] Trimmed bytes: [{trimmedBytesStr}]");
+            Console.WriteLine($"[DEBUG] Text: '{text}'");
+        }
+        
         throw new FormatException($"Invalid numeric format: '{text}'");
     }
 

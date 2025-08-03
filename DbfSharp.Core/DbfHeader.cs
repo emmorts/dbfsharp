@@ -184,33 +184,6 @@ public readonly struct DbfHeader
     /// </summary>
     public bool IsVisualFoxPro => DbfVersion.IsVisualFoxPro();
 
-    /// <summary>
-    /// Gets the number of field descriptors in the header
-    /// </summary>
-    public int FieldCount
-    {
-        get
-        {
-            // For dBASE II, we need to calculate field count differently
-            if (DbfVersion == DbfVersion.DBase2)
-            {
-                // dBASE II calculates field count from record length
-                // Record length includes the deletion flag (1 byte)
-                // We'll calculate this in the reader where we have access to actual fields
-                return -1; // Indicates we need to count fields dynamically
-            }
-
-            // Field descriptors start after the 32-byte header and end with 0x0D
-            // Each field descriptor is 32 bytes
-            if (HeaderLength <= Size + 1) // +1 for terminator
-            {
-                return 0;
-            }
-
-            var fieldDescriptorArea = HeaderLength - Size - 1; // -1 for terminator byte
-            return fieldDescriptorArea / DbfField.Size;
-        }
-    }
 
     /// <summary>
     /// Asynchronously reads a DBF header from a PipeReader
@@ -398,7 +371,6 @@ public readonly struct DbfHeader
     {
         return $"DBF Header: {DbfVersion.GetDescription()}, "
             + $"{NumberOfRecords} records, "
-            + $"{FieldCount} fields, "
             + $"Record length: {RecordLength}, "
             + $"Encoding: {EncodingDescription}";
     }

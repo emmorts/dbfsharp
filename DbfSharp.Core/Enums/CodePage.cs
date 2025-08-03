@@ -75,6 +75,7 @@ public static class CodePage
             { 0xC9, ("windows-1251", "Russian Windows") },
             { 0xCA, ("windows-1254", "Turkish Windows") },
             { 0xCB, ("windows-1253", "Greek Windows") },
+            { 0xF0, ("utf-8", "UTF-8 Unicode") },
         };
 
     /// <summary>
