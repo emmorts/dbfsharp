@@ -1,3 +1,5 @@
+using DbfSharp.Core.Exceptions;
+
 namespace DbfSharp.ConsoleAot.Diagnostics;
 
 /// <summary>
@@ -99,6 +101,11 @@ public static class ExceptionMapper
                 (ExitCodes.InvalidArgument,
                     $"Invalid argument: {argEx.Message}",
                     "Check argument format and try again."),
+
+            UnsupportedDbfVersionException unsupportedEx =>
+                (ExitCodes.InvalidFileFormat,
+                    $"Unsupported DBF file version: 0x{unsupportedEx.VersionByte:X2}",
+                    "This DBF file uses an unsupported format version. Consider converting it to a supported format or contact the tool maintainer for support."),
 
             OutOfMemoryException =>
                 (ExitCodes.OutOfMemory,

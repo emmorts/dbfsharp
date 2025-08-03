@@ -229,7 +229,7 @@ public class DbfReaderBasicTests
 
         if (reader.Count > 1)
         {
-            var lastRecord = reader[reader.Count - 1];
+            var lastRecord = reader[^1];
             Assert.NotNull(lastRecord);
         }
     }

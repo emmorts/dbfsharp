@@ -83,7 +83,7 @@ public class DbfMemoFileTests
         }
     }
 
-    [Fact] 
+    [Fact]
     public void MemoFile_VfpFormat_ShouldReadCorrectly()
     {
         if (!TestHelper.TestFileExists(TestHelper.TestFiles.DBase30))
@@ -179,7 +179,7 @@ public class DbfMemoFileTests
         }
 
         Assert.Equal(memoFields.Count, memoValues.Count);
-        
+
         // Verify each memo field can be accessed independently
         foreach (var field in memoFields)
         {
@@ -284,7 +284,7 @@ public class DbfMemoFileTests
         using var reader = DbfReader.Create(filePath);
 
         Assert.Equal(expectedVersion, reader.Header.DbfVersion);
-        
+
         if (reader.Fields.Any(f => f.Type.UsesMemoFile()))
         {
             var record = reader.Records.First();
@@ -306,19 +306,19 @@ public class DbfMemoFileTests
         }
 
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.DBase83);
-        var options = new DbfReaderOptions 
-        { 
-            Encoding = System.Text.Encoding.UTF8 
+        var options = new DbfReaderOptions
+        {
+            Encoding = System.Text.Encoding.UTF8
         };
 
         using var reader = DbfReader.Create(filePath, options);
         var memoFields = reader.Fields.Where(f => f.Type == FieldType.Memo).ToList();
-        
+
         if (memoFields.Count > 0)
         {
             var record = reader.Records.First();
             var memoValue = record.GetString(memoFields[0].Name);
-            
+
             if (memoValue != null)
             {
                 Assert.True(System.Text.Encoding.UTF8.GetByteCount(memoValue) >= 0);
@@ -369,7 +369,7 @@ public class DbfMemoFileTests
 
         // Test random access to memo fields
         var firstRecord = reader[0];
-        var lastRecord = reader[reader.Count - 1];
+        var lastRecord = reader[^1];
 
         foreach (var field in memoFields)
         {

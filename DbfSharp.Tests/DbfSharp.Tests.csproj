@@ -44,9 +44,6 @@
     <None Update="Resources\dbase_8b.dbf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\dbase_8c.dbf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Update="Resources\dbase_30.dbf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

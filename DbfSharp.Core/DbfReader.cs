@@ -940,13 +940,15 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
                 }
                 catch (Exception ex)
                 {
+                    var rawData = fieldDataSequence.ToArray();
+
                     if (_options.ValidateFields)
                     {
-                        throw new FieldParseException(field.Name, field.Type.ToString(), fieldDataSequence.ToArray(),
+                        throw new FieldParseException(field.Name, field.Type.ToString(), rawData,
                             $"Failed to parse field: {ex.Message}");
                     }
 
-                    fieldValues[fieldIndex] = new InvalidValue(fieldDataSequence.ToArray(), field, ex.Message);
+                    fieldValues[fieldIndex] = new InvalidValue(rawData, field, ex.Message);
                 }
             }
         }
@@ -977,13 +979,15 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
                 }
                 catch (Exception ex)
                 {
+                    var rawData = fieldDataSequence.ToArray();
+
                     if (_options.ValidateFields)
                     {
-                        throw new FieldParseException(field.Name, field.Type.ToString(), fieldDataSequence.ToArray(),
+                        throw new FieldParseException(field.Name, field.Type.ToString(), rawData,
                             $"Failed to parse field: {ex.Message}");
                     }
 
-                    fieldValues[fieldIndex] = new InvalidValue(fieldDataSequence.ToArray(), field, ex.Message);
+                    fieldValues[fieldIndex] = new InvalidValue(rawData, field, ex.Message);
                 }
 
                 dataSequence = dataSequence.Slice(fieldLength);
@@ -999,10 +1003,16 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
         // Check if the field addresses form a valid sequential pattern
         // If addresses are 0 or don't form a proper sequence, fall back to sequential parsing
 
-        if (Fields.Count == 0) return false;
+        if (Fields.Count == 0)
+        {
+            return false;
+        }
 
         // Check if any field has address 0 (indicates addresses not used)
-        if (Fields.Any(f => f.Address == 0)) return false;
+        if (Fields.Any(f => f.Address == 0))
+        {
+            return false;
+        }
 
         // Check if addresses form a proper sequence (each field starts where the previous ends)
         uint expectedAddress = 1; // Addresses are 1-based

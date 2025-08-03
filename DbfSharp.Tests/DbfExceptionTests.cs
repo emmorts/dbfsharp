@@ -337,12 +337,107 @@ public class DbfExceptionTests
     }
 
     [Fact]
+    public void UnsupportedDbfVersion_ShouldThrowUnsupportedDbfVersionException()
+    {
+        const byte unsupportedVersionByte = 0xFF; // should map to Unknown
+
+        var fakeDbfHeader = new byte[32];
+        fakeDbfHeader[0] = unsupportedVersionByte; // version byte at position 0
+
+        // set minimal required header data to avoid other parsing errors
+        fakeDbfHeader[1] = 0x01; // year
+        fakeDbfHeader[2] = 0x01; // month
+        fakeDbfHeader[3] = 0x01; // day
+        fakeDbfHeader[8] = 33; // header length (32 + 1 for terminator)
+        fakeDbfHeader[10] = 1; // record length (minimal)
+
+        using var stream = new MemoryStream(fakeDbfHeader);
+
+        var exception = Assert.Throws<UnsupportedDbfVersionException>(() => DbfReader.Create(stream));
+
+        Assert.Equal(unsupportedVersionByte, exception.VersionByte);
+        Assert.Contains($"0x{unsupportedVersionByte:X2}", exception.Message);
+        Assert.Contains("Unsupported or unrecognized DBF version", exception.Message);
+    }
+
+    [Fact]
+    public async Task UnsupportedDbfVersion_CreateAsync_ShouldThrowUnsupportedDbfVersionException()
+    {
+        const byte unsupportedVersionByte = 0x99; // should map to Unknown
+
+        var fakeDbfHeader = new byte[32];
+        fakeDbfHeader[0] = unsupportedVersionByte;
+
+        // set minimal required header data
+        fakeDbfHeader[1] = 0x01; // year
+        fakeDbfHeader[2] = 0x01; // month
+        fakeDbfHeader[3] = 0x01; // day
+        fakeDbfHeader[8] = 33; // header length
+        fakeDbfHeader[10] = 1; // record length
+
+        using var stream = new MemoryStream(fakeDbfHeader);
+
+        var exception = await Assert.ThrowsAsync<UnsupportedDbfVersionException>(() => DbfReader.CreateAsync(stream));
+
+        Assert.Equal(unsupportedVersionByte, exception.VersionByte);
+        Assert.Contains($"0x{unsupportedVersionByte:X2}", exception.Message);
+    }
+
+    [Fact]
+    public void SupportedDbfVersions_ShouldNotThrowUnsupportedDbfVersionException()
+    {
+        // Test that known/supported versions don't throw the exception
+        var supportedVersions = new byte[]
+        {
+            0x02, // DBase2
+            0x03, // DBase3Plus
+            0x30, // VisualFoxPro
+            0x31, // VisualFoxProAutoIncrement
+            0x32, // VisualFoxProVarchar
+            0x83, // DBase3PlusWithMemo
+            0x8B, // DBase4WithMemo
+            0xF5  // FoxPro2WithMemo
+        };
+
+        foreach (var versionByte in supportedVersions)
+        {
+            var fakeDbfHeader = new byte[32];
+            fakeDbfHeader[0] = versionByte;
+
+            // Set minimal header data
+            fakeDbfHeader[1] = 0x01; // year
+            fakeDbfHeader[2] = 0x01; // month
+            fakeDbfHeader[3] = 0x01; // day
+            fakeDbfHeader[8] = 33; // header length
+            fakeDbfHeader[10] = 1; // record length
+
+            using var stream = new MemoryStream(fakeDbfHeader);
+
+            // Should not throw UnsupportedDbfVersionException (might throw other exceptions due to minimal data)
+            try
+            {
+                using var reader = DbfReader.Create(stream);
+                // Success - version was recognized
+            }
+            catch (UnsupportedDbfVersionException)
+            {
+                Assert.True(false, $"Supported DBF version 0x{versionByte:X2} should not throw UnsupportedDbfVersionException");
+            }
+            catch (Exception)
+            {
+                // Other exceptions are fine for this test - we just want to ensure UnsupportedDbfVersionException is not thrown
+            }
+        }
+    }
+
+    [Fact]
     public void ExceptionHierarchy_ShouldBeCorrect()
     {
         // Test exception inheritance
         Assert.True(typeof(DbfNotFoundException).IsSubclassOf(typeof(DbfException)));
         Assert.True(typeof(MissingMemoFileException).IsSubclassOf(typeof(DbfException)));
         Assert.True(typeof(FieldParseException).IsSubclassOf(typeof(DbfException)));
+        Assert.True(typeof(UnsupportedDbfVersionException).IsSubclassOf(typeof(DbfException)));
         Assert.True(typeof(DbfException).IsSubclassOf(typeof(Exception)));
     }
 

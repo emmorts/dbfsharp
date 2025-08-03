@@ -3,6 +3,7 @@ using System.IO.Pipelines;
 using System.Runtime.InteropServices;
 using System.Text;
 using DbfSharp.Core.Enums;
+using DbfSharp.Core.Exceptions;
 
 namespace DbfSharp.Core;
 
@@ -278,6 +279,11 @@ public readonly struct DbfHeader
 
         var dbVersionByte = bytes[0];
         var version = DbfVersionExtensions.FromByte(dbVersionByte);
+
+        if (version == DbfVersion.Unknown)
+        {
+            throw new UnsupportedDbfVersionException(dbVersionByte);
+        }
 
         // Handle different header formats based on DBF version
         uint numberOfRecords;
