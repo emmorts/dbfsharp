@@ -371,63 +371,54 @@ public class DbfAsyncTests
     [Fact]
     public async Task ReadDeletedRecordsAsync_ShouldReturnDeletedRecords()
     {
-        // Arrange
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
         await using var reader = await DbfReader.CreateAsync(filePath);
 
-        // Act
         var deletedRecords = new List<DbfRecord>();
         await foreach (var record in reader.ReadDeletedRecordsAsync())
         {
             deletedRecords.Add(record);
         }
 
-        // Assert
         Assert.NotEmpty(deletedRecords);
     }
 
-    [Fact(Skip = "This test is failing and will be reviewed later.")]
+    [Fact]
     public async Task CreateAsync_WithNonSeekableStream_ShouldWork()
     {
-        // Arrange
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
         var fileBytes = await File.ReadAllBytesAsync(filePath);
         await using var memoryStream = new NonSeekableMemoryStream(fileBytes);
 
-        // Act
         await using var reader = await DbfReader.CreateAsync(memoryStream);
 
-        // Assert
         Assert.NotNull(reader);
         Assert.True(reader.Fields.Count > 0);
         var record = reader.Records.First();
     }
 
-    private class NonSeekableMemoryStream : MemoryStream
+    private class NonSeekableMemoryStream(byte[] buffer) : MemoryStream(buffer)
     {
-        public NonSeekableMemoryStream(byte[] buffer) : base(buffer)
-        {
-        }
-
         public override bool CanSeek => false;
     }
 
-    //[Fact]
+    [Fact]
     public async Task PipeReader_ShouldReadAllRecords()
     {
-        // Arrange
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
         var fileBytes = await File.ReadAllBytesAsync(filePath);
 
+        // create a pipe and write the record data portion only (skip header and field definitions)
         var pipe = new Pipe();
-        await pipe.Writer.WriteAsync(fileBytes);
-        await pipe.Writer.CompleteAsync();
-
         var options = new DbfReaderOptions();
         var header = DbfHeader.Read(new BinaryReader(new MemoryStream(fileBytes)));
         var fields = DbfField.ReadFields(new BinaryReader(new MemoryStream(fileBytes, 32, fileBytes.Length - 32)), header.Encoding, (int)header.NumberOfRecords, options.LowerCaseFieldNames, header.DbfVersion);
 
-        // Act
+        // write only the record data portion to the pipe (starting from HeaderLength)
+        var recordDataBytes = fileBytes.AsMemory(header.HeaderLength);
+        await pipe.Writer.WriteAsync(recordDataBytes);
+        await pipe.Writer.CompleteAsync();
+
         var reader = new DbfReader(new MemoryStream(), false, header, fields, options, null, "test", pipe.Reader, Task.CompletedTask);
         var records = new List<DbfRecord>();
         await foreach (var record in reader.ReadRecordsAsync())
@@ -435,7 +426,6 @@ public class DbfAsyncTests
             records.Add(record);
         }
 
-        // Assert
         Assert.Equal(2, records.Count);
     }
 }

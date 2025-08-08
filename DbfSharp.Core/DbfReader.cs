@@ -730,7 +730,46 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
 
     private IEnumerable<(DbfRecord Record, bool IsDeleted)> EnumerateAllRecords()
     {
-        if (_disposed || _reader == null)
+        if (_disposed)
+        {
+            yield break;
+        }
+
+        // for non-seekable streams (PipeReader case), we need to load records first
+        if (_reader == null && _pipeReader != null)
+        {
+            if (!IsLoaded)
+            {
+                // use async loading in a sync context is safe for enumeration since it's a one-time operation to populate the cache
+                try
+                {
+                    LoadAsync().GetAwaiter().GetResult();
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException(
+                        "Failed to load records from non-seekable stream. Consider using ReadRecordsAsync() instead.", ex);
+                }
+            }
+
+            if (_loadedRecords != null)
+            {
+                foreach (var record in _loadedRecords)
+                {
+                    yield return (record, false);
+                }
+            }
+            if (_loadedDeletedRecords != null)
+            {
+                foreach (var record in _loadedDeletedRecords)
+                {
+                    yield return (record, true);
+                }
+            }
+            yield break;
+        }
+
+        if (_reader == null)
         {
             yield break;
         }
