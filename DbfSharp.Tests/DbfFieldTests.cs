@@ -105,7 +105,7 @@ public class DbfFieldTests
         Assert.NotEqual(field1.GetHashCode(), field2.GetHashCode());
     }
 
-    //[Theory]
+    [Theory]
     [InlineData("N", 10, 2, DbfVersion.DBase3Plus, true)] // Valid numeric
     [InlineData("C", 254, 0, DbfVersion.DBase3Plus, true)] // Valid character
     [InlineData("L", 1, 0, DbfVersion.DBase3Plus, true)] // Valid logical

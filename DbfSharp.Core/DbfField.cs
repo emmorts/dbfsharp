@@ -862,6 +862,19 @@ public readonly struct DbfField
 
                 break;
             case FieldType.Character:
+                if (ActualLength == 0)
+                {
+                    throw new ArgumentException($"{Type} field '{Name}' cannot have zero length");
+                }
+
+                if (ActualLength > 254)
+                {
+                    throw new ArgumentException(
+                        $"Character field '{Name}' cannot exceed maximum length of 254 bytes, got {ActualLength}"
+                    );
+                }
+
+                break;
             case FieldType.Varchar:
             case FieldType.Numeric:
             case FieldType.Float:
