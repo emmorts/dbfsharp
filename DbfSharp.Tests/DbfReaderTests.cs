@@ -62,7 +62,6 @@ public class DbfReaderTests
             }
         }
 
-        // some test files may legitimately have no records (e.g., dbase_02.dbf) so just verify we can open them without error
         Assert.True(recordCount >= 0, $"Error reading records from {fileName}");
     }
 
@@ -84,27 +83,19 @@ public class DbfReaderTests
 
         using var reader = DbfReader.Create(filePath, options);
 
-        // Load all records into memory
         reader.Load();
 
         Assert.True(reader.IsLoaded);
         Assert.True(reader.Count > 0);
 
-        // Test random access
         var firstRecord = reader[0];
         var lastRecord = reader[^1];
 
-        Assert.NotNull(firstRecord);
-        Assert.NotNull(lastRecord);
-
-        // Test that we can access records in any order
         if (reader.Count > 1)
         {
             var middleRecord = reader[reader.Count / 2];
-            Assert.NotNull(middleRecord);
         }
 
-        // Verify loaded records match streaming records
         var streamingRecords = new List<DbfRecord>();
         foreach (var record in reader.Records)
         {
@@ -113,14 +104,12 @@ public class DbfReaderTests
 
         Assert.Equal(reader.Count, streamingRecords.Count);
 
-        // Compare first few records
         var recordsToCompare = Math.Min(5, reader.Count);
         for (var i = 0; i < recordsToCompare; i++)
         {
             var loadedRecord = reader[i];
             var streamingRecord = streamingRecords[i];
 
-            // Compare field values
             for (var j = 0; j < loadedRecord.FieldCount; j++)
             {
                 Assert.Equal(loadedRecord[j], streamingRecord[j]);
@@ -155,7 +144,7 @@ public class DbfReaderTests
         var fieldsOfType = reader.Fields.Where(f => f.Type == fieldType).ToList();
         if (fieldsOfType.Count == 0)
         {
-            return; // Skip if no fields of this type
+            return;
         }
 
         var recordsToTest = Math.Min(5, reader.RecordCount);
@@ -167,13 +156,11 @@ public class DbfReaderTests
             {
                 var value = record[field.Name];
 
-                // Test type-specific reading methods
                 switch (fieldType)
                 {
                     case FieldType.Character:
                     case FieldType.Varchar:
                         var stringValue = record.GetString(field.Name);
-                        Assert.True(stringValue is null or string);
                         break;
 
                     case FieldType.Numeric:
@@ -181,33 +168,27 @@ public class DbfReaderTests
                         if (field.DecimalCount > 0)
                         {
                             var decimalValue = record.GetDecimal(field.Name);
-                            Assert.True(decimalValue is null or decimal);
                         }
                         else
                         {
                             var intValue = record.GetInt32(field.Name);
-                            Assert.True(intValue is null or int);
                         }
                         break;
 
                     case FieldType.Date:
                         var dateValue = record.GetDateTime(field.Name);
-                        Assert.True(dateValue is null or DateTime);
                         break;
 
                     case FieldType.Logical:
                         var boolValue = record.GetBoolean(field.Name);
-                        Assert.True(boolValue is null or bool);
                         break;
 
                     case FieldType.Memo:
                         var memoValue = record.GetString(field.Name);
-                        Assert.True(memoValue is null or string);
                         break;
 
                     case FieldType.Timestamp:
                         var timestampValue = record.GetDateTime(field.Name);
-                        Assert.True(timestampValue is null or DateTime);
                         break;
                 }
             }
@@ -227,9 +208,8 @@ public class DbfReaderTests
         using var reader = DbfReader.Create(filePath);
 
         reader.Load();
-        Assert.Equal(2, reader.Count); // Two active records (one deleted record excluded)
+        Assert.Equal(2, reader.Count);
 
-        // Test first record
         var record1 = reader[0];
         var name1 = record1.GetString("NAME")?.Trim();
         var birthdate1 = record1.GetDateTime("BIRTHDATE");
@@ -237,7 +217,6 @@ public class DbfReaderTests
         Assert.Equal("Alice", name1);
         Assert.Equal(new DateTime(1987, 3, 1), birthdate1);
 
-        // Test second record
         var record2 = reader[1];
         var name2 = record2.GetString("NAME")?.Trim();
         var birthdate2 = record2.GetDateTime("BIRTHDATE");
@@ -254,7 +233,6 @@ public class DbfReaderTests
 
         var firstRecord = reader.Records.First();
 
-        // Test key fields from first record based on metadata
         var pointId = firstRecord.GetString("Point_ID")?.Trim();
         var type = firstRecord.GetString("Type")?.Trim();
         var shape = firstRecord.GetString("Shape")?.Trim();
@@ -265,7 +243,6 @@ public class DbfReaderTests
         Assert.Equal("circular", shape);
         Assert.Equal("12", circularD);
 
-        // Test numeric fields
         var maxPdopField = reader.FindField("Max_PDOP");
         if (maxPdopField.HasValue)
         {
@@ -273,7 +250,6 @@ public class DbfReaderTests
             Assert.True(maxPdop.HasValue);
         }
 
-        // Test date field
         var dateVisit = firstRecord.GetDateTime("Date_Visit");
         Assert.True(dateVisit.HasValue);
     }
@@ -303,11 +279,9 @@ public class DbfReaderTests
         {
             try
             {
-                // Try to access all fields in the record
                 for (var i = 0; i < record.FieldCount; i++)
                 {
                     var value = record[i];
-                    // Just accessing the value is enough to test
                 }
             }
             catch
@@ -322,7 +296,6 @@ public class DbfReaderTests
         Assert.True(allRecordsAccessible, $"Some records in {fileName} were not accessible");
         Assert.True(streamingCount > 0, $"No records found in {fileName}");
 
-        // Compare with loaded mode
         reader.Load();
         Assert.Equal(streamingCount, reader.Count);
     }
@@ -362,7 +335,6 @@ public class DbfReaderTests
                     recordsWithMemoData++;
                     Assert.IsType<string>(value);
 
-                    // Memo fields should not contain null terminators in the middle
                     Assert.DoesNotContain('\0', value.TrimEnd('\0'));
                 }
             }
@@ -374,7 +346,6 @@ public class DbfReaderTests
             }
         }
 
-        // Don't require memo data to be present, but if it is, it should be readable
         Assert.True(recordsWithMemoData >= 0);
     }
 
@@ -405,7 +376,6 @@ public class DbfReaderTests
         Assert.True(stats.HeaderLength > 0);
         Assert.NotNull(stats.Encoding);
 
-        // After loading, active records should be available
         reader.Load();
         var loadedStats = reader.GetStatistics();
 
@@ -430,14 +400,13 @@ public class DbfReaderTests
         var recordCount = 0;
         foreach (var record in reader.Records)
         {
-            // Should be able to read records without throwing
             for (var i = 0; i < record.FieldCount; i++)
             {
-                var value = record[i]; // May contain InvalidValue objects
+                var value = record[i];
             }
 
             recordCount++;
-            if (recordCount > 5) // Don't test all records
+            if (recordCount > 5)
             {
                 break;
             }
@@ -470,7 +439,6 @@ public class DbfReaderTests
 
         if (ignoreCase)
         {
-            // Should be able to access with any case
             Assert.True(record.HasField(firstFieldName));
             Assert.True(record.HasField(upperFieldName));
             Assert.True(record.HasField(lowerFieldName));
@@ -484,7 +452,6 @@ public class DbfReaderTests
         }
         else
         {
-            // Should only work with exact case
             Assert.True(record.HasField(firstFieldName));
 
             if (firstFieldName != upperFieldName)
@@ -522,7 +489,6 @@ public class DbfReaderTests
         var actualRecords = reader.Records.ToList();
         Assert.True(actualRecords.Count <= maxRecords);
 
-        // If there are enough records in the file, we should get exactly maxRecords
         if (reader.RecordCount >= maxRecords)
         {
             Assert.Equal(maxRecords, actualRecords.Count);

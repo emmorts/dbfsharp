@@ -14,7 +14,7 @@ public class DbfReaderBasicTests
         using var reader = DbfReader.Create(filePath);
 
         Assert.NotNull(reader);
-        Assert.False(reader.IsLoaded); // Default is streaming mode
+        Assert.False(reader.IsLoaded);
         Assert.NotEmpty(reader.Fields);
         Assert.NotEmpty(reader.FieldNames);
         Assert.True(reader.RecordCount > 0);
@@ -39,7 +39,7 @@ public class DbfReaderBasicTests
 
         Assert.NotNull(reader);
         Assert.NotEmpty(reader.Fields);
-        Assert.Equal("Unknown", reader.TableName); // Stream-based readers don't have table names
+        Assert.Equal("Unknown", reader.TableName);
     }
 
     [Theory]
@@ -55,14 +55,12 @@ public class DbfReaderBasicTests
         Assert.NotNull(reader);
         Assert.True(reader.Fields.Count > 0);
 
-        // Should be able to enumerate without errors
         var recordCount = 0;
         foreach (var record in reader.Records)
         {
             Assert.Equal(reader.Fields.Count, record.FieldCount);
             recordCount++;
 
-            // Don't read too many records in tests
             if (recordCount > 100)
             {
                 break;
@@ -81,7 +79,6 @@ public class DbfReaderBasicTests
         Assert.True(reader.Header.NumberOfRecords > 0);
         Assert.True(reader.Header.HeaderLength > 0);
         Assert.True(reader.Header.RecordLength > 0);
-        // Fields.Count is the authoritative field count
     }
 
     [Theory]
@@ -101,7 +98,6 @@ public class DbfReaderBasicTests
     {
         if (!TestHelper.TestFileExists(fileName))
         {
-            // Skip test if file doesn't exist
             return;
         }
 
@@ -114,7 +110,6 @@ public class DbfReaderBasicTests
 
         Assert.Equal(expectedVersion, reader.Header.DbfVersion);
         
-        // Validate exact header values from metadata
         if (expectedRecords > 0)
         {
             Assert.Equal((uint)expectedRecords, reader.Header.NumberOfRecords);
@@ -168,7 +163,6 @@ public class DbfReaderBasicTests
         using var reader = DbfReader.Create(filePath);
         var firstRecord = reader.Records.First();
 
-        // Test index-based access
         for (var i = 0; i < firstRecord.FieldCount; i++)
         {
             var value = firstRecord[i];
@@ -176,7 +170,6 @@ public class DbfReaderBasicTests
             Assert.False(string.IsNullOrEmpty(fieldName));
         }
 
-        // Test name-based access
         foreach (var fieldName in reader.FieldNames)
         {
             var hasField = firstRecord.HasField(fieldName);
@@ -185,7 +178,6 @@ public class DbfReaderBasicTests
             if (hasField)
             {
                 var value = firstRecord[fieldName];
-                // Value can be null, that's valid
             }
         }
     }
@@ -207,7 +199,7 @@ public class DbfReaderBasicTests
         Assert.True(stats.RecordLength > 0);
         Assert.True(stats.HeaderLength > 0);
         Assert.False(string.IsNullOrEmpty(stats.Encoding));
-        Assert.False(stats.IsLoaded); // Default is streaming
+        Assert.False(stats.IsLoaded);
     }
 
     [Fact]
@@ -223,14 +215,11 @@ public class DbfReaderBasicTests
         Assert.True(reader.IsLoaded);
         Assert.True(reader.Count > 0);
 
-        // Test random access
         var firstRecord = reader[0];
-        Assert.NotNull(firstRecord);
 
         if (reader.Count > 1)
         {
             var lastRecord = reader[^1];
-            Assert.NotNull(lastRecord);
         }
     }
 
@@ -294,7 +283,7 @@ public class DbfReaderBasicTests
 
         Assert.False(string.IsNullOrEmpty(str));
         Assert.Contains("DbfReader", str);
-        Assert.Contains("people", str, StringComparison.OrdinalIgnoreCase); // Table name
+        Assert.Contains("people", str, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -316,7 +305,6 @@ public class DbfReaderBasicTests
         using var reader = DbfReader.Create(filePath);
         var record = reader.Records.First();
 
-        // Test generic access for different field types
         foreach (var field in reader.Fields)
         {
             switch (field.Type)
@@ -324,38 +312,29 @@ public class DbfReaderBasicTests
                 case FieldType.Character:
                 case FieldType.Varchar:
                     var stringValue = record.GetString(field.Name);
-                    Assert.True(stringValue is null or string);
                     break;
 
                 case FieldType.Date:
                     var dateValue = record.GetDateTime(field.Name);
-                    Assert.True(dateValue is null or DateTime);
                     break;
 
                 case FieldType.Float:
                 case FieldType.Double:
                 case FieldType.Numeric:
-                    // Numeric can be int or decimal
                     var numericValue = record[field.Name];
-                    Assert.True(numericValue is null or int or decimal or double or float);
                     break;
 
                 case FieldType.Logical:
                     var boolValue = record.GetBoolean(field.Name);
-                    Assert.True(boolValue is null or bool);
-                    // Can be null or bool
                     break;
                 case FieldType.Memo:
                     var memoValue = record.GetString(field.Name);
-                    Assert.True(memoValue is null or string);
                     break;
                 case FieldType.Timestamp:
                 case FieldType.TimestampAlternate:
                     var timestampValue = record.GetDateTime(field.Name);
-                    Assert.True(timestampValue is null or DateTime);
                     break;
                 default:
-                    // For other types, just check if we can get a value
                     var value = record[field.Name];
                     break;
             }
@@ -373,7 +352,6 @@ public class DbfReaderBasicTests
 
         var success = record.TryGetValue(firstFieldName, out var value);
         Assert.True(success);
-        // Value can be null, that's valid
 
         var failureResult = record.TryGetValue("NON_EXISTENT_FIELD", out var nonExistentValue);
         Assert.False(failureResult);
@@ -406,12 +384,10 @@ public class DbfReaderBasicTests
         using var reader = DbfReader.Create(filePath);
         var deletedRecords = reader.DeletedRecords.Take(10).ToList();
 
-        // May have deleted records or not, both are valid
         Assert.True(deletedRecords.Count >= 0);
 
         foreach (var record in deletedRecords)
         {
-            Assert.NotNull(record);
             Assert.Equal(reader.Fields.Count, record.FieldCount);
         }
     }
@@ -422,7 +398,7 @@ public class DbfReaderBasicTests
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
 
         using var reader = DbfReader.Create(filePath);
-        reader.Load(); // Load to enable count properties
+        reader.Load();
 
         var activeCount = reader.Count;
         var deletedCount = reader.DeletedCount;

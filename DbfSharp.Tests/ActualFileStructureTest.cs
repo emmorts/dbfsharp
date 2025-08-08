@@ -30,7 +30,7 @@ public class ActualFileStructureTest
             var options = new DbfReaderOptions { IgnoreMissingMemoFile = true };
             using var reader = DbfReader.Create(filePath, options);
 
-            // Output the actual structure for debugging
+            // output the actual structure for debugging
             Console.WriteLine($"\n=== {fileName} ===");
             Console.WriteLine($"Version: {reader.Header.DbfVersion}");
             Console.WriteLine($"Records: {reader.Header.NumberOfRecords}");
@@ -38,7 +38,7 @@ public class ActualFileStructureTest
             Console.WriteLine($"Record Length: {reader.Header.RecordLength}");
             Console.WriteLine($"Field Count: {reader.Fields.Count}");
 
-            if (reader.Fields.Count <= 20) // Only show details for files with reasonable field counts
+            if (reader.Fields.Count <= 20) // only show details for files with reasonable field counts
             {
                 Console.WriteLine("Fields:");
                 for (var i = 0; i < reader.Fields.Count; i++)
@@ -47,7 +47,7 @@ public class ActualFileStructureTest
                     Console.WriteLine($"  {i + 1}: {field.Name} ({field.Type}) Length={field.Length} Decimals={field.DecimalCount}");
                 }
 
-                // Load and show first record if available
+                // load and show first record if available
                 reader.Load();
                 if (reader.Count > 0)
                 {
@@ -63,7 +63,7 @@ public class ActualFileStructureTest
             }
         }
 
-        // This test always passes - it's just for discovery
+        // this test always passes - it's just for discovery
         Assert.True(true);
     }
 }

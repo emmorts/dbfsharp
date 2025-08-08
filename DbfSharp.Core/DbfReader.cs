@@ -188,7 +188,7 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
     /// to enforce the use of the static factory methods <see cref="CreateAsync(string, DbfReaderOptions, CancellationToken)"/>
     /// and <see cref="Create(string, DbfReaderOptions)"/>.
     /// </summary>
-    private DbfReader(
+    internal DbfReader(
         Stream stream,
         bool ownsStream,
         DbfHeader header,
@@ -451,93 +451,70 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
 
         try
         {
-            var pipe = new Pipe();
-            var writingTask = FillPipeAsync(stream, pipe.Writer, cancellationToken);
-            var pipeReader = pipe.Reader;
-
-            var header = await DbfHeader.ReadAsync(pipeReader, cancellationToken);
-
-            var fields = await DbfField.ReadFieldsAsync(pipeReader, header.Encoding, 0,
-                options.LowerCaseFieldNames, header.DbfVersion, header.HeaderLength, cancellationToken);
-
-            if (fields.Length == 0)
-            {
-                // Zero fields is valid for some DBF files, but the record length should be minimal (typically 1 byte for deletion marker)
-                if (header.RecordLength == 0)
-                {
-                    throw new DbfException("DBF file has no field definitions and invalid record length");
-                }
-            }
-
-            if (header.DbfVersion == DbfVersion.DBase2)
-            {
-                header = RecalculateDBase2Header(header, fields);
-            }
-
-            IMemoFile? memoFile = null;
-            if (header.SupportsMemoFields && filePath != null)
-            {
-                try
-                {
-                    memoFile = MemoFileFactory.CreateMemoFile(filePath, header.DbfVersion, options);
-                }
-                catch (MissingMemoFileException)
-                {
-                    if (!options.IgnoreMissingMemoFile)
-                    {
-                        throw;
-                    }
-                }
-            }
-
-            // For seekable streams, position to record data
             if (stream.CanSeek)
             {
+                // SEEKABLE: Read directly from the stream.
+                var header = await DbfHeader.ReadAsync(stream, cancellationToken);
+
+                var fields = await DbfField.ReadFieldsAsync(stream, header.Encoding, (int)header.NumberOfRecords,
+                    options.LowerCaseFieldNames, header.DbfVersion, header.HeaderLength, cancellationToken);
+
+                if (header.DbfVersion == DbfVersion.DBase2)
+                {
+                    header = RecalculateDBase2Header(header, fields);
+                }
+
+                IMemoFile? memoFile = null;
+                if (header.SupportsMemoFields && filePath != null)
+                {
+                    try
+                    {
+                        memoFile = MemoFileFactory.CreateMemoFile(filePath, header.DbfVersion, options);
+                    }
+                    catch (MissingMemoFileException)
+                    {
+                        if (!options.IgnoreMissingMemoFile) throw;
+                    }
+                }
+
                 stream.Position = header.HeaderLength;
+                return new DbfReader(stream, ownsStream, header, fields, options, memoFile, tableName);
             }
             else
             {
-                // For non-seekable streams using pipe, we need to advance the pipe reader
-                // to skip any remaining padding after field definitions
-                var consumedBytes = DbfHeader.Size + fields.Length * DbfField.Size + 1; // +1 for terminator
-                var remainingToSkip = header.HeaderLength - consumedBytes;
+                // NON-SEEKABLE: Use PipeReader for robust streaming.
+                var pipe = new Pipe();
+                var writingTask = FillPipeAsync(stream, pipe.Writer, cancellationToken);
+                var pipeReader = pipe.Reader;
 
+                var header = await DbfHeader.ReadAsync(pipeReader, cancellationToken);
 
-                if (remainingToSkip > 0)
+                var fields = await DbfField.ReadFieldsAsync(pipeReader, header.Encoding, 0,
+                    options.LowerCaseFieldNames, header.DbfVersion, header.HeaderLength, cancellationToken);
+
+                if (header.DbfVersion == DbfVersion.DBase2)
                 {
-                    // Read and discard the padding bytes
-                    while (remainingToSkip > 0)
+                    header = RecalculateDBase2Header(header, fields);
+                }
+
+                IMemoFile? memoFile = null;
+                if (header.SupportsMemoFields && filePath != null)
+                {
+                    try
                     {
-                        var paddingResult = await pipeReader.ReadAsync(cancellationToken);
-                        var paddingBuffer = paddingResult.Buffer;
-
-                        if (paddingBuffer.IsEmpty && paddingResult.IsCompleted)
-                        {
-                            break;
-                        }
-
-                        var toSkip = Math.Min(remainingToSkip, (int)paddingBuffer.Length);
-                        var skipPosition = paddingBuffer.GetPosition(toSkip);
-                        pipeReader.AdvanceTo(skipPosition);
-                        remainingToSkip -= toSkip;
-
-
-                        if (paddingResult.IsCompleted)
-                        {
-                            break;
-                        }
+                        memoFile = MemoFileFactory.CreateMemoFile(filePath, header.DbfVersion, options);
+                    }
+                    catch (MissingMemoFileException)
+                    {
+                        if (!options.IgnoreMissingMemoFile) throw;
                     }
                 }
+
+                // The pipe is already positioned correctly after reading fields.
+                // Any padding should have been handled by the correct pipe advance logic.
+                // We now pass the pipe reader and the background writing task to the DbfReader instance.
+                return new DbfReader(stream, ownsStream, header, fields, options, memoFile, tableName, pipeReader, writingTask);
             }
-
-            // For seekable streams, we don't need the pipe reader for record enumeration
-            // since we can use the properly positioned stream directly
-            var readerPipeReader = stream.CanSeek ? null : pipeReader;
-            var readerPipeTask = stream.CanSeek ? null : writingTask;
-
-
-            return new DbfReader(stream, ownsStream, header, fields, options, memoFile, tableName, readerPipeReader,
-                readerPipeTask);
         }
         catch
         {
@@ -545,7 +522,6 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
             {
                 await stream.DisposeAsync();
             }
-
             throw;
         }
     }
@@ -866,12 +842,28 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
         int maxRecords, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var recordLength = Header.RecordLength;
+        if (recordLength == 0) yield break;
+
         var recordsRead = 0;
 
         while (recordsRead < Header.NumberOfRecords && recordsRead < maxRecords)
         {
-            var result = await _pipeReader!.ReadAsync(cancellationToken);
+            ReadResult result;
+            try
+            {
+                result = await _pipeReader!.ReadAsync(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+
             var buffer = result.Buffer;
+
+            if (result.IsCanceled)
+            {
+                break;
+            }
 
             while (buffer.Length >= recordLength)
             {
@@ -880,26 +872,23 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
                     break;
                 }
 
-                // Note: Header terminator skipping is now handled in ReadFieldsAsync method
-                // No need to skip 0x0D bytes here as we should already be positioned at record data
-
                 var recordSequence = buffer.Slice(0, recordLength);
-                if (recordSequence.FirstSpan[0] == EofMarker) // EOF marker
+
+                if (recordSequence.FirstSpan[0] == EofMarker)
                 {
                     _pipeReader.AdvanceTo(recordSequence.Start);
                     yield break;
                 }
 
-                var recordBytes = recordSequence.ToArray();
-                yield return ParseRecord(recordBytes);
+                yield return ParseRecord(in recordSequence);
                 recordsRead++;
 
                 buffer = buffer.Slice(recordLength);
             }
 
-            _pipeReader.AdvanceTo(buffer.Start, buffer.End);
+            _pipeReader.AdvanceTo(buffer.Start, result.Buffer.End);
 
-            if (result.IsCompleted || recordsRead >= maxRecords)
+            if (result.IsCompleted)
             {
                 break;
             }

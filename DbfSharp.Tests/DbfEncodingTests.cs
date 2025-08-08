@@ -19,7 +19,6 @@ public class DbfEncodingTests
         using var reader = DbfReader.Create(filePath, options);
 
         Assert.NotNull(reader.Encoding);
-        // Encoding detection may return UTF8 as default, that's acceptable
         
         var records = reader.Records.Take(3).ToList();
         foreach (var record in records)
@@ -29,10 +28,7 @@ public class DbfEncodingTests
                 var value = record[i];
                 if (value is string stringValue && !string.IsNullOrEmpty(stringValue))
                 {
-                    // Check if the string appears to be properly decoded
-                    // Replacement characters may appear if the encoding detection isn't perfect
                     var hasReplacementChars = stringValue.Contains('\uFFFD');
-                    // This is informational - encoding detection is not perfect
                 }
             }
         }
@@ -86,7 +82,6 @@ public class DbfEncodingTests
         using var reader = DbfReader.Create(filePath);
 
         var records = reader.Records.Take(3).ToList();
-        var hasCyrillicText = false;
 
         foreach (var record in records)
         {
@@ -95,10 +90,8 @@ public class DbfEncodingTests
                 var value = record[i];
                 if (value is string stringValue && !string.IsNullOrEmpty(stringValue))
                 {
-                    // Check for Cyrillic characters (U+0400 to U+04FF)
                     if (stringValue.Any(c => c >= 0x0400 && c <= 0x04FF))
                     {
-                        hasCyrillicText = true;
                         Assert.False(stringValue.Contains('\uFFFD'), 
                             "Cyrillic text should not contain replacement characters");
                     }
@@ -106,7 +99,6 @@ public class DbfEncodingTests
             }
         }
 
-        // If no Cyrillic text found, that's also valid - file might use Latin characters
     }
 
     [Theory]
@@ -127,7 +119,6 @@ public class DbfEncodingTests
         for (var i = 0; i < record.FieldCount; i++)
         {
             var value = record[i];
-            // Should not throw exceptions during string conversion
             Assert.True(value == null || value is string || value.GetType().IsPrimitive || 
                        value is DateTime || value is decimal || value is byte[]);
         }
@@ -198,7 +189,6 @@ public class DbfEncodingTests
             Assert.NotNull(reader.Encoding);
         }
 
-        // All encodings should be valid
         Assert.True(encodings.Count > 0);
         foreach (var encoding in encodings)
         {
@@ -282,11 +272,9 @@ public class DbfEncodingTests
 
         if (firstFieldName != upperFieldName)
         {
-            // Test case-insensitive access
             Assert.True(record1.HasField(upperFieldName));
             Assert.True(record1.HasField(lowerFieldName));
 
-            // Test case-sensitive access
             Assert.True(record2.HasField(firstFieldName));
             
             if (firstFieldName != upperFieldName)
@@ -351,11 +339,11 @@ public class DbfEncodingTests
     }
 
     [Theory]
-    [InlineData(TestHelper.TestFiles.People, "plain ol' ascii")]
-    [InlineData(TestHelper.TestFiles.DBase03, "plain ol' ascii")]
-    [InlineData(TestHelper.TestFiles.DBase30, "Windows ANSI")]
-    [InlineData(TestHelper.TestFiles.Cp1251, "Russian Windows")]
-    public void LanguageDriver_ShouldBeDetectedFromMetadata(string fileName, string expectedLanguageDriver)
+    [InlineData(TestHelper.TestFiles.People)]
+    [InlineData(TestHelper.TestFiles.DBase03)]
+    [InlineData(TestHelper.TestFiles.DBase30)]
+    [InlineData(TestHelper.TestFiles.Cp1251)]
+    public void LanguageDriver_ShouldBeDetectedFromMetadata(string fileName)
     {
         if (!TestHelper.TestFileExists(fileName))
         {
@@ -366,11 +354,8 @@ public class DbfEncodingTests
         var options = new DbfReaderOptions { IgnoreMissingMemoFile = true };
         using var reader = DbfReader.Create(filePath, options);
 
-        // The language driver is detected automatically
         Assert.NotNull(reader.Encoding);
         
-        // We can't directly access the language driver string from the reader,
-        // but we can verify that encoding detection works
         var stats = reader.GetStatistics();
         Assert.NotNull(stats.Encoding);
     }
@@ -387,19 +372,14 @@ public class DbfEncodingTests
         var options = new DbfReaderOptions { IgnoreMissingMemoFile = true };
         using var reader = DbfReader.Create(filePath, options);
 
-        // From cp1251.txt metadata: Language Driver is "Russian Windows" (Code: 0xC9)
         Assert.NotNull(reader.Encoding);
         
-        // Load and check that we can read the data without replacement characters
         reader.Load();
         Assert.Equal(4, reader.Count);
 
-        // Check first record
         var firstRecord = reader[0];
         var nameValue = firstRecord.GetString("NAME");
         
-        // Even if encoding isn't perfect, we should get some string value
-        Assert.True(nameValue is null or string);
     }
 
     [Fact] 
@@ -427,7 +407,6 @@ public class DbfEncodingTests
             Assert.Equal(expectedVersion, reader.Header.DbfVersion);
             Assert.NotNull(reader.Encoding);
 
-            // All versions should support basic text encoding
             var records = reader.Records.Take(2).ToList();
             foreach (var record in records)
             {
@@ -437,8 +416,6 @@ public class DbfEncodingTests
                     if (field.Type == FieldType.Character)
                     {
                         var value = record.GetString(field.Name);
-                        // Should be able to read character fields as strings
-                        Assert.True(value is null or string);
                     }
                 }
             }

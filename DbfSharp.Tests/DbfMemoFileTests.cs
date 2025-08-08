@@ -7,10 +7,10 @@ namespace DbfSharp.Tests;
 public class DbfMemoFileTests
 {
     [Theory]
-    [InlineData(TestHelper.TestFiles.DBase83)]    // .dbt memo file
-    [InlineData(TestHelper.TestFiles.DBase8B)]    // .dbt memo file
-    [InlineData(TestHelper.TestFiles.DBaseF5)]    // .fpt memo file
-    [InlineData(TestHelper.TestFiles.DBase30)]    // .fpt memo file
+    [InlineData(TestHelper.TestFiles.DBase83)]
+    [InlineData(TestHelper.TestFiles.DBase8B)]
+    [InlineData(TestHelper.TestFiles.DBaseF5)]
+    [InlineData(TestHelper.TestFiles.DBase30)]
     public void MemoFields_WithMemoFile_ShouldReadCorrectly(string fileName)
     {
         if (!TestHelper.TestFileExists(fileName))
@@ -24,7 +24,7 @@ public class DbfMemoFileTests
         var memoFields = reader.Fields.Where(f => f.Type.UsesMemoFile()).ToList();
         if (memoFields.Count == 0)
         {
-            return; // Skip if no memo fields
+            return;
         }
 
         var record = reader.Records.First();
@@ -132,7 +132,6 @@ public class DbfMemoFileTests
             foreach (var field in memoFields)
             {
                 var value = record[field.Name];
-                // Should return null or empty for missing memo data
                 Assert.True(value == null || (value is string str && string.IsNullOrEmpty(str)));
             }
         }
@@ -184,7 +183,7 @@ public class DbfMemoFileTests
         foreach (var field in memoFields)
         {
             var value1 = record[field.Name];
-            var value2 = record[field.Name]; // Second access should return same value
+            var value2 = record[field.Name];
             Assert.Equal(value1, value2);
         }
     }
@@ -212,12 +211,12 @@ public class DbfMemoFileTests
             foreach (var field in memoFields)
             {
                 var value = record.GetString(field.Name);
-                if (value is { Length: > 1000 }) // Consider "large" memo content
+                if (value is { Length: > 1000 })
                 {
                     Assert.IsType<string>(value);
                     Assert.True(value.Length > 1000);
-                    Assert.DoesNotContain('\0', value); // Should not contain null terminators
-                    return; // Found at least one large memo, test passed
+                    Assert.DoesNotContain('\0', value);
+                    return;
                 }
             }
 
@@ -291,7 +290,6 @@ public class DbfMemoFileTests
             foreach (var field in reader.Fields.Where(f => f.Type.UsesMemoFile()))
             {
                 var value = record[field.Name];
-                // Should be able to read memo data without exceptions
                 Assert.True(value is null or string or byte[]);
             }
         }
@@ -344,7 +342,6 @@ public class DbfMemoFileTests
         if (memoFieldCount > 0)
         {
             Assert.True(stats.FieldCount > 0);
-            // Memo files should not significantly affect basic statistics
             Assert.True(stats.TotalRecords > 0);
         }
     }
@@ -367,7 +364,6 @@ public class DbfMemoFileTests
             return;
         }
 
-        // Test random access to memo fields
         var firstRecord = reader[0];
         var lastRecord = reader[^1];
 
@@ -376,7 +372,6 @@ public class DbfMemoFileTests
             var firstValue = firstRecord[field.Name];
             var lastValue = lastRecord[field.Name];
 
-            // Values should be consistent across multiple access attempts
             Assert.Equal(firstValue, firstRecord[field.Name]);
             Assert.Equal(lastValue, lastRecord[field.Name]);
         }

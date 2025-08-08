@@ -94,7 +94,6 @@ public class DbfReaderOptionsTests
         using var reader = DbfReader.Create(filePath, options);
         Assert.NotNull(reader);
 
-        // Should be able to read records without errors
         var records = reader.Records.Take(5).ToList();
         Assert.NotEmpty(records);
     }
@@ -115,8 +114,6 @@ public class DbfReaderOptionsTests
         var recordWithTrim = readerWithTrim.Records.First();
         var recordWithoutTrim = readerWithoutTrim.Records.First();
 
-        // At least one string field should be different between trimmed and non-trimmed
-        var hasDifference = false;
         for (var i = 0; i < recordWithTrim.FieldCount; i++)
         {
             var valueWithTrim = recordWithTrim[i]?.ToString();
@@ -124,13 +121,10 @@ public class DbfReaderOptionsTests
 
             if (valueWithTrim != valueWithoutTrim)
             {
-                hasDifference = true;
                 break;
             }
         }
 
-        // Note: This test might not always pass if the test data doesn't have trailing spaces
-        // but it demonstrates the functionality
     }
 
     [Fact]
@@ -158,7 +152,6 @@ public class DbfReaderOptionsTests
         using var reader = DbfReader.Create(filePath, options);
         Assert.NotNull(reader);
 
-        // Should be able to read records even with invalid field values
         var records = reader.Records.Take(5).ToList();
         Assert.NotEmpty(records);
     }
@@ -194,10 +187,10 @@ public class DbfReaderOptionsTests
     {
         var options = DbfReaderOptions.CreatePerformanceOptimized();
 
-        Assert.True(options.EnableStringInterning); // Reduce memory
-        Assert.True(options.BufferSize > 65536); // Larger buffer
-        Assert.False(options.ValidateFields); // Skip validation for speed
-        Assert.False(options.TrimStrings); // Skip trimming for speed
+        Assert.True(options.EnableStringInterning);
+        Assert.True(options.BufferSize > 65536);
+        Assert.False(options.ValidateFields);
+        Assert.False(options.TrimStrings);
     }
 
     [Fact]
@@ -205,10 +198,10 @@ public class DbfReaderOptionsTests
     {
         var options = DbfReaderOptions.CreateMemoryOptimized();
 
-        Assert.True(options.EnableStringInterning); // Reduce string duplication
-        Assert.True(options.BufferSize < 65536); // Smaller buffer
-        Assert.False(options.UseMemoryMapping); // Don't map entire file
-        Assert.True(options.TrimStrings); // Remove unnecessary whitespace
+        Assert.True(options.EnableStringInterning);
+        Assert.True(options.BufferSize < 65536);
+        Assert.False(options.UseMemoryMapping);
+        Assert.True(options.TrimStrings);
     }
 
     [Fact]
@@ -263,7 +256,6 @@ public class DbfReaderOptionsTests
         var recordsIncludeDeleted = readerIncludeDeleted.Records.Count();
         var recordsSkipDeleted = readerSkipDeleted.Records.Count();
 
-        // Records count should be >= when including deleted records
         Assert.True(recordsIncludeDeleted >= recordsSkipDeleted);
     }
 }
