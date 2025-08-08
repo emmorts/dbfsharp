@@ -1,0 +1,377 @@
+// Validating benchmarks:
+// ***** BenchmarkRunner: Start   *****
+// ***** Found 3 benchmark(s) in total *****
+// ***** Building 1 exe(s) in Parallel: Start   *****
+// start dotnet  restore /p:UseSharedCompilation=false /p:BuildInParallel=false /m:1 /p:Deterministic=true /p:Optimize=true /p:ArtifactsPath="/app/DbfSharp.Benchmark/bin/Release/net9.0/DbfSharp.Benchmark-DefaultJob-1/" /p:OutDir="/app/DbfSharp.Benchmark/bin/Release/net9.0/DbfSharp.Benchmark-DefaultJob-1/bin/Release/net9.0/" /p:OutputPath="/app/DbfSharp.Benchmark/bin/Release/net9.0/DbfSharp.Benchmark-DefaultJob-1/bin/Release/net9.0/" /p:PublishDir="/app/DbfSharp.Benchmark/bin/Release/net9.0/DbfSharp.Benchmark-DefaultJob-1/publish/" in /app/DbfSharp.Benchmark/bin/Release/net9.0/DbfSharp.Benchmark-DefaultJob-1
+// command took 3.96 sec and exited with 0
+// start dotnet  build -c Release --no-restore /p:UseSharedCompilation=false /p:BuildInParallel=false /m:1 /p:Deterministic=true /p:Optimize=true /p:ArtifactsPath="/app/DbfSharp.Benchmark/bin/Release/net9.0/DbfSharp.Benchmark-DefaultJob-1/" /p:OutDir="/app/DbfSharp.Benchmark/bin/Release/net9.0/DbfSharp.Benchmark-DefaultJob-1/bin/Release/net9.0/" /p:OutputPath="/app/DbfSharp.Benchmark/bin/Release/net9.0/DbfSharp.Benchmark-DefaultJob-1/bin/Release/net9.0/" /p:PublishDir="/app/DbfSharp.Benchmark/bin/Release/net9.0/DbfSharp.Benchmark-DefaultJob-1/publish/" --output "/app/DbfSharp.Benchmark/bin/Release/net9.0/DbfSharp.Benchmark-DefaultJob-1/bin/Release/net9.0/" in /app/DbfSharp.Benchmark/bin/Release/net9.0/DbfSharp.Benchmark-DefaultJob-1
+// command took 17.72 sec and exited with 0
+// ***** Done, took 00:00:21 (21.88 sec)   *****
+// Found 3 benchmarks:
+//   DbfReaderBenchmarks.'Read all records from a generated DBF file': DefaultJob [RowCount=10]
+//   DbfReaderBenchmarks.'Read all records from a generated DBF file': DefaultJob [RowCount=1000]
+//   DbfReaderBenchmarks.'Read all records from a generated DBF file': DefaultJob [RowCount=100000]
+
+// **************************
+// Benchmark: DbfReaderBenchmarks.'Read all records from a generated DBF file': DefaultJob [RowCount=10]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet DbfSharp.Benchmark-DefaultJob-1.dll --anonymousPipes 119 120 --benchmarkName "DbfSharp.Benchmark.DbfReaderBenchmarks.ReadAllRecords(RowCount: 10)" --job Default --benchmarkId 0 in /app/DbfSharp.Benchmark/bin/Release/net9.0/DbfSharp.Benchmark-DefaultJob-1/bin/Release/net9.0
+// Failed to set up high priority (Permission denied). In order to run benchmarks with high priority, make sure you have the right permissions.
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.2
+// Runtime=.NET 9.0.8 (9.0.825.36511), X64 RyuJIT AVX2
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: DefaultJob
+
+OverheadJitting  1: 1 op, 240509.00 ns, 240.5090 us/op
+WorkloadJitting  1: 1 op, 35248766.00 ns, 35.2488 ms/op
+
+WorkloadPilot    1: 2 op, 578844.00 ns, 289.4220 us/op
+WorkloadPilot    2: 3 op, 729243.00 ns, 243.0810 us/op
+WorkloadPilot    3: 4 op, 819585.00 ns, 204.8963 us/op
+WorkloadPilot    4: 5 op, 923165.00 ns, 184.6330 us/op
+WorkloadPilot    5: 6 op, 1013175.00 ns, 168.8625 us/op
+WorkloadPilot    6: 7 op, 1244224.00 ns, 177.7463 us/op
+WorkloadPilot    7: 8 op, 1279357.00 ns, 159.9196 us/op
+WorkloadPilot    8: 9 op, 1373541.00 ns, 152.6157 us/op
+WorkloadPilot    9: 10 op, 1546570.00 ns, 154.6570 us/op
+WorkloadPilot   10: 11 op, 1752455.00 ns, 159.3141 us/op
+WorkloadPilot   11: 12 op, 1820308.00 ns, 151.6923 us/op
+WorkloadPilot   12: 13 op, 2074983.00 ns, 159.6141 us/op
+WorkloadPilot   13: 14 op, 2203988.00 ns, 157.4277 us/op
+WorkloadPilot   14: 15 op, 2405821.00 ns, 160.3881 us/op
+WorkloadPilot   15: 16 op, 2417523.00 ns, 151.0952 us/op
+WorkloadPilot   16: 32 op, 5217575.00 ns, 163.0492 us/op
+WorkloadPilot   17: 64 op, 10724282.00 ns, 167.5669 us/op
+WorkloadPilot   18: 128 op, 21147007.00 ns, 165.2110 us/op
+WorkloadPilot   19: 256 op, 40869347.00 ns, 159.6459 us/op
+WorkloadPilot   20: 512 op, 93704657.00 ns, 183.0169 us/op
+WorkloadPilot   21: 1024 op, 204083095.00 ns, 199.2999 us/op
+WorkloadPilot   22: 2048 op, 429284063.00 ns, 209.6114 us/op
+WorkloadPilot   23: 4096 op, 312049151.00 ns, 76.1839 us/op
+WorkloadPilot   24: 8192 op, 378024449.00 ns, 46.1456 us/op
+WorkloadPilot   25: 16384 op, 721632265.00 ns, 44.0449 us/op
+
+OverheadWarmup   1: 16384 op, 76518.00 ns, 4.6703 ns/op
+OverheadWarmup   2: 16384 op, 67511.00 ns, 4.1205 ns/op
+OverheadWarmup   3: 16384 op, 67206.00 ns, 4.1019 ns/op
+OverheadWarmup   4: 16384 op, 67273.00 ns, 4.1060 ns/op
+OverheadWarmup   5: 16384 op, 68630.00 ns, 4.1888 ns/op
+OverheadWarmup   6: 16384 op, 67340.00 ns, 4.1101 ns/op
+OverheadWarmup   7: 16384 op, 67428.00 ns, 4.1155 ns/op
+OverheadWarmup   8: 16384 op, 67388.00 ns, 4.1130 ns/op
+
+// BeforeActualRun
+WorkloadActual   1: 16384 op, 729771303.00 ns, 44.5417 us/op
+WorkloadActual   2: 16384 op, 745001280.00 ns, 45.4713 us/op
+WorkloadActual   3: 16384 op, 720447280.00 ns, 43.9726 us/op
+WorkloadActual   4: 16384 op, 726904200.00 ns, 44.3667 us/op
+WorkloadActual   5: 16384 op, 739817394.00 ns, 45.1549 us/op
+WorkloadActual   6: 16384 op, 708184641.00 ns, 43.2242 us/op
+WorkloadActual   7: 16384 op, 704778334.00 ns, 43.0163 us/op
+WorkloadActual   8: 16384 op, 713682382.00 ns, 43.5597 us/op
+WorkloadActual   9: 16384 op, 702410114.00 ns, 42.8717 us/op
+WorkloadActual  10: 16384 op, 706847867.00 ns, 43.1426 us/op
+WorkloadActual  11: 16384 op, 701504927.00 ns, 42.8165 us/op
+WorkloadActual  12: 16384 op, 712503839.00 ns, 43.4878 us/op
+WorkloadActual  13: 16384 op, 717882326.00 ns, 43.8161 us/op
+WorkloadActual  14: 16384 op, 720961938.00 ns, 44.0040 us/op
+WorkloadActual  15: 16384 op, 805639308.00 ns, 49.1723 us/op
+WorkloadActual  16: 16384 op, 826068013.00 ns, 50.4192 us/op
+WorkloadActual  17: 16384 op, 765864283.00 ns, 46.7446 us/op
+WorkloadActual  18: 16384 op, 703650533.00 ns, 42.9474 us/op
+WorkloadActual  19: 16384 op, 704180120.00 ns, 42.9797 us/op
+WorkloadActual  20: 16384 op, 704032685.00 ns, 42.9707 us/op
+WorkloadActual  21: 16384 op, 711755954.00 ns, 43.4421 us/op
+WorkloadActual  22: 16384 op, 711541672.00 ns, 43.4291 us/op
+WorkloadActual  23: 16384 op, 704860038.00 ns, 43.0212 us/op
+
+// AfterActualRun
+WorkloadResult   1: 16384 op, 729771303.00 ns, 44.5417 us/op
+WorkloadResult   2: 16384 op, 745001280.00 ns, 45.4713 us/op
+WorkloadResult   3: 16384 op, 720447280.00 ns, 43.9726 us/op
+WorkloadResult   4: 16384 op, 726904200.00 ns, 44.3667 us/op
+WorkloadResult   5: 16384 op, 739817394.00 ns, 45.1549 us/op
+WorkloadResult   6: 16384 op, 708184641.00 ns, 43.2242 us/op
+WorkloadResult   7: 16384 op, 704778334.00 ns, 43.0163 us/op
+WorkloadResult   8: 16384 op, 713682382.00 ns, 43.5597 us/op
+WorkloadResult   9: 16384 op, 702410114.00 ns, 42.8717 us/op
+WorkloadResult  10: 16384 op, 706847867.00 ns, 43.1426 us/op
+WorkloadResult  11: 16384 op, 701504927.00 ns, 42.8165 us/op
+WorkloadResult  12: 16384 op, 712503839.00 ns, 43.4878 us/op
+WorkloadResult  13: 16384 op, 717882326.00 ns, 43.8161 us/op
+WorkloadResult  14: 16384 op, 720961938.00 ns, 44.0040 us/op
+WorkloadResult  15: 16384 op, 703650533.00 ns, 42.9474 us/op
+WorkloadResult  16: 16384 op, 704180120.00 ns, 42.9797 us/op
+WorkloadResult  17: 16384 op, 704032685.00 ns, 42.9707 us/op
+WorkloadResult  18: 16384 op, 711755954.00 ns, 43.4421 us/op
+WorkloadResult  19: 16384 op, 711541672.00 ns, 43.4291 us/op
+WorkloadResult  20: 16384 op, 704860038.00 ns, 43.0212 us/op
+// GC:  56 13 0 1329250400 16384
+// Threading:  0 0 16384
+
+// AfterAll
+// Benchmark Process 8594 has exited with code 0.
+
+Mean = 43.612 μs, StdErr = 0.172 μs (0.39%), N = 20, StdDev = 0.767 μs
+Min = 42.816 μs, Q1 = 43.007 μs, Median = 43.436 μs, Q3 = 43.980 μs, Max = 45.471 μs
+IQR = 0.973 μs, LowerFence = 41.547 μs, UpperFence = 45.440 μs
+ConfidenceInterval = [42.946 μs; 44.278 μs] (CI 99.9%), Margin = 0.666 μs (1.53% of Mean)
+Skewness = 1.01, Kurtosis = 2.93, MValue = 2
+
+// ** Remained 2 (66.7 %) benchmark(s) to run. Estimated finish 2025-08-08 13:30 (0h 0m from now) **
+// **************************
+// Benchmark: DbfReaderBenchmarks.'Read all records from a generated DBF file': DefaultJob [RowCount=1000]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet DbfSharp.Benchmark-DefaultJob-1.dll --anonymousPipes 119 120 --benchmarkName "DbfSharp.Benchmark.DbfReaderBenchmarks.ReadAllRecords(RowCount: 1000)" --job Default --benchmarkId 1 in /app/DbfSharp.Benchmark/bin/Release/net9.0/DbfSharp.Benchmark-DefaultJob-1/bin/Release/net9.0
+// Failed to set up high priority (Permission denied). In order to run benchmarks with high priority, make sure you have the right permissions.
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.2
+// Runtime=.NET 9.0.8 (9.0.825.36511), X64 RyuJIT AVX2
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: DefaultJob
+
+OverheadJitting  1: 1 op, 234932.00 ns, 234.9320 us/op
+WorkloadJitting  1: 1 op, 46395292.00 ns, 46.3953 ms/op
+
+WorkloadPilot    1: 2 op, 22698454.00 ns, 11.3492 ms/op
+WorkloadPilot    2: 3 op, 31960387.00 ns, 10.6535 ms/op
+WorkloadPilot    3: 4 op, 42113446.00 ns, 10.5284 ms/op
+WorkloadPilot    4: 5 op, 50432552.00 ns, 10.0865 ms/op
+WorkloadPilot    5: 6 op, 59988641.00 ns, 9.9981 ms/op
+WorkloadPilot    6: 7 op, 95080491.00 ns, 13.5829 ms/op
+WorkloadPilot    7: 8 op, 122922476.00 ns, 15.3653 ms/op
+WorkloadPilot    8: 9 op, 132728674.00 ns, 14.7476 ms/op
+WorkloadPilot    9: 10 op, 87289420.00 ns, 8.7289 ms/op
+WorkloadPilot   10: 11 op, 75269533.00 ns, 6.8427 ms/op
+WorkloadPilot   11: 12 op, 75138138.00 ns, 6.2615 ms/op
+WorkloadPilot   12: 13 op, 73591998.00 ns, 5.6609 ms/op
+WorkloadPilot   13: 14 op, 57949596.00 ns, 4.1393 ms/op
+WorkloadPilot   14: 15 op, 61341763.00 ns, 4.0895 ms/op
+WorkloadPilot   15: 16 op, 64877987.00 ns, 4.0549 ms/op
+WorkloadPilot   16: 32 op, 104816923.00 ns, 3.2755 ms/op
+WorkloadPilot   17: 64 op, 166940383.00 ns, 2.6084 ms/op
+WorkloadPilot   18: 128 op, 293482144.00 ns, 2.2928 ms/op
+WorkloadPilot   19: 256 op, 577367497.00 ns, 2.2553 ms/op
+
+OverheadWarmup   1: 256 op, 4056.00 ns, 15.8438 ns/op
+OverheadWarmup   2: 256 op, 1596.00 ns, 6.2344 ns/op
+OverheadWarmup   3: 256 op, 1504.00 ns, 5.8750 ns/op
+OverheadWarmup   4: 256 op, 1440.00 ns, 5.6250 ns/op
+OverheadWarmup   5: 256 op, 1472.00 ns, 5.7500 ns/op
+OverheadWarmup   6: 256 op, 1502.00 ns, 5.8672 ns/op
+OverheadWarmup   7: 256 op, 1529.00 ns, 5.9727 ns/op
+OverheadWarmup   8: 256 op, 1329.00 ns, 5.1914 ns/op
+OverheadWarmup   9: 256 op, 1445.00 ns, 5.6445 ns/op
+OverheadWarmup  10: 256 op, 1422.00 ns, 5.5547 ns/op
+
+// BeforeActualRun
+WorkloadActual   1: 256 op, 584166663.00 ns, 2.2819 ms/op
+WorkloadActual   2: 256 op, 581981955.00 ns, 2.2734 ms/op
+WorkloadActual   3: 256 op, 579783500.00 ns, 2.2648 ms/op
+WorkloadActual   4: 256 op, 575124918.00 ns, 2.2466 ms/op
+WorkloadActual   5: 256 op, 573575662.00 ns, 2.2405 ms/op
+WorkloadActual   6: 256 op, 578847949.00 ns, 2.2611 ms/op
+WorkloadActual   7: 256 op, 589271371.00 ns, 2.3018 ms/op
+WorkloadActual   8: 256 op, 577739624.00 ns, 2.2568 ms/op
+WorkloadActual   9: 256 op, 577178144.00 ns, 2.2546 ms/op
+WorkloadActual  10: 256 op, 576734573.00 ns, 2.2529 ms/op
+WorkloadActual  11: 256 op, 578882649.00 ns, 2.2613 ms/op
+WorkloadActual  12: 256 op, 579810568.00 ns, 2.2649 ms/op
+WorkloadActual  13: 256 op, 577866361.00 ns, 2.2573 ms/op
+WorkloadActual  14: 256 op, 577323559.00 ns, 2.2552 ms/op
+WorkloadActual  15: 256 op, 576819483.00 ns, 2.2532 ms/op
+
+// AfterActualRun
+WorkloadResult   1: 256 op, 581981955.00 ns, 2.2734 ms/op
+WorkloadResult   2: 256 op, 579783500.00 ns, 2.2648 ms/op
+WorkloadResult   3: 256 op, 575124918.00 ns, 2.2466 ms/op
+WorkloadResult   4: 256 op, 573575662.00 ns, 2.2405 ms/op
+WorkloadResult   5: 256 op, 578847949.00 ns, 2.2611 ms/op
+WorkloadResult   6: 256 op, 577739624.00 ns, 2.2568 ms/op
+WorkloadResult   7: 256 op, 577178144.00 ns, 2.2546 ms/op
+WorkloadResult   8: 256 op, 576734573.00 ns, 2.2529 ms/op
+WorkloadResult   9: 256 op, 578882649.00 ns, 2.2613 ms/op
+WorkloadResult  10: 256 op, 579810568.00 ns, 2.2649 ms/op
+WorkloadResult  11: 256 op, 577866361.00 ns, 2.2573 ms/op
+WorkloadResult  12: 256 op, 577323559.00 ns, 2.2552 ms/op
+WorkloadResult  13: 256 op, 576819483.00 ns, 2.2532 ms/op
+// GC:  8 1 0 208815712 256
+// Threading:  0 0 256
+
+// AfterAll
+// Benchmark Process 8607 has exited with code 0.
+
+Mean = 2.257 ms, StdErr = 0.002 ms (0.10%), N = 13, StdDev = 0.008 ms
+Min = 2.241 ms, Q1 = 2.253 ms, Median = 2.257 ms, Q3 = 2.261 ms, Max = 2.273 ms
+IQR = 0.008 ms, LowerFence = 2.241 ms, UpperFence = 2.273 ms
+ConfidenceInterval = [2.247 ms; 2.267 ms] (CI 99.9%), Margin = 0.010 ms (0.45% of Mean)
+Skewness = -0.07, Kurtosis = 2.57, MValue = 2
+
+// ** Remained 1 (33.3 %) benchmark(s) to run. Estimated finish 2025-08-08 13:29 (0h 0m from now) **
+// **************************
+// Benchmark: DbfReaderBenchmarks.'Read all records from a generated DBF file': DefaultJob [RowCount=100000]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet DbfSharp.Benchmark-DefaultJob-1.dll --anonymousPipes 119 120 --benchmarkName "DbfSharp.Benchmark.DbfReaderBenchmarks.ReadAllRecords(RowCount: 100000)" --job Default --benchmarkId 2 in /app/DbfSharp.Benchmark/bin/Release/net9.0/DbfSharp.Benchmark-DefaultJob-1/bin/Release/net9.0
+// Failed to set up high priority (Permission denied). In order to run benchmarks with high priority, make sure you have the right permissions.
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.2
+// Runtime=.NET 9.0.8 (9.0.825.36511), X64 RyuJIT AVX2
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX2,AES,BMI1,BMI2,FMA,LZCNT,PCLMUL,POPCNT VectorSize=256
+// Job: DefaultJob
+
+OverheadJitting  1: 1 op, 264269.00 ns, 264.2690 us/op
+WorkloadJitting  1: 1 op, 930882802.00 ns, 930.8828 ms/op
+
+OverheadJitting  2: 1 op, 1004.00 ns, 1.0040 us/op
+WorkloadJitting  2: 1 op, 275398886.00 ns, 275.3989 ms/op
+
+WorkloadPilot    1: 2 op, 465181858.00 ns, 232.5909 ms/op
+WorkloadPilot    2: 3 op, 684994860.00 ns, 228.3316 ms/op
+
+OverheadWarmup   1: 3 op, 1067.00 ns, 355.6667 ns/op
+OverheadWarmup   2: 3 op, 572.00 ns, 190.6667 ns/op
+OverheadWarmup   3: 3 op, 443.00 ns, 147.6667 ns/op
+OverheadWarmup   4: 3 op, 588.00 ns, 196.0000 ns/op
+OverheadWarmup   5: 3 op, 535.00 ns, 178.3333 ns/op
+OverheadWarmup   6: 3 op, 555.00 ns, 185.0000 ns/op
+OverheadWarmup   7: 3 op, 634.00 ns, 211.3333 ns/op
+OverheadWarmup   8: 3 op, 387.00 ns, 129.0000 ns/op
+
+// BeforeActualRun
+WorkloadActual   1: 3 op, 684651345.00 ns, 228.2171 ms/op
+WorkloadActual   2: 3 op, 692503348.00 ns, 230.8344 ms/op
+WorkloadActual   3: 3 op, 696654120.00 ns, 232.2180 ms/op
+WorkloadActual   4: 3 op, 690593852.00 ns, 230.1980 ms/op
+WorkloadActual   5: 3 op, 676887126.00 ns, 225.6290 ms/op
+WorkloadActual   6: 3 op, 677494459.00 ns, 225.8315 ms/op
+WorkloadActual   7: 3 op, 679480145.00 ns, 226.4934 ms/op
+WorkloadActual   8: 3 op, 679961506.00 ns, 226.6538 ms/op
+WorkloadActual   9: 3 op, 679763220.00 ns, 226.5877 ms/op
+WorkloadActual  10: 3 op, 677680060.00 ns, 225.8934 ms/op
+WorkloadActual  11: 3 op, 677829865.00 ns, 225.9433 ms/op
+WorkloadActual  12: 3 op, 679330110.00 ns, 226.4434 ms/op
+WorkloadActual  13: 3 op, 678314955.00 ns, 226.1050 ms/op
+WorkloadActual  14: 3 op, 675080797.00 ns, 225.0269 ms/op
+WorkloadActual  15: 3 op, 676233143.00 ns, 225.4110 ms/op
+
+// AfterActualRun
+WorkloadResult   1: 3 op, 684651345.00 ns, 228.2171 ms/op
+WorkloadResult   2: 3 op, 676887126.00 ns, 225.6290 ms/op
+WorkloadResult   3: 3 op, 677494459.00 ns, 225.8315 ms/op
+WorkloadResult   4: 3 op, 679480145.00 ns, 226.4934 ms/op
+WorkloadResult   5: 3 op, 679961506.00 ns, 226.6538 ms/op
+WorkloadResult   6: 3 op, 679763220.00 ns, 226.5877 ms/op
+WorkloadResult   7: 3 op, 677680060.00 ns, 225.8934 ms/op
+WorkloadResult   8: 3 op, 677829865.00 ns, 225.9433 ms/op
+WorkloadResult   9: 3 op, 679330110.00 ns, 226.4434 ms/op
+WorkloadResult  10: 3 op, 678314955.00 ns, 226.1050 ms/op
+WorkloadResult  11: 3 op, 675080797.00 ns, 225.0269 ms/op
+WorkloadResult  12: 3 op, 676233143.00 ns, 225.4110 ms/op
+// GC:  8 0 0 211324080 3
+// Threading:  0 0 3
+
+// AfterAll
+// Benchmark Process 8621 has exited with code 0.
+
+Mean = 226.186 ms, StdErr = 0.234 ms (0.10%), N = 12, StdDev = 0.809 ms
+Min = 225.027 ms, Q1 = 225.781 ms, Median = 226.024 ms, Q3 = 226.517 ms, Max = 228.217 ms
+IQR = 0.736 ms, LowerFence = 224.677 ms, UpperFence = 227.621 ms
+ConfidenceInterval = [225.150 ms; 227.222 ms] (CI 99.9%), Margin = 1.036 ms (0.46% of Mean)
+Skewness = 0.99, Kurtosis = 3.77, MValue = 2
+
+// ** Remained 0 (0.0 %) benchmark(s) to run. Estimated finish 2025-08-08 13:29 (0h 0m from now) **
+// ***** BenchmarkRunner: Finish  *****
+
+// * Export *
+  BenchmarkDotNet.Artifacts/results/DbfSharp.Benchmark.DbfReaderBenchmarks-report.csv
+  BenchmarkDotNet.Artifacts/results/DbfSharp.Benchmark.DbfReaderBenchmarks-report-github.md
+  BenchmarkDotNet.Artifacts/results/DbfSharp.Benchmark.DbfReaderBenchmarks-report.html
+
+// * Detailed results *
+DbfReaderBenchmarks.'Read all records from a generated DBF file': DefaultJob [RowCount=10]
+Runtime = .NET 9.0.8 (9.0.825.36511), X64 RyuJIT AVX2; GC = Concurrent Workstation
+Mean = 43.612 μs, StdErr = 0.172 μs (0.39%), N = 20, StdDev = 0.767 μs
+Min = 42.816 μs, Q1 = 43.007 μs, Median = 43.436 μs, Q3 = 43.980 μs, Max = 45.471 μs
+IQR = 0.973 μs, LowerFence = 41.547 μs, UpperFence = 45.440 μs
+ConfidenceInterval = [42.946 μs; 44.278 μs] (CI 99.9%), Margin = 0.666 μs (1.53% of Mean)
+Skewness = 1.01, Kurtosis = 2.93, MValue = 2
+-------------------- Histogram --------------------
+[42.721 μs ; 43.737 μs) | @@@@@@@@@@@@@
+[43.737 μs ; 45.766 μs) | @@@@@@@
+---------------------------------------------------
+
+DbfReaderBenchmarks.'Read all records from a generated DBF file': DefaultJob [RowCount=1000]
+Runtime = .NET 9.0.8 (9.0.825.36511), X64 RyuJIT AVX2; GC = Concurrent Workstation
+Mean = 2.257 ms, StdErr = 0.002 ms (0.10%), N = 13, StdDev = 0.008 ms
+Min = 2.241 ms, Q1 = 2.253 ms, Median = 2.257 ms, Q3 = 2.261 ms, Max = 2.273 ms
+IQR = 0.008 ms, LowerFence = 2.241 ms, UpperFence = 2.273 ms
+ConfidenceInterval = [2.247 ms; 2.267 ms] (CI 99.9%), Margin = 0.010 ms (0.45% of Mean)
+Skewness = -0.07, Kurtosis = 2.57, MValue = 2
+-------------------- Histogram --------------------
+[2.236 ms ; 2.278 ms) | @@@@@@@@@@@@@
+---------------------------------------------------
+
+DbfReaderBenchmarks.'Read all records from a generated DBF file': DefaultJob [RowCount=100000]
+Runtime = .NET 9.0.8 (9.0.825.36511), X64 RyuJIT AVX2; GC = Concurrent Workstation
+Mean = 226.186 ms, StdErr = 0.234 ms (0.10%), N = 12, StdDev = 0.809 ms
+Min = 225.027 ms, Q1 = 225.781 ms, Median = 226.024 ms, Q3 = 226.517 ms, Max = 228.217 ms
+IQR = 0.736 ms, LowerFence = 224.677 ms, UpperFence = 227.621 ms
+ConfidenceInterval = [225.150 ms; 227.222 ms] (CI 99.9%), Margin = 1.036 ms (0.46% of Mean)
+Skewness = 0.99, Kurtosis = 3.77, MValue = 2
+-------------------- Histogram --------------------
+[224.563 ms ; 228.681 ms) | @@@@@@@@@@@@
+---------------------------------------------------
+
+// * Summary *
+
+BenchmarkDotNet v0.15.2, Linux Ubuntu 24.04.2 LTS (Noble Numbat)
+Intel Xeon Processor 2.30GHz, 1 CPU, 4 logical and 4 physical cores
+.NET SDK 9.0.109
+  [Host]     : .NET 9.0.8 (9.0.825.36511), X64 RyuJIT AVX2
+  DefaultJob : .NET 9.0.8 (9.0.825.36511), X64 RyuJIT AVX2
+
+
+| Method                                       | RowCount | Mean          | Error        | StdDev     | Gen0      | Gen1   | Allocated   |
+|--------------------------------------------- |--------- |--------------:|-------------:|-----------:|----------:|-------:|------------:|
+| 'Read all records from a generated DBF file' | 10       |      43.61 μs |     0.666 μs |   0.767 μs |    3.4180 | 0.7935 |    79.23 KB |
+| 'Read all records from a generated DBF file' | 1000     |   2,257.11 μs |    10.056 μs |   8.397 μs |   31.2500 | 3.9063 |   796.57 KB |
+| 'Read all records from a generated DBF file' | 100000   | 226,186.30 μs | 1,036.068 μs | 808.894 μs | 2666.6667 |      - | 68790.39 KB |
+
+// * Hints *
+Outliers
+  DbfReaderBenchmarks.'Read all records from a generated DBF file': Default -> 3 outliers were removed (46.74 μs..50.42 μs)
+  DbfReaderBenchmarks.'Read all records from a generated DBF file': Default -> 2 outliers were removed (2.28 ms, 2.30 ms)
+  DbfReaderBenchmarks.'Read all records from a generated DBF file': Default -> 3 outliers were removed (230.20 ms..232.22 ms)
+
+// * Legends *
+  RowCount  : Value of the 'RowCount' parameter
+  Mean      : Arithmetic mean of all measurements
+  Error     : Half of 99.9% confidence interval
+  StdDev    : Standard deviation of all measurements
+  Gen0      : GC Generation 0 collects per 1000 operations
+  Gen1      : GC Generation 1 collects per 1000 operations
+  Allocated : Allocated memory per single operation (managed only, inclusive, 1KB = 1024B)
+  1 μs      : 1 Microsecond (0.000001 sec)
+
+// * Diagnostic Output - MemoryDiagnoser *
+
+
+// ***** BenchmarkRunner: End *****
+Run time: 00:00:46 (46.34 sec), executed benchmarks: 3
+
+Global total time: 00:01:08 (68.41 sec), executed benchmarks: 3
+// * Artifacts cleanup *
+Artifacts cleanup is finished

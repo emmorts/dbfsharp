@@ -1,0 +1,87 @@
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.1  0.1  21124 12160 ?        Ss   13:09   0:04 /usr/sbin/init
+root           2  0.0  0.0      0     0 ?        S    13:09   0:00 [kthreadd]
+root           3  0.0  0.0      0     0 ?        S    13:09   0:00 [pool_workqueue_release]
+root           4  0.0  0.0      0     0 ?        I<   13:09   0:00 [kworker/R-rcu_g]
+root           5  0.0  0.0      0     0 ?        I<   13:09   0:00 [kworker/R-rcu_p]
+root           6  0.0  0.0      0     0 ?        I<   13:09   0:00 [kworker/R-slub_]
+root           7  0.0  0.0      0     0 ?        I<   13:09   0:00 [kworker/R-netns]
+root           9  0.0  0.0      0     0 ?        I<   13:09   0:00 [kworker/0:0H-events_highpri]
+root          10  0.0  0.0      0     0 ?        I    13:09   0:00 [kworker/0:1-cgroup_destroy]
+root          12  0.0  0.0      0     0 ?        I<   13:09   0:00 [kworker/R-mm_pe]
+root          13  0.0  0.0      0     0 ?        I    13:09   0:00 [rcu_tasks_kthread]
+root          14  0.0  0.0      0     0 ?        I    13:09   0:00 [rcu_tasks_trace_kthread]
+root          15  0.0  0.0      0     0 ?        S    13:09   0:00 [ksoftirqd/0]
+root          16  0.1  0.0      0     0 ?        I    13:09   0:03 [rcu_preempt]
+root          17  0.0  0.0      0     0 ?        S    13:09   0:00 [migration/0]
+root          18  0.0  0.0      0     0 ?        S    13:09   0:00 [cpuhp/0]
+root          19  0.0  0.0      0     0 ?        S    13:09   0:00 [cpuhp/1]
+root          20  0.0  0.0      0     0 ?        S    13:09   0:01 [migration/1]
+root          21  0.0  0.0      0     0 ?        S    13:09   0:00 [ksoftirqd/1]
+root          23  0.0  0.0      0     0 ?        I<   13:09   0:00 [kworker/1:0H-kblockd]
+root          24  0.0  0.0      0     0 ?        S    13:09   0:00 [cpuhp/2]
+root          25  0.0  0.0      0     0 ?        S    13:09   0:01 [migration/2]
+root          26  0.0  0.0      0     0 ?        S    13:09   0:00 [ksoftirqd/2]
+root          28  0.0  0.0      0     0 ?        I<   13:09   0:00 [kworker/2:0H-kblockd]
+root          29  0.0  0.0      0     0 ?        S    13:09   0:00 [cpuhp/3]
+root          30  0.0  0.0      0     0 ?        S    13:09   0:01 [migration/3]
+root          31  0.0  0.0      0     0 ?        S    13:09   0:00 [ksoftirqd/3]
+root          33  0.0  0.0      0     0 ?        I<   13:09   0:00 [kworker/3:0H-kblockd]
+root          34  0.0  0.0      0     0 ?        S    13:09   0:00 [kdevtmpfs]
+root          35  0.0  0.0      0     0 ?        I<   13:09   0:00 [kworker/R-inet_]
+root          36  0.0  0.0      0     0 ?        S    13:09   0:00 [oom_reaper]
+root          37  0.0  0.0      0     0 ?        I<   13:09   0:00 [kworker/R-write]
+root          38  0.0  0.0      0     0 ?        S    13:09   0:00 [kcompactd0]
+root          39  0.0  0.0      0     0 ?        SN   13:09   0:00 [ksmd]
+root          40  0.0  0.0      0     0 ?        SN   13:09   0:00 [khugepaged]
+root          41  0.0  0.0      0     0 ?        I<   13:09   0:00 [kworker/R-crypt]
+root          42  0.0  0.0      0     0 ?        I<   13:09   0:00 [kworker/R-kbloc]
+root          43  0.0  0.0      0     0 ?        I    13:09   0:00 [kworker/1:1-events]
+root          50  0.0  0.0      0     0 ?        I<   13:09   0:00 [kworker/0:1H-kblockd]
+root          74  0.0  0.0      0     0 ?        S    13:09   0:00 [kswapd0]
+root          84  0.0  0.0      0     0 ?        I<   13:09   0:00 [kworker/R-kthro]
+root          86  0.0  0.0      0     0 ?        I    13:09   0:00 [kworker/3:2-events]
+root          89  0.0  0.0      0     0 ?        S    13:09   0:00 [irq/24-ACPI:Ged]
+root          91  0.0  0.0      0     0 ?        I<   13:09   0:00 [kworker/R-acpi_]
+root         177  0.0  0.0      0     0 ?        I    13:09   0:00 [kworker/1:2-events]
+root         178  0.0  0.0      0     0 ?        I<   13:09   0:00 [kworker/R-kstrp]
+root         397  0.0  0.0      0     0 ?        I<   13:09   0:00 [kworker/1:1H]
+root         399  0.0  0.0      0     0 ?        I<   13:09   0:00 [kworker/2:1H-kblockd]
+root         401  0.0  0.0      0     0 ?        S    13:09   0:00 [jbd2/vdb-8]
+root         402  0.0  0.0      0     0 ?        I<   13:09   0:00 [kworker/R-ext4-]
+root         409  0.0  0.0      0     0 ?        I<   13:09   0:00 [kworker/3:1H-kblockd]
+root         427  0.0  0.2  50888 18048 ?        S<s  13:09   0:02 /usr/lib/systemd/systemd-journald
+root         453  0.0  0.0      0     0 ?        I    13:09   0:00 [kworker/3:4-cgroup_destroy]
+root         777  0.0  0.0  23988  5760 ?        Ss   13:09   0:00 /usr/lib/systemd/systemd-udevd
+systemd+     812  0.0  0.1  21456 12928 ?        Ss   13:09   0:00 /usr/lib/systemd/systemd-resolved
+systemd+     813  0.0  0.0  91024  7936 ?        Ssl  13:09   0:00 /usr/lib/systemd/systemd-timesyncd
+message+     824  0.0  0.0   9540  4992 ?        Ss   13:09   0:00 @dbus-daemon --system --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only
+root         834  0.0  0.1  18164  8320 ?        Ss   13:09   0:00 /usr/lib/systemd/systemd-logind
+root         845  0.0  0.0   6104  2048 tty1     Ss+  13:09   0:00 /sbin/agetty -o -p -- \u --noclear - linux
+root         846  0.0  0.0   6148  2048 ttyS0    Ss+  13:09   0:00 /sbin/agetty -o -p -- \u --keep-baud 115200,57600,38400,9600 - vt220
+root         871  0.0  0.2 110644 23472 ?        Ssl  13:09   0:02 /usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal
+root         880  0.0  0.0  12020  8064 ?        Ss   13:09   0:00 sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups
+root         883  0.0  0.0   9288  3712 ?        Ss   13:09   0:00 /usr/bin/socat -d VSOCK-LISTEN:22,fork TCP4:127.0.0.1:22
+root         894  0.2  0.5 1875920 48304 ?       Ssl  13:09   0:08 /usr/bin/containerd
+root         901  0.0  0.1  14728 10112 ?        Ss   13:09   0:00 sshd: swebot [priv]
+jules        907  0.0  0.1  20088 11008 ?        Ss   13:09   0:00 /usr/lib/systemd/systemd --user
+jules        908  0.0  0.0  21152  3508 ?        S    13:09   0:00 (sd-pam)
+root         910  0.1  0.9 1974208 76876 ?       Ssl  13:09   0:04 /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock
+jules        930  0.0  0.0  14984  7052 ?        S    13:09   0:00 sshd: swebot@notty
+polkitd     1699  0.0  0.0 308164  7808 ?        Ssl  13:18   0:00 /usr/lib/polkit-1/polkitd --no-debug
+root        2172  0.0  0.1  14736 10240 ?        Ss   13:19   0:00 sshd: swebot [priv]
+jules       2184  0.0  0.0  15444  7356 ?        S    13:19   0:01 sshd: swebot@notty
+root        2192  0.0  0.0      0     0 ?        I    13:19   0:00 [kworker/0:0-events]
+root        2226  0.0  0.0      0     0 ?        I    13:20   0:00 [kworker/u8:1-ext4-rsv-conversion]
+jules       2266  0.0  0.0  12620  4036 ?        Ss   13:20   0:00 tmux new-session -d -s default -c /app
+jules       2267  0.0  0.1  12092  8448 pts/0    Ss   13:20   0:00 -bash
+root        4875  0.0  0.0      0     0 ?        I    13:26   0:00 [kworker/2:0]
+root        6248  0.0  0.0      0     0 ?        I    13:29   0:00 [kworker/u8:3-writeback]
+root        9171  0.0  0.0      0     0 ?        I    13:42   0:00 [kworker/u8:2-flush-254:16]
+root        9511  0.0  0.0      0     0 ?        I    13:55   0:00 [kworker/2:2-events]
+root        9649  0.4  0.1  14732  9984 ?        Ss   14:03   0:00 sshd: swebot [priv]
+jules       9661  0.3  0.0  15268  7212 ?        S    14:03   0:00 sshd: swebot@notty
+jules       9773  190  3.1 275128964 254416 pts/0 Sl  14:03   1:45 /usr/lib/dotnet/dotnet exec /usr/lib/dotnet/sdk/9.0.109/Roslyn/bincore/VBCSCompiler.dll -pipename:aSmtirjcBim+7ireaiEZ0j8NEYpLyZ4BYOrZSm1puSE
+root        9832  0.0  0.0      0     0 ?        I    14:04   0:00 [kworker/u8:0-events_unbound]
+root        9833  0.0  0.0      0     0 ?        I    14:04   0:00 [kworker/u8:4-events_unbound]
+jules      10020  0.0  0.0  11320  4224 pts/0    R+   14:04   0:00 ps aux
