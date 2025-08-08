@@ -192,144 +192,66 @@ public readonly struct DbfField
         }
 
         var fields = new List<DbfField>();
-        byte[]? rentedBuffer = null;
+        var terminatorFound = false;
 
-        try
+        while (!terminatorFound)
         {
-            rentedBuffer = ArrayPool<byte>.Shared.Rent(Size);
-
-            while (true)
+            ReadResult result;
+            try
             {
-                var result = await pipeReader.ReadAsync(cancellationToken);
-                var buffer = result.Buffer;
-                var position = buffer.Start;
+                result = await pipeReader.ReadAsync(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
 
-                if (buffer.IsEmpty && result.IsCompleted)
+            var buffer = result.Buffer;
+
+            if (result.IsCanceled)
+            {
+                break;
+            }
+
+            if (buffer.IsEmpty && result.IsCompleted)
+            {
+                break; // End of stream
+            }
+
+            var sequenceReader = new SequenceReader<byte>(buffer);
+
+            while (sequenceReader.TryPeek(out var b))
+            {
+                if (b == 0x0D)
                 {
+                    terminatorFound = true;
+                    sequenceReader.Advance(1); // Consume terminator
                     break;
                 }
 
-                // Look for the correct terminator - not necessarily the first 0x0D found
-                // The terminator should be at a position that makes sense for field boundaries
-                var terminator = FindCorrectTerminator(buffer, dbfVersion);
-                if (terminator != null)
+                if (sequenceReader.Remaining < Size)
                 {
-                    buffer = buffer.Slice(0, terminator.Value);
-                }
-
-                // Check for immediate terminator (no field definitions)
-                if (buffer.Length > 0 && (buffer.FirstSpan[0] == 0x0D || buffer.FirstSpan[0] == 0x1A))
-                {
-                    // No field definitions, just the terminator
-                    if (headerLength > 0)
-                    {
-                        // Calculate how many bytes we've consumed so far (header + terminator)
-                        const int consumedBytes = DbfHeader.Size + 1; // +1 for the terminator byte
-                        var remainingToSkip = headerLength - consumedBytes;
-
-                        if (remainingToSkip > 0)
-                        {
-                            // Advance past the remaining padding to reach record data
-                            var currentPos = result.Buffer.GetPosition(1, buffer.Start); // Start after terminator
-                            var targetPos = result.Buffer.GetPosition(Math.Min(remainingToSkip, (int)(result.Buffer.Length - result.Buffer.GetOffset(currentPos))), currentPos);
-                            pipeReader.AdvanceTo(targetPos);
-                        }
-                        else
-                        {
-                            // Just advance past the terminator byte
-                            var nextPosition = result.Buffer.GetPosition(1, buffer.Start);
-                            pipeReader.AdvanceTo(nextPosition);
-                        }
-                    }
-                    else
-                    {
-                        // Legacy behavior: advance past the terminator byte
-                        var nextPosition = result.Buffer.GetPosition(1, buffer.Start);
-                        pipeReader.AdvanceTo(nextPosition);
-                    }
-                    return fields.ToArray();
-                }
-
-                while (buffer.Length >= Size)
-                {
-                    var fieldSequence = buffer.Slice(0, Size);
-
-                    if (fieldSequence.FirstSpan[0] == 0x0D || fieldSequence.FirstSpan[0] == 0x1A)
-                    {
-                        // For async pipe reading, we need to advance to the start of record data
-                        // This is at headerLength bytes from the beginning of the file
-                        if (headerLength > 0)
-                        {
-                            // Calculate how many bytes we've consumed so far (header + field definitions + terminator)
-                            var consumedBytes = DbfHeader.Size + fields.Count * Size + 1; // +1 for the terminator byte
-                            var remainingToSkip = headerLength - consumedBytes;
-
-
-                            if (remainingToSkip > 0)
-                            {
-                                // Advance past the remaining padding to reach record data
-                                var currentPos = result.Buffer.GetPosition(1, fieldSequence.Start); // Start after terminator
-                                var targetPos = result.Buffer.GetPosition(Math.Min(remainingToSkip, (int)(result.Buffer.Length - result.Buffer.GetOffset(currentPos))), currentPos);
-                                pipeReader.AdvanceTo(targetPos);
-                            }
-                            else
-                            {
-                                // Just advance past the terminator byte
-                                var nextPosition = result.Buffer.GetPosition(1, fieldSequence.Start);
-                                pipeReader.AdvanceTo(nextPosition);
-                            }
-                        }
-                        else
-                        {
-                            // Legacy behavior: advance past the terminator byte
-                            var nextPosition = result.Buffer.GetPosition(1, fieldSequence.Start);
-                            pipeReader.AdvanceTo(nextPosition);
-                        }
-                        return fields.ToArray();
-                    }
-
-                    DbfField field;
-                    if (fieldSequence.IsSingleSegment)
-                    {
-                        field = FromBytes(fieldSequence.FirstSpan, encoding, lowerCaseNames);
-                    }
-                    else
-                    {
-                        var fieldBytes = rentedBuffer.AsSpan(0, Size);
-                        fieldSequence.CopyTo(fieldBytes);
-                        field = FromBytes(fieldBytes, encoding, lowerCaseNames);
-                    }
-
-                    if (string.IsNullOrWhiteSpace(field.Name) || field.ActualLength == 0)
-                    {
-                        pipeReader.AdvanceTo(fieldSequence.End);
-                        return fields.ToArray();
-                    }
-
-                    fields.Add(field);
-                    buffer = buffer.Slice(Size);
-                    position = fieldSequence.End;
-                }
-
-                pipeReader.AdvanceTo(position, result.Buffer.End);
-
-                if (result.IsCompleted)
-                {
+                    // Not enough data for a full field. Need more from the pipe.
                     break;
                 }
+
+                var fieldData = sequenceReader.Sequence.Slice(sequenceReader.Position, Size);
+                var field = FromBytes(fieldData.ToArray(), encoding, lowerCaseNames);
+                fields.Add(field);
+
+                sequenceReader.Advance(Size);
             }
 
-            // Note: Positioning to record data is now handled in CreateFromStreamAsync
+            var consumed = sequenceReader.Position;
+            pipeReader.AdvanceTo(consumed, result.Buffer.End);
 
-            return fields.ToArray();
-        }
-        finally
-        {
-            if (rentedBuffer != null)
+            if (result.IsCompleted)
             {
-                ArrayPool<byte>.Shared.Return(rentedBuffer);
+                break;
             }
         }
+
+        return fields.ToArray();
     }
 
     /// <summary>
@@ -940,6 +862,19 @@ public readonly struct DbfField
 
                 break;
             case FieldType.Character:
+                if (ActualLength == 0)
+                {
+                    throw new ArgumentException($"{Type} field '{Name}' cannot have zero length");
+                }
+
+                if (ActualLength > 254)
+                {
+                    throw new ArgumentException(
+                        $"Character field '{Name}' cannot exceed maximum length of 254 bytes, got {ActualLength}"
+                    );
+                }
+
+                break;
             case FieldType.Varchar:
             case FieldType.Numeric:
             case FieldType.Float:

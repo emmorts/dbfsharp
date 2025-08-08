@@ -211,7 +211,6 @@ public class DbfFieldTypeTests
                     var expectedType = field.Type.GetExpectedNetType();
                     if (expectedType != typeof(object))
                     {
-                        // Special handling for numeric fields which can return int, decimal, double, or float
                         if (field.Type == FieldType.Numeric)
                         {
                             Assert.True(value is int or decimal or double or float,
@@ -232,7 +231,7 @@ public class DbfFieldTypeTests
             recordsProcessed++;
             if (recordsProcessed > 10)
             {
-                break; // Limit for performance
+                break;
             }
         }
     }
@@ -253,7 +252,7 @@ public class DbfFieldTypeTests
 
             if (field.Type == FieldType.Memo)
             {
-                Assert.True(field.Length <= 10, "Memo fields should have small length values (memo block indices)");
+                Assert.True(field.Length <= 10);
             }
         }
     }
@@ -264,7 +263,6 @@ public class DbfFieldTypeTests
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
         using var reader = DbfReader.Create(filePath);
 
-        // Validate exact field structure from people.txt metadata
         Assert.Equal(2, reader.Fields.Count);
 
         var nameField = reader.Fields[0];
@@ -286,10 +284,8 @@ public class DbfFieldTypeTests
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.DBase03);
         using var reader = DbfReader.Create(filePath);
 
-        // Validate field count from dbase_03.txt metadata
         Assert.Equal(31, reader.Fields.Count);
 
-        // Validate key fields with exact specifications
         var pointIdField = reader.FindField("Point_ID");
         Assert.NotNull(pointIdField);
         Assert.Equal(FieldType.Character, pointIdField.Value.Type);
@@ -331,25 +327,21 @@ public class DbfFieldTypeTests
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.DBase30);
         await using var reader = await DbfReader.CreateAsync(filePath);
 
-        // Validate field count from dbase_30.txt metadata (corrected after fixing VFP field parsing)
         Assert.Equal(145, reader.Fields.Count);
 
-        // Verify that OBJECTID field exists and is accessible (the expected last field)
         var objectIdField = reader.FindField("OBJECTID");
         Assert.NotNull(objectIdField);
         Assert.Equal("OBJECTID", objectIdField.Value.Name);
 
-        // Validate memo fields
         var memoFields = reader.Fields.Where(f => f.Type == FieldType.Memo).ToList();
         Assert.True(memoFields.Count > 0);
 
         foreach (var memoField in memoFields.Take(5))
         {
-            Assert.Equal(4, memoField.Length); // All memo fields should be 4 bytes
+            Assert.Equal(4, memoField.Length);
             Assert.Equal(0, memoField.DecimalCount);
         }
 
-        // Validate specific fields from metadata
         var accessNoField = reader.FindField("ACCESSNO");
         Assert.NotNull(accessNoField);
         Assert.Equal(FieldType.Character, accessNoField.Value.Type);
@@ -383,7 +375,6 @@ public class DbfFieldTypeTests
         var allRecords = reader.Records.ToList();
         Assert.Equal(3, allRecords.Count);
 
-        // Validate first record from people.txt metadata
         var record1 = allRecords[0];
         var name1 = record1.GetString("NAME")?.Trim();
         var birthdate1 = record1.GetDateTime("BIRTHDATE");
@@ -391,7 +382,6 @@ public class DbfFieldTypeTests
         Assert.Equal("Alice", name1);
         Assert.Equal(new DateTime(1987, 3, 1), birthdate1);
 
-        // Validate second record
         var record2 = allRecords[1];
         var name2 = record2.GetString("NAME")?.Trim();
         var birthdate2 = record2.GetDateTime("BIRTHDATE");
@@ -399,7 +389,6 @@ public class DbfFieldTypeTests
         Assert.Equal("Bob", name2);
         Assert.Equal(new DateTime(1980, 11, 12), birthdate2);
 
-        // Validate third record (deleted)
         var record3 = allRecords[2];
         var name3 = record3.GetString("NAME")?.Trim();
         var birthdate3 = record3.GetDateTime("BIRTHDATE");
@@ -417,7 +406,6 @@ public class DbfFieldTypeTests
         reader.Load();
         Assert.True(reader.Count > 0);
 
-        // Validate first record data from dbase_03.txt metadata
         var firstRecord = reader[0];
         var pointId = firstRecord.GetString("Point_ID")?.Trim();
         var type = firstRecord.GetString("Type")?.Trim();
@@ -429,7 +417,6 @@ public class DbfFieldTypeTests
         Assert.Equal("circular", shape);
         Assert.Equal("12", circularD);
 
-        // Validate that first few records follow expected pattern
         for (var i = 0; i < Math.Min(3, reader.Count); i++)
         {
             var record = reader[i];

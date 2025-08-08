@@ -11,13 +11,11 @@ public class DbfMetadataValidationTests
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
         using var reader = DbfReader.Create(filePath);
 
-        // Header validation
         Assert.Equal(DbfVersion.DBase3Plus, reader.Header.DbfVersion);
         Assert.Equal(3u, reader.Header.NumberOfRecords);
         Assert.Equal((ushort)97, reader.Header.HeaderLength);
         Assert.Equal((ushort)25, reader.Header.RecordLength);
 
-        // Field validation
         Assert.Equal(2, reader.Fields.Count);
 
         var nameField = reader.Fields[0];
@@ -32,9 +30,8 @@ public class DbfMetadataValidationTests
         Assert.Equal(8, birthdateField.Length);
         Assert.Equal(0, birthdateField.DecimalCount);
 
-        // Sample data validation
         reader.Load();
-        Assert.Equal(2, reader.Count);  // Two active records (header shows 3 total including deleted)
+        Assert.Equal(2, reader.Count);
 
         var record1 = reader[0];
         var name1 = record1.GetString("NAME")?.Trim();
@@ -57,17 +54,14 @@ public class DbfMetadataValidationTests
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.DBase03);
         using var reader = DbfReader.Create(filePath);
 
-        // Header validation
         Assert.Equal(DbfVersion.DBase3Plus, reader.Header.DbfVersion);
         Assert.Equal(14u, reader.Header.NumberOfRecords);
         Assert.Equal((ushort)1025, reader.Header.HeaderLength);
         Assert.Equal((ushort)590, reader.Header.RecordLength);
 
-        // Field count validation
         Assert.Equal(31, reader.Fields.Count);
 
-        // Key field validations - access first Point_ID field by index since there are duplicates
-        var pointIdField = reader.Fields[0]; // First Point_ID field is at index 0
+        var pointIdField = reader.Fields[0];
         Assert.Equal("Point_ID", pointIdField.Name);
         Assert.Equal(FieldType.Character, pointIdField.Type);
         Assert.Equal(12, pointIdField.Length);
@@ -94,12 +88,10 @@ public class DbfMetadataValidationTests
         Assert.Equal(5, maxPdopField.Value.Length);
         Assert.Equal(1, maxPdopField.Value.DecimalCount);
 
-        // Sample data validation (first record)
         reader.Load();
         Assert.True(reader.Count > 0);
 
         var firstRecord = reader[0];
-        // Sample data validation - now correctly using FindField which returns first occurrence
         var pointId = firstRecord.GetString("Point_ID")?.Trim();
 
         var type = firstRecord.GetString("Type")?.Trim();
@@ -118,16 +110,13 @@ public class DbfMetadataValidationTests
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.DBase30);
         using var reader = DbfReader.Create(filePath);
 
-        // Header validation
         Assert.Equal(DbfVersion.VisualFoxPro, reader.Header.DbfVersion);
         Assert.Equal(34u, reader.Header.NumberOfRecords);
         Assert.Equal((ushort)4936, reader.Header.HeaderLength);
         Assert.Equal((ushort)3907, reader.Header.RecordLength);
 
-        // Field count validation (70 fields as shown in metadata)
         Assert.Equal(70, reader.Fields.Count);
 
-        // Key field validations
         var accessNoField = reader.FindField("ACCESSNO");
         Assert.NotNull(accessNoField);
         Assert.Equal(FieldType.Character, accessNoField.Value.Type);
@@ -160,11 +149,9 @@ public class DbfMetadataValidationTests
         Assert.Equal(4, earlyDateField.Value.Length);
         Assert.Equal(0, earlyDateField.Value.DecimalCount);
 
-        // Load and validate record count
         reader.Load();
         Assert.Equal(34, reader.Count);
 
-        // Test memo fields if accessible
         var memoFields = reader.Fields.Where(f => f.Type == FieldType.Memo).ToList();
         Assert.True(memoFields.Count > 0);
     }
@@ -180,16 +167,13 @@ public class DbfMetadataValidationTests
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.DBase83);
         using var reader = DbfReader.Create(filePath);
 
-        // Header validation
         Assert.Equal(DbfVersion.DBase3PlusWithMemo, reader.Header.DbfVersion);
         Assert.Equal(67u, reader.Header.NumberOfRecords);
         Assert.Equal((ushort)513, reader.Header.HeaderLength);
         Assert.Equal((ushort)805, reader.Header.RecordLength);
 
-        // Field count validation
         Assert.Equal(9, reader.Fields.Count);
 
-        // Field validations
         var idField = reader.FindField("ID");
         Assert.NotNull(idField);
         Assert.Equal(FieldType.Numeric, idField.Value.Type);
@@ -222,7 +206,6 @@ public class DbfMetadataValidationTests
         Assert.Equal(FieldType.Character, imageField.Value.Type);
         Assert.Equal(254, imageField.Value.Length);
 
-        // Record count validation
         reader.Load();
         Assert.Equal(67, reader.Count);
     }
@@ -239,16 +222,13 @@ public class DbfMetadataValidationTests
         var options = new DbfReaderOptions { IgnoreMissingMemoFile = true };
         using var reader = DbfReader.Create(filePath, options);
 
-        // Header validation
         Assert.Equal(DbfVersion.VisualFoxPro, reader.Header.DbfVersion);
         Assert.Equal(4u, reader.Header.NumberOfRecords);
         Assert.Equal((ushort)360, reader.Header.HeaderLength);
         Assert.Equal((ushort)105, reader.Header.RecordLength);
 
-        // Field count validation
         Assert.Equal(2, reader.Fields.Count);
 
-        // Field validations
         var rnField = reader.FindField("RN");
         Assert.NotNull(rnField);
         Assert.Equal(FieldType.Numeric, rnField.Value.Type);
@@ -260,7 +240,6 @@ public class DbfMetadataValidationTests
         Assert.Equal(FieldType.Character, nameField.Value.Type);
         Assert.Equal(100, nameField.Value.Length);
 
-        // Record count validation
         reader.Load();
         Assert.Equal(4, reader.Count);
     }
