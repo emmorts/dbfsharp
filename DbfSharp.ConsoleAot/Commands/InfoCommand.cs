@@ -86,8 +86,7 @@ public static class InfoCommand
             var readerOptions = CreateDbfReaderOptions(settings);
             var tableName = inputSource.IsStdin ? "stdin" : Path.GetFileNameWithoutExtension(inputSource.OriginalPath);
 
-            await using var reader =
-                await DbfReader.CreateAsync(inputSource.Stream, readerOptions, cancellationToken);
+            using var reader = DbfReader.Create(inputSource.Stream, readerOptions);
 
             // Subscribe to warnings if not in quiet mode
             if (!settings.Quiet)
@@ -112,7 +111,7 @@ public static class InfoCommand
 
             if (settings is { ShowStats: true, Verbose: true })
             {
-                await DisplaySampleDataAsync(reader, cancellationToken);
+                DisplaySampleData(reader, cancellationToken);
             }
 
             if (settings.ShowMemo && dbfStats.HasMemoFile)
@@ -240,13 +239,13 @@ public static class InfoCommand
     }
 
 
-    private static async Task DisplaySampleDataAsync(DbfReader reader, CancellationToken cancellationToken)
+    private static void DisplaySampleData(DbfReader reader, CancellationToken cancellationToken)
     {
         try
         {
             var sampleRecords = new List<DbfRecord>();
             var count = 0;
-            await foreach (var record in reader.ReadRecordsAsync(cancellationToken))
+            foreach (var record in reader.Records)
             {
                 if (count >= 3)
                 {

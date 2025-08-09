@@ -112,7 +112,7 @@ public static class ReadCommand
 
             var tableName = inputSource.IsStdin ? "stdin" : Path.GetFileNameWithoutExtension(inputSource.OriginalPath);
 
-            await using var reader = await CreateDbfReaderAsync(inputSource.Stream, tableName, settings);
+            using var reader = CreateDbfReader(inputSource.Stream, tableName, settings);
 
             if (settings is { Verbose: true, Quiet: false })
             {
@@ -128,7 +128,7 @@ public static class ReadCommand
 
             if (settings.Format == OutputFormat.Table)
             {
-                var records = await GetRecordsToDisplayAsync(reader, settings, cancellationToken);
+                var records = GetRecordsToDisplay(reader, settings, cancellationToken);
                 await FormatAndOutputAsync(records, fieldsToDisplay, reader, settings, cancellationToken);
             }
             else
@@ -144,7 +144,7 @@ public static class ReadCommand
         }
     }
 
-    private static async Task<DbfReader> CreateDbfReaderAsync(Stream stream, string tableName,
+    private static DbfReader CreateDbfReader(Stream stream, string tableName,
         ReadConfiguration settings)
     {
         var readerOptions = new DbfReaderOptions
@@ -172,7 +172,7 @@ public static class ReadCommand
             }
         }
 
-        var reader = await DbfReader.CreateAsync(stream, readerOptions);
+        var reader = DbfReader.Create(stream, readerOptions);
         
         // Subscribe to warnings if not in quiet mode
         if (!settings.Quiet)
@@ -183,15 +183,15 @@ public static class ReadCommand
         return reader;
     }
 
-    private static async Task<List<DbfRecord>> GetRecordsToDisplayAsync(DbfReader reader, ReadConfiguration settings,
+    private static List<DbfRecord> GetRecordsToDisplay(DbfReader reader, ReadConfiguration settings,
         CancellationToken cancellationToken)
     {
         var records = new List<DbfRecord>();
-        var recordsToEnumerate = reader.ReadRecordsAsync(cancellationToken);
+        var recordsToEnumerate = reader.Records;
 
         var count = 0;
         var skipped = 0;
-        await foreach (var record in recordsToEnumerate)
+        foreach (var record in recordsToEnumerate)
         {
             if (skipped < settings.Skip)
             {
@@ -310,7 +310,7 @@ public static class ReadCommand
             await using var fileWriter = new StreamWriter(settings.OutputPath, false, Encoding.UTF8, bufferSize: 65536);
 
             var records = new List<DbfRecord>();
-            await foreach (var record in CreateFilteredRecordStreamAsync(reader, settings, cancellationToken))
+            foreach (var record in CreateFilteredRecordStream(reader, settings, cancellationToken))
             {
                 records.Add(record);
             }
@@ -327,7 +327,7 @@ public static class ReadCommand
         else
         {
             var records = new List<DbfRecord>();
-            await foreach (var record in CreateFilteredRecordStreamAsync(reader, settings, cancellationToken))
+            foreach (var record in CreateFilteredRecordStream(reader, settings, cancellationToken))
             {
                 records.Add(record);
             }
@@ -336,16 +336,16 @@ public static class ReadCommand
         }
     }
 
-    private static async IAsyncEnumerable<DbfRecord> CreateFilteredRecordStreamAsync(
+    private static IEnumerable<DbfRecord> CreateFilteredRecordStream(
         DbfReader reader,
         ReadConfiguration settings,
-        [EnumeratorCancellation] CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        var recordsAsyncEnumerable = reader.ReadRecordsAsync(cancellationToken);
+        var recordsEnumerable = reader.Records;
         var count = 0;
         var skipped = 0;
 
-        await foreach (var record in recordsAsyncEnumerable)
+        foreach (var record in recordsEnumerable)
         {
             cancellationToken.ThrowIfCancellationRequested();
 

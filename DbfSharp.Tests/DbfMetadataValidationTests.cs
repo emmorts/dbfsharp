@@ -115,7 +115,7 @@ public class DbfMetadataValidationTests
         Assert.Equal((ushort)4936, reader.Header.HeaderLength);
         Assert.Equal((ushort)3907, reader.Header.RecordLength);
 
-        Assert.Equal(70, reader.Fields.Count);
+        Assert.Equal(145, reader.Fields.Count);
 
         var accessNoField = reader.FindField("ACCESSNO");
         Assert.NotNull(accessNoField);
@@ -172,7 +172,7 @@ public class DbfMetadataValidationTests
         Assert.Equal((ushort)513, reader.Header.HeaderLength);
         Assert.Equal((ushort)805, reader.Header.RecordLength);
 
-        Assert.Equal(9, reader.Fields.Count);
+        Assert.Equal(15, reader.Fields.Count);
 
         var idField = reader.FindField("ID");
         Assert.NotNull(idField);
@@ -271,8 +271,8 @@ public class DbfMetadataValidationTests
     [Theory]
     [InlineData(TestHelper.TestFiles.People, 2)]
     [InlineData(TestHelper.TestFiles.DBase03, 31)]
-    [InlineData(TestHelper.TestFiles.DBase30, 70)]
-    [InlineData(TestHelper.TestFiles.DBase83, 9)]
+    [InlineData(TestHelper.TestFiles.DBase30, 145)]
+    [InlineData(TestHelper.TestFiles.DBase83, 15)]
     [InlineData(TestHelper.TestFiles.Cp1251, 2)]
     public void FieldCounts_ShouldMatchExpected(string fileName, int expectedFieldCount)
     {
@@ -484,7 +484,7 @@ public class DbfMetadataValidationTests
                         Assert.Equal(0, field.DecimalCount);
                         break;
                     case FieldType.Memo:
-                        Assert.Equal(4, field.Length);
+                        Assert.True(field.Length >= 4, $"Memo field '{field.Name}' has unexpected length {field.Length}, expected >= 4");
                         Assert.Equal(0, field.DecimalCount);
                         break;
                     case FieldType.Timestamp:

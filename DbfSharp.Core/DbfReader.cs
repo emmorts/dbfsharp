@@ -1,6 +1,5 @@
 using System.Buffers;
 using System.Collections;
-using System.IO.Pipelines;
 using System.Runtime.CompilerServices;
 using System.Text;
 using DbfSharp.Core.Enums;
@@ -22,7 +21,7 @@ namespace DbfSharp.Core;
 /// memo file support (.DBT/.FPT), field validation with customizable parsing, and comprehensive
 /// statistics reporting. The reader is designed to handle legacy DBF files that may not strictly
 /// conform to format specifications while providing modern .NET integration through IEnumerable
-/// and async/await patterns.
+/// patterns.
 /// </para>
 /// <para>
 /// **Thread Safety**: This class is **not thread-safe**. Each thread should use its own DbfReader instance.
@@ -31,31 +30,27 @@ namespace DbfSharp.Core;
 /// </remarks>
 /// <example>
 /// <code>
-/// // Asynchronous streaming access for large files (recommended)
-/// using var reader = await DbfReader.CreateAsync("data.dbf");
-/// await foreach (var record in reader.ReadRecordsAsync())
+/// // Streaming access for large files (recommended)
+/// using var reader = DbfReader.Create("data.dbf");
+/// foreach (var record in reader.Records)
 /// {
 ///     Console.WriteLine(record["CustomerName"]);
 /// }
 ///
 /// // Loaded access for frequent operations and random access
-/// using var reader = await DbfReader.CreateAsync("data.dbf");
-/// await reader.LoadAsync(); // Load all records into memory
+/// using var reader = DbfReader.Create("data.dbf");
+/// reader.Load(); // Load all records into memory
 /// var statistics = reader.GetStatistics();
 /// var firstRecord = reader[0]; // Random access is now available
 /// </code>
 /// </example>
-public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRecord>
+public sealed class DbfReader : IDisposable, IEnumerable<DbfRecord>
 {
-    private readonly Stream _stream;
+    internal readonly Stream Stream;
+
     private readonly BinaryReader? _reader;
-    private readonly DbfReaderOptions _options;
-    private readonly IMemoFile? _memoFile;
-    private readonly IFieldParser _fieldParser;
     private readonly Dictionary<string, int> _fieldIndexMap;
     private readonly bool _ownsStream;
-    private readonly PipeReader? _pipeReader;
-    private readonly Task? _pipeWriterTask;
 
     private DbfRecord[]? _loadedRecords;
 
@@ -70,17 +65,15 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
         add
         {
             _warning += value;
-            // Raise deferred warnings when first event handler is attached
-            if (!_warningsRaised)
+            if (_warningsRaised)
             {
-                _warningsRaised = true;
-                RaiseDeferredWarnings();
+                return;
             }
+
+            _warningsRaised = true;
+            RaiseDeferredWarnings();
         }
-        remove
-        {
-            _warning -= value;
-        }
+        remove => _warning -= value;
     }
 
     private readonly List<string>? _duplicateFields;
@@ -89,6 +82,7 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
 
     private const int StackAllocThreshold = 256;
     private const uint EofMarker = 0x1A; // End of file marker in DBF files
+    private string? MemoFilePath => MemoFile?.FilePath;
 
     /// <summary>
     /// Gets the DBF file header containing structural metadata and format information.
@@ -104,11 +98,6 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
     /// Gets the names of all fields in the DBF file in their original order.
     /// </summary>
     public IReadOnlyList<string> FieldNames { get; }
-
-    /// <summary>
-    /// Gets the file path to the associated memo file, if present.
-    /// </summary>
-    public string? MemoFilePath => _memoFile?.FilePath;
 
     /// <summary>
     /// Gets a value indicating whether all records have been loaded into memory.
@@ -128,6 +117,21 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
     /// Gets the character encoding used to interpret text data in the DBF file.
     /// </summary>
     public Encoding Encoding { get; }
+
+    /// <summary>
+    /// Gets the field parser used by this reader (internal access for SpanDbfRecord)
+    /// </summary>
+    internal IFieldParser FieldParser { get; }
+
+    /// <summary>
+    /// Gets the memo file associated with this reader (internal access for SpanDbfRecord)
+    /// </summary>
+    internal IMemoFile? MemoFile { get; }
+
+    /// <summary>
+    /// Gets the reader options (internal access for SpanDbfRecord)
+    /// </summary>
+    internal DbfReaderOptions Options { get; }
 
     /// <summary>
     /// Gets the table name, typically derived from the filename.
@@ -155,7 +159,7 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
                 return _loadedRecords ?? Enumerable.Empty<DbfRecord>();
             }
 
-            return EnumerateRecords(skipDeleted: _options.SkipDeletedRecords);
+            return EnumerateRecords(skipDeleted: Options.SkipDeletedRecords);
         }
     }
 
@@ -185,37 +189,33 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
 
     /// <summary>
     /// Initializes a new instance of the DbfReader class. This constructor is private
-    /// to enforce the use of the static factory methods <see cref="CreateAsync(string, DbfReaderOptions, CancellationToken)"/>
+    /// to enforce the use of the static factory methods <see cref="Create(string, DbfReaderOptions)"/>
     /// and <see cref="Create(string, DbfReaderOptions)"/>.
     /// </summary>
-    internal DbfReader(
+    private DbfReader(
         Stream stream,
         bool ownsStream,
         DbfHeader header,
         DbfField[] fields,
         DbfReaderOptions options,
         IMemoFile? memoFile,
-        string tableName,
-        PipeReader? pipeReader = null,
-        Task? pipeWriterTask = null)
+        string tableName)
     {
-        _stream = stream;
+        Stream = stream;
         _ownsStream = ownsStream;
-        if (stream.CanSeek && pipeReader == null)
+        if (stream.CanSeek)
         {
             _reader = new BinaryReader(stream, options.Encoding ?? header.Encoding, leaveOpen: true);
         }
 
         Header = header;
         Fields = fields;
-        _options = options;
-        _memoFile = memoFile;
+        Options = options;
+        MemoFile = memoFile;
         TableName = tableName;
-        _pipeReader = pipeReader;
-        _pipeWriterTask = pipeWriterTask;
 
         Encoding = options.Encoding ?? Header.Encoding;
-        _fieldParser = options.CustomFieldParser ?? new FieldParser(Header.DbfVersion);
+        FieldParser = options.CustomFieldParser ?? new FieldParser(Header.DbfVersion);
 
         var fieldNames = new string[fields.Length];
         for (var i = 0; i < fields.Length; i++)
@@ -271,59 +271,25 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
     /// <summary>
     /// Checks for and raises warnings that were deferred during construction
     /// </summary>
-    internal void RaiseDeferredWarnings()
+    private void RaiseDeferredWarnings()
     {
-        if (_duplicateFields is { Count: > 0 })
+        if (_duplicateFields is not { Count: > 0 })
         {
-            var duplicateList = string.Join(", ", _duplicateFields.Select(name => $"'{name}'"));
-            var message = _duplicateFields.Count == 1
-                ? $"Duplicate field name detected: {duplicateList}. Only the first occurrence will be accessible via FindField()."
-                : $"Duplicate field names detected: {duplicateList}. Only the first occurrence of each will be accessible via FindField().";
-
-            OnWarning(new DbfWarningEventArgs(message, DbfWarningType.DuplicateFieldNames,
-                $"{_duplicateFields.Count} duplicate field name(s) found"));
+            return;
         }
+
+        var duplicateList = string.Join(", ", _duplicateFields.Select(name => $"'{name}'"));
+        var message = _duplicateFields.Count == 1
+            ? $"Duplicate field name detected: {duplicateList}. Only the first occurrence will be accessible via FindField()."
+            : $"Duplicate field names detected: {duplicateList}. Only the first occurrence of each will be accessible via FindField().";
+
+        OnWarning(new DbfWarningEventArgs(message, DbfWarningType.DuplicateFieldNames,
+            $"{_duplicateFields.Count} duplicate field name(s) found"));
     }
 
-    /// <summary>
-    /// Asynchronously creates and initializes a DbfReader from the specified file path.
-    /// This is the recommended factory method for opening a DBF file.
-    /// </summary>
-    /// <param name="filePath">The path to the DBF file to open.</param>
-    /// <param name="options">Optional reader configuration settings.</param>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains a new DbfReader instance.</returns>
-    public static async Task<DbfReader> CreateAsync(string filePath, DbfReaderOptions? options = null,
-        CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrEmpty(filePath))
-        {
-            throw new ArgumentException("File path cannot be null or empty", nameof(filePath));
-        }
-
-        if (!File.Exists(filePath))
-        {
-            throw new DbfNotFoundException(filePath, $"DBF file not found: {filePath}");
-        }
-
-        options ??= new DbfReaderOptions();
-
-        try
-        {
-            var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, options.BufferSize,
-                useAsync: true);
-            var tableName = Path.GetFileNameWithoutExtension(filePath);
-            return await CreateFromStreamAsync(stream, true, options, tableName, filePath, cancellationToken);
-        }
-        catch (Exception ex) when (ex is not DbfException)
-        {
-            throw new DbfException($"Failed to open DBF file: {ex.Message}", ex);
-        }
-    }
 
     /// <summary>
-    /// Creates a DbfReader from the specified file path using synchronous I/O.
-    /// For applications using async/await, prefer <see cref="CreateAsync(string, DbfReaderOptions, CancellationToken)"/>.
+    /// Creates a DbfReader from the specified file path.
     /// </summary>
     /// <param name="filePath">The path to the DBF file to open.</param>
     /// <param name="options">Optional reader configuration settings.</param>
@@ -354,20 +320,13 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
         }
     }
 
-    /// <summary>
-    /// Asynchronously creates a DbfReader from a stream. The caller is responsible for disposing the stream.
-    /// </summary>
-    public static async Task<DbfReader> CreateAsync(Stream stream, DbfReaderOptions? options = null,
-        CancellationToken cancellationToken = default)
-    {
-        return await CreateFromStreamAsync(stream, false, options, "Unknown", null, cancellationToken);
-    }
 
     /// <summary>
-    /// Creates a DbfReader from a stream using synchronous I/O. The caller is responsible for disposing the stream.
+    /// Creates a DbfReader from a stream. The caller is responsible for disposing the stream.
     /// </summary>
     public static DbfReader Create(Stream stream, DbfReaderOptions? options = null)
     {
+        ArgumentNullException.ThrowIfNull(stream);
         return CreateFromStream(stream, false, options, "Unknown", null);
     }
 
@@ -378,6 +337,11 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
 
         try
         {
+            if (!stream.CanSeek)
+            {
+                throw new NotSupportedException("Non-seekable streams are not supported. Consider using a seekable stream like FileStream or MemoryStream.");
+            }
+
             var reader = new BinaryReader(stream, options.Encoding ?? Encoding.ASCII, leaveOpen: true);
             var header = DbfHeader.Read(reader);
 
@@ -444,119 +408,7 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
         }
     }
 
-    private static async Task<DbfReader> CreateFromStreamAsync(Stream stream, bool ownsStream,
-        DbfReaderOptions? options, string tableName, string? filePath, CancellationToken cancellationToken)
-    {
-        options ??= new DbfReaderOptions();
 
-        try
-        {
-            if (stream.CanSeek)
-            {
-                // SEEKABLE: Read directly from the stream.
-                var header = await DbfHeader.ReadAsync(stream, cancellationToken);
-
-                var fields = await DbfField.ReadFieldsAsync(stream, header.Encoding, (int)header.NumberOfRecords,
-                    options.LowerCaseFieldNames, header.DbfVersion, header.HeaderLength, cancellationToken);
-
-                if (header.DbfVersion == DbfVersion.DBase2)
-                {
-                    header = RecalculateDBase2Header(header, fields);
-                }
-
-                IMemoFile? memoFile = null;
-                if (header.SupportsMemoFields && filePath != null)
-                {
-                    try
-                    {
-                        memoFile = MemoFileFactory.CreateMemoFile(filePath, header.DbfVersion, options);
-                    }
-                    catch (MissingMemoFileException)
-                    {
-                        if (!options.IgnoreMissingMemoFile) throw;
-                    }
-                }
-
-                stream.Position = header.HeaderLength;
-                return new DbfReader(stream, ownsStream, header, fields, options, memoFile, tableName);
-            }
-            else
-            {
-                // NON-SEEKABLE: Use PipeReader for robust streaming.
-                var pipe = new Pipe();
-                var writingTask = FillPipeAsync(stream, pipe.Writer, cancellationToken);
-                var pipeReader = pipe.Reader;
-
-                var header = await DbfHeader.ReadAsync(pipeReader, cancellationToken);
-
-                var fields = await DbfField.ReadFieldsAsync(pipeReader, header.Encoding, 0,
-                    options.LowerCaseFieldNames, header.DbfVersion, header.HeaderLength, cancellationToken);
-
-                if (header.DbfVersion == DbfVersion.DBase2)
-                {
-                    header = RecalculateDBase2Header(header, fields);
-                }
-
-                IMemoFile? memoFile = null;
-                if (header.SupportsMemoFields && filePath != null)
-                {
-                    try
-                    {
-                        memoFile = MemoFileFactory.CreateMemoFile(filePath, header.DbfVersion, options);
-                    }
-                    catch (MissingMemoFileException)
-                    {
-                        if (!options.IgnoreMissingMemoFile) throw;
-                    }
-                }
-
-                // The pipe is already positioned correctly after reading fields.
-                // Any padding should have been handled by the correct pipe advance logic.
-                // We now pass the pipe reader and the background writing task to the DbfReader instance.
-                return new DbfReader(stream, ownsStream, header, fields, options, memoFile, tableName, pipeReader, writingTask);
-            }
-        }
-        catch
-        {
-            if (ownsStream)
-            {
-                await stream.DisposeAsync();
-            }
-            throw;
-        }
-    }
-
-    private static async Task FillPipeAsync(Stream stream, PipeWriter writer, CancellationToken cancellationToken)
-    {
-        const int minimumBufferSize = 4096;
-
-        try
-        {
-            while (true)
-            {
-                var memory = writer.GetMemory(minimumBufferSize);
-                var bytesRead = await stream.ReadAsync(memory, cancellationToken);
-                if (bytesRead == 0)
-                {
-                    break;
-                }
-
-                writer.Advance(bytesRead);
-
-                var result = await writer.FlushAsync(cancellationToken);
-                if (result.IsCompleted)
-                {
-                    break;
-                }
-            }
-
-            await writer.CompleteAsync();
-        }
-        catch (Exception ex)
-        {
-            await writer.CompleteAsync(ex);
-        }
-    }
 
     private static DbfHeader RecalculateDBase2Header(DbfHeader header, DbfField[] fields)
     {
@@ -648,36 +500,6 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
         _loadedDeletedRecords = deletedRecords.ToArray();
     }
 
-    /// <summary>
-    /// Asynchronously loads all records into memory for fast random access and repeated enumeration.
-    /// </summary>
-    public async Task LoadAsync(CancellationToken cancellationToken = default)
-    {
-        ObjectDisposedException.ThrowIf(_disposed, nameof(DbfReader));
-
-        if (IsLoaded)
-        {
-            return;
-        }
-
-        var records = new List<DbfRecord>();
-        var deletedRecords = new List<DbfRecord>();
-
-        await foreach (var (record, isDeleted) in EnumerateAllRecordsAsync(cancellationToken))
-        {
-            if (isDeleted)
-            {
-                deletedRecords.Add(record);
-            }
-            else
-            {
-                records.Add(record);
-            }
-        }
-
-        _loadedRecords = records.ToArray();
-        _loadedDeletedRecords = deletedRecords.ToArray();
-    }
 
     /// <summary>
     /// Unloads records from memory, returning the reader to streaming mode.
@@ -687,6 +509,18 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
         _loadedRecords = null;
         _loadedDeletedRecords = null;
     }
+
+    /// <summary>
+    /// Enumerates records using zero-allocation span-based access.
+    /// Records cannot cross method boundaries due to ref struct limitations.
+    /// </summary>
+    /// <param name="skipDeleted">Whether to skip deleted records</param>
+    /// <returns>An enumerable of span-based records</returns>
+    public SpanRecordEnumerable EnumerateSpanRecords(bool skipDeleted = true)
+    {
+        return new SpanRecordEnumerable(this, skipDeleted);
+    }
+
 
     /// <summary>
     /// Returns an enumerator that iterates through the active records.
@@ -704,7 +538,7 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
     private IEnumerable<DbfRecord> EnumerateRecords(bool skipDeleted = true, bool deletedOnly = false)
     {
         var recordsRead = 0;
-        var maxRecords = _options.MaxRecords ?? int.MaxValue;
+        var maxRecords = Options.MaxRecords ?? int.MaxValue;
 
         foreach (var (record, isDeleted) in EnumerateAllRecords())
         {
@@ -735,51 +569,18 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
             yield break;
         }
 
-        // for non-seekable streams (PipeReader case), we need to load records first
-        if (_reader == null && _pipeReader != null)
-        {
-            if (!IsLoaded)
-            {
-                // use async loading in a sync context is safe for enumeration since it's a one-time operation to populate the cache
-                try
-                {
-                    LoadAsync().GetAwaiter().GetResult();
-                }
-                catch (Exception ex)
-                {
-                    throw new InvalidOperationException(
-                        "Failed to load records from non-seekable stream. Consider using ReadRecordsAsync() instead.", ex);
-                }
-            }
-
-            if (_loadedRecords != null)
-            {
-                foreach (var record in _loadedRecords)
-                {
-                    yield return (record, false);
-                }
-            }
-            if (_loadedDeletedRecords != null)
-            {
-                foreach (var record in _loadedDeletedRecords)
-                {
-                    yield return (record, true);
-                }
-            }
-            yield break;
-        }
 
         if (_reader == null)
         {
             yield break;
         }
 
-        _stream.Position = Header.HeaderLength;
+        Stream.Position = Header.HeaderLength;
         var recordBuffer = new byte[Header.RecordLength];
 
         for (uint i = 0; i < Header.NumberOfRecords; i++)
         {
-            var bytesRead = _stream.Read(recordBuffer, 0, recordBuffer.Length);
+            var bytesRead = Stream.Read(recordBuffer, 0, recordBuffer.Length);
             if (bytesRead != recordBuffer.Length)
             {
                 break;
@@ -794,151 +595,12 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
         }
     }
 
-    /// <summary>
-    /// Asynchronously reads active records from the DBF file.
-    /// </summary>
-    public async IAsyncEnumerable<DbfRecord> ReadRecordsAsync(
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+
+    private (DbfRecord Record, bool IsDeleted) ParseRecord(byte[] recordBuffer)
     {
-        await foreach (var (record, isDeleted) in EnumerateAllRecordsAsync(cancellationToken))
-        {
-            if (_options.SkipDeletedRecords && isDeleted)
-            {
-                continue;
-            }
-
-            yield return record;
-        }
-    }
-
-    /// <summary>
-    /// Asynchronously reads deleted records from the DBF file.
-    /// </summary>
-    public async IAsyncEnumerable<DbfRecord> ReadDeletedRecordsAsync(
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        await foreach (var (record, isDeleted) in EnumerateAllRecordsAsync(cancellationToken))
-        {
-            if (isDeleted)
-            {
-                yield return record;
-            }
-        }
-    }
-
-    private async IAsyncEnumerable<(DbfRecord Record, bool IsDeleted)> EnumerateAllRecordsAsync(
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        if (_disposed)
-        {
-            yield break;
-        }
-
-        var maxRecords = _options.MaxRecords ?? int.MaxValue;
-
-        var enumerator = _pipeReader == null
-            ? EnumerateRecordsFromStreamAsync(maxRecords, cancellationToken)
-            : EnumerateRecordsFromPipeAsync(maxRecords, cancellationToken);
-
-        await foreach (var record in enumerator.WithCancellation(cancellationToken))
-        {
-            yield return record;
-        }
-    }
-
-    /// <summary>
-    /// Handles record enumeration for seekable streams. This is the faster path
-    /// when the underlying stream supports direct positioning.
-    /// </summary>
-    private async IAsyncEnumerable<(DbfRecord Record, bool IsDeleted)> EnumerateRecordsFromStreamAsync(
-        int maxRecords, [EnumeratorCancellation] CancellationToken cancellationToken)
-    {
-        if (_stream.CanSeek)
-        {
-            _stream.Position = Header.HeaderLength;
-        }
-
-        var recordBuffer = new byte[Header.RecordLength];
-        var recordMemory = new Memory<byte>(recordBuffer);
-
-        for (var recordsRead = 0; recordsRead < Header.NumberOfRecords && recordsRead < maxRecords; recordsRead++)
-        {
-            await _stream.ReadExactlyAsync(recordMemory, cancellationToken);
-            if (recordBuffer[0] == EofMarker) // EOF marker
-            {
-                break;
-            }
-
-            yield return ParseRecord(recordBuffer);
-        }
-    }
-
-    /// <summary>
-    /// Handles record enumeration using a PipeReader, ideal for non-seekable streams.
-    /// This method processes records from a continuous byte stream.
-    /// </summary>
-    private async IAsyncEnumerable<(DbfRecord Record, bool IsDeleted)> EnumerateRecordsFromPipeAsync(
-        int maxRecords, [EnumeratorCancellation] CancellationToken cancellationToken)
-    {
-        var recordLength = Header.RecordLength;
-        if (recordLength == 0) yield break;
-
-        var recordsRead = 0;
-
-        while (recordsRead < Header.NumberOfRecords && recordsRead < maxRecords)
-        {
-            ReadResult result;
-            try
-            {
-                result = await _pipeReader!.ReadAsync(cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                break;
-            }
-
-            var buffer = result.Buffer;
-
-            if (result.IsCanceled)
-            {
-                break;
-            }
-
-            while (buffer.Length >= recordLength)
-            {
-                if (recordsRead >= maxRecords)
-                {
-                    break;
-                }
-
-                var recordSequence = buffer.Slice(0, recordLength);
-
-                if (recordSequence.FirstSpan[0] == EofMarker)
-                {
-                    _pipeReader.AdvanceTo(recordSequence.Start);
-                    yield break;
-                }
-
-                yield return ParseRecord(in recordSequence);
-                recordsRead++;
-
-                buffer = buffer.Slice(recordLength);
-            }
-
-            _pipeReader.AdvanceTo(buffer.Start, result.Buffer.End);
-
-            if (result.IsCompleted)
-            {
-                break;
-            }
-        }
-    }
-
-    private (DbfRecord Record, bool IsDeleted) ParseRecord(in ReadOnlySequence<byte> recordSequence)
-    {
-        var isDeleted = recordSequence.FirstSpan[0] == '*';
+        var isDeleted = recordBuffer[0] == '*';
         var fieldValues = new object?[Fields.Count];
-        var recordData = recordSequence.Slice(1); // Skip deletion flag
+        var recordData = recordBuffer.AsSpan(1); // Skip deletion flag
 
         // Visual FoxPro uses the Address field for field positioning, but only if addresses are meaningful
         var useAddressBasedParsing = Header.DbfVersion.IsVisualFoxPro() && HasMeaningfulAddresses();
@@ -959,18 +621,17 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
                     continue;
                 }
 
-                var fieldDataSequence = recordData.Slice(fieldOffset, fieldLength);
-
+                var fieldData = recordData.Slice(fieldOffset, fieldLength);
 
                 try
                 {
-                    fieldValues[fieldIndex] = ParseFieldFromSequence(field, fieldDataSequence);
+                    fieldValues[fieldIndex] = FieldParser.Parse(field, fieldData, MemoFile, Encoding, Options);
                 }
                 catch (Exception ex)
                 {
-                    var rawData = fieldDataSequence.ToArray();
+                    var rawData = fieldData.ToArray();
 
-                    if (_options.ValidateFields)
+                    if (Options.ValidateFields)
                     {
                         throw new FieldParseException(field.Name, field.Type.ToString(), rawData,
                             $"Failed to parse field: {ex.Message}");
@@ -983,33 +644,31 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
         else
         {
             // Sequential parsing: fields are tightly packed
-            var dataSequence = recordData;
-
+            var dataSpan = recordData;
 
             for (var fieldIndex = 0; fieldIndex < Fields.Count; fieldIndex++)
             {
                 var field = Fields[fieldIndex];
                 var fieldLength = field.ActualLength;
 
-                if (dataSequence.Length < fieldLength)
+                if (dataSpan.Length < fieldLength)
                 {
                     fieldValues[fieldIndex] =
                         new InvalidValue(Array.Empty<byte>(), field, "Record is shorter than expected.");
                     continue;
                 }
 
-                var fieldDataSequence = dataSequence.Slice(0, fieldLength);
-
+                var fieldData = dataSpan[..fieldLength];
 
                 try
                 {
-                    fieldValues[fieldIndex] = ParseFieldFromSequence(field, fieldDataSequence);
+                    fieldValues[fieldIndex] = FieldParser.Parse(field, fieldData, MemoFile, Encoding, Options);
                 }
                 catch (Exception ex)
                 {
-                    var rawData = fieldDataSequence.ToArray();
+                    var rawData = fieldData.ToArray();
 
-                    if (_options.ValidateFields)
+                    if (Options.ValidateFields)
                     {
                         throw new FieldParseException(field.Name, field.Type.ToString(), rawData,
                             $"Failed to parse field: {ex.Message}");
@@ -1018,7 +677,7 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
                     fieldValues[fieldIndex] = new InvalidValue(rawData, field, ex.Message);
                 }
 
-                dataSequence = dataSequence.Slice(fieldLength);
+                dataSpan = dataSpan[fieldLength..];
             }
         }
 
@@ -1026,7 +685,7 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
         return (record, isDeleted);
     }
 
-    private bool HasMeaningfulAddresses()
+    internal bool HasMeaningfulAddresses()
     {
         // Check if the field addresses form a valid sequential pattern
         // If addresses are 0 or don't form a proper sequence, fall back to sequential parsing
@@ -1065,44 +724,14 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
         return true;
     }
 
-    private object? ParseFieldFromSequence(DbfField field, in ReadOnlySequence<byte> sequence)
-    {
-        if (sequence.IsSingleSegment)
-        {
-            return _fieldParser.Parse(field, sequence.FirstSpan, _memoFile, Encoding, _options);
-        }
 
-        var length = (int)sequence.Length;
-        byte[]? rentedBuffer = null;
-        try
-        {
-            var span = length <= StackAllocThreshold
-                ? stackalloc byte[length]
-                : (rentedBuffer = ArrayPool<byte>.Shared.Rent(length));
-            sequence.CopyTo(span);
-            return _fieldParser.Parse(field, span[..length], _memoFile, Encoding, _options);
-        }
-        finally
-        {
-            if (rentedBuffer != null)
-            {
-                ArrayPool<byte>.Shared.Return(rentedBuffer);
-            }
-        }
-    }
-
-    private (DbfRecord Record, bool IsDeleted) ParseRecord(byte[] recordBuffer)
-    {
-        var sequence = new ReadOnlySequence<byte>(recordBuffer);
-        return ParseRecord(in sequence);
-    }
 
     /// <summary>
     /// Gets the record at the specified index when operating in loaded mode.
     /// </summary>
     /// <param name="index">The zero-based index of the record to retrieve.</param>
     /// <returns>The DbfRecord at the specified index.</returns>
-    /// <exception cref="InvalidOperationException">Thrown when records are not loaded. Call Load() or LoadAsync() first.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when records are not loaded. Call Load() first.</exception>
     public DbfRecord this[int index]
     {
         get
@@ -1110,7 +739,7 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
             if (!IsLoaded)
             {
                 throw new InvalidOperationException(
-                    "Records must be loaded to access by index. Call Load() or LoadAsync() first.");
+                    "Records must be loaded to access by index. Call Load() first.");
             }
 
             if (_loadedRecords == null || index < 0 || index >= _loadedRecords.Length)
@@ -1184,7 +813,7 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
             FieldCount = Fields.Count,
             RecordLength = Header.RecordLength,
             HeaderLength = Header.HeaderLength,
-            HasMemoFile = _memoFile is { IsValid: true },
+            HasMemoFile = MemoFile is { IsValid: true },
             MemoFilePath = MemoFilePath,
             Encoding = Encoding.EncodingName,
             IsLoaded = IsLoaded
@@ -1207,12 +836,12 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
             return;
         }
 
-        _memoFile?.Dispose();
+        MemoFile?.Dispose();
         _reader?.Dispose();
 
         if (_ownsStream)
         {
-            _stream.Dispose();
+            Stream.Dispose();
         }
 
         _loadedRecords = null;
@@ -1220,56 +849,4 @@ public sealed class DbfReader : IDisposable, IAsyncDisposable, IEnumerable<DbfRe
         _disposed = true;
     }
 
-    /// <inheritdoc />
-    public async ValueTask DisposeAsync()
-    {
-        if (_reader != null)
-        {
-            await CastAndDispose(_reader);
-        }
-
-        if (_memoFile != null)
-        {
-            await CastAndDispose(_memoFile);
-        }
-
-        if (_pipeReader != null)
-        {
-            await _pipeReader.CompleteAsync();
-        }
-
-        if (_pipeWriterTask != null)
-        {
-            try
-            {
-                // ensure the background pipe-filling task is complete and observe any exceptions
-                await _pipeWriterTask;
-            }
-            catch
-            {
-                // exception will be propagated to the reader so we can ignore it here
-            }
-
-            await CastAndDispose(_pipeWriterTask);
-        }
-
-        if (_ownsStream)
-        {
-            await _stream.DisposeAsync();
-        }
-
-        return;
-
-        static async ValueTask CastAndDispose(IDisposable resource)
-        {
-            if (resource is IAsyncDisposable resourceAsyncDisposable)
-            {
-                await resourceAsyncDisposable.DisposeAsync();
-            }
-            else
-            {
-                resource.Dispose();
-            }
-        }
-    }
 }

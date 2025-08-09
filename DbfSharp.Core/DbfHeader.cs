@@ -186,64 +186,7 @@ public readonly struct DbfHeader
     public bool IsVisualFoxPro => DbfVersion.IsVisualFoxPro();
 
 
-    /// <summary>
-    /// Asynchronously reads a DBF header from a PipeReader
-    /// </summary>
-    /// <param name="pipeReader">PipeReader positioned at the start of the file</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The parsed DBF header</returns>
-    /// <exception cref="EndOfStreamException">
-    /// Thrown when the PipeReader doesn't contain enough data
-    /// </exception>
-    public static async ValueTask<DbfHeader> ReadAsync(
-        PipeReader pipeReader,
-        CancellationToken cancellationToken = default
-    )
-    {
-        while (true)
-        {
-            var result = await pipeReader.ReadAsync(cancellationToken);
-            var buffer = result.Buffer;
 
-            if (buffer.Length >= Size)
-            {
-                var headerSequence = buffer.Slice(0, Size);
-                var header = FromBytes(headerSequence.IsSingleSegment ? headerSequence.FirstSpan : headerSequence.ToArray());
-                pipeReader.AdvanceTo(headerSequence.End);
-                return header;
-            }
-
-            if (result.IsCompleted)
-            {
-                break;
-            }
-
-            pipeReader.AdvanceTo(buffer.Start, buffer.End);
-        }
-
-        throw new EndOfStreamException($"Expected {Size} bytes for DBF header, but stream ended.");
-    }
-
-    /// <summary>
-    /// Asynchronously reads a DBF header from a stream
-    /// </summary>
-    /// <param name="stream">The stream positioned at the start of the file</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The parsed DBF header</returns>
-    /// <exception cref="ArgumentNullException">Thrown when stream is null</exception>
-    /// <exception cref="EndOfStreamException">Thrown when the stream doesn't contain enough data</exception>
-    public static async ValueTask<DbfHeader> ReadAsync(
-        Stream stream,
-        CancellationToken cancellationToken = default
-    )
-    {
-        ArgumentNullException.ThrowIfNull(stream);
-
-        var headerBytes = new byte[Size];
-        await stream.ReadExactlyAsync(headerBytes, cancellationToken);
-
-        return FromBytes(headerBytes);
-    }
 
     /// <summary>
     /// Reads a DBF header from a binary reader

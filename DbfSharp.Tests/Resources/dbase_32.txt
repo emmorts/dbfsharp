@@ -1,20 +1,19 @@
 Analyzing DBF file: dbase_32.dbf
 
 Header Information
-╭──────────────────┬────────────────────────────────────────────────────┬───────────────────────────╮
-│ Property         │ Value                                              │ Details                   │
-├──────────────────┼────────────────────────────────────────────────────┼───────────────────────────┤
-│ DBF Version      │ Visual FoxPro with field type Varchar or Varbinary │ Byte: 0x32                │
-│ Last Update      │ 2012-01-29                                         │ Raw: 12/01/29             │
-│ Header Length    │ 360 bytes                                          │ Fields area: 327 bytes    │
-│ Record Length    │ 252 bytes                                          │ Including deletion flag   │
-│ Total Records    │ 1                                                  │ Including deleted records │
-│ MDX Index        │ None                                               │ Flag: 0x00                │
-│ Encryption       │ None                                               │ Flag: 0x00                │
-│ Language Driver  │ Windows ANSI                                       │ Code: 0x03                │
-│ File Size        │ 613 bytes                                          │ 613 bytes                 │
-│ Size vs Expected │ +1 byte larger than expected                       │ Expected: 612 bytes       │
-╰──────────────────┴────────────────────────────────────────────────────┴───────────────────────────╯
+╭─────────────────┬────────────────────────────────────────────────────┬───────────────────────────╮
+│ Property        │ Value                                              │ Details                   │
+├─────────────────┼────────────────────────────────────────────────────┼───────────────────────────┤
+│ DBF Version     │ Visual FoxPro with field type Varchar or Varbinary │ Byte: 0x32                │
+│ Last Update     │ 2012-01-29                                         │ Raw: 12/01/29             │
+│ Header Length   │ 360 bytes                                          │ Fields area: 327 bytes    │
+│ Record Length   │ 252 bytes                                          │ Including deletion flag   │
+│ Total Records   │ 1                                                  │ Including deleted records │
+│ MDX Index       │ None                                               │ Flag: 0x00                │
+│ Encryption      │ None                                               │ Flag: 0x00                │
+│ Language Driver │ Windows ANSI                                       │ Code: 0x03                │
+│ File Size       │ 613 bytes                                          │ 613 bytes                 │
+╰─────────────────┴────────────────────────────────────────────────────┴───────────────────────────╯
 
 Field Definitions
 ╭───┬────────────┬─────────────┬────────┬──────────┬───────╮
@@ -41,6 +40,6 @@ Performance Information
 ╰───────────────────────────┴─────────┴────────────────────────────────────╯
 
 Performance Summary for Analyze DBF File:
-  Elapsed Time: 00:00.053
+  Elapsed Time: 00:00.035
   Memory Used: 0.0 MB
-  Peak Working Set: 25.0 MB
+  Peak Working Set: 24.0 MB

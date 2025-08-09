@@ -301,6 +301,74 @@ public readonly struct DbfField
     }
 
     /// <summary>
+    /// Finds the correct field terminator in a byte buffer, handling embedded 0x0D bytes in Visual FoxPro files
+    /// </summary>
+    private static int FindCorrectTerminatorSync(ReadOnlySpan<byte> buffer, DbfVersion dbfVersion)
+    {
+        // For most DBF versions, the first 0x0D is the terminator
+        // For dBASE III+ with memo (0x83) and Visual FoxPro versions, we need to be more careful due to embedded 0x0D bytes
+
+        if (dbfVersion != DbfVersion.DBase3PlusWithMemo && !dbfVersion.IsVisualFoxPro())
+        {
+            return buffer.IndexOf((byte)0x0D);
+        }
+
+        // For dBASE III+ with memo and Visual FoxPro, look for terminators that are at reasonable positions
+        // This avoids false positives from 0x0D bytes within field definition data
+        var searchStart = 0;
+
+        while (searchStart < buffer.Length)
+        {
+            var terminatorIndex = buffer.Slice(searchStart).IndexOf((byte)0x0D);
+            if (terminatorIndex < 0)
+            {
+                break; // No more terminators found
+            }
+
+            var absoluteTerminatorPos = searchStart + terminatorIndex;
+
+            // Check if this terminator is at a field boundary (multiple of 32 bytes) OR
+            // if it's preceded by null bytes (padding), which is common in Visual FoxPro
+            if (absoluteTerminatorPos % Size == 0 || IsValidTerminatorPositionSync(buffer, absoluteTerminatorPos))
+            {
+                return absoluteTerminatorPos;
+            }
+
+            // Move past this terminator and continue searching
+            searchStart = absoluteTerminatorPos + 1;
+        }
+
+        return -1; // No valid terminator found
+    }
+
+    /// <summary>
+    /// Check if a terminator position is valid by examining the preceding bytes for null padding (sync version)
+    /// </summary>
+    private static bool IsValidTerminatorPositionSync(ReadOnlySpan<byte> buffer, int terminatorPosition)
+    {
+        // Look at the 16 bytes before the terminator to see if they're mostly null (padding)
+        if (terminatorPosition < 16)
+        {
+            return false;
+        }
+
+        var precedingBytes = buffer.Slice(terminatorPosition - 16, 16);
+        var nullCount = 0;
+
+        // Check if the preceding bytes are mostly null (padding)
+        foreach (var b in precedingBytes)
+        {
+            if (b == 0)
+            {
+                nullCount++;
+            }
+        }
+
+        // If more than 75% of the preceding bytes are null, this is likely valid padding before a terminator
+        return nullCount >= 12; // 12 out of 16 bytes = 75%
+    }
+
+    /// <summary>
     /// Check if a terminator position is valid by examining the preceding bytes for null padding
     /// </summary>
     private static bool IsValidTerminatorPosition(ReadOnlySequence<byte> buffer, SequencePosition terminatorPosition)
@@ -433,16 +501,8 @@ public readonly struct DbfField
         var buffer = reader.ReadBytes(bufferSize);
         reader.BaseStream.Position = startPosition; // Reset position
 
-        // Find terminator in buffer (equivalent to async buffer.PositionOf((byte)0x0D))
-        var terminatorPos = -1;
-        for (var i = 0; i < buffer.Length; i++)
-        {
-            if (buffer[i] == 0x0D)
-            {
-                terminatorPos = i;
-                break;
-            }
-        }
+        // Find terminator in buffer using the same logic as async version
+        var terminatorPos = FindCorrectTerminatorSync(buffer, dbfVersion);
 
         // Process only data up to terminator (equivalent to async buffer.Slice(0, terminator.Value))
         var dataLength = terminatorPos >= 0 ? terminatorPos : buffer.Length;

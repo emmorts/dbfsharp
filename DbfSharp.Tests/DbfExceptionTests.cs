@@ -341,7 +341,7 @@ public class DbfExceptionTests
     }
 
     [Fact]
-    public async Task UnsupportedDbfVersion_CreateAsync_ShouldThrowUnsupportedDbfVersionException()
+    public void UnsupportedDbfVersion_Create_ShouldThrowUnsupportedDbfVersionException()
     {
         const byte unsupportedVersionByte = 0x99;
 
@@ -356,7 +356,7 @@ public class DbfExceptionTests
 
         using var stream = new MemoryStream(fakeDbfHeader);
 
-        var exception = await Assert.ThrowsAsync<UnsupportedDbfVersionException>(() => DbfReader.CreateAsync(stream));
+        var exception = Assert.Throws<UnsupportedDbfVersionException>(() => DbfReader.Create(stream));
 
         Assert.Equal(unsupportedVersionByte, exception.VersionByte);
         Assert.Contains($"0x{unsupportedVersionByte:X2}", exception.Message);

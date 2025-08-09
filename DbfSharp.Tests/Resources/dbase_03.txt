@@ -2,20 +2,19 @@ Analyzing DBF file: dbase_03.dbf
 
 Warning: Duplicate field name detected: 'Point_ID'. Only the first occurrence will be accessible via FindField().
 Header Information
-╭──────────────────┬────────────────────────────────────┬───────────────────────────╮
-│ Property         │ Value                              │ Details                   │
-├──────────────────┼────────────────────────────────────┼───────────────────────────┤
-│ DBF Version      │ FoxBASE+/dBase III plus, no memory │ Byte: 0x03                │
-│ Last Update      │ 2005-07-13                         │ Raw: 05/07/13             │
-│ Header Length    │ 1025 bytes                         │ Fields area: 992 bytes    │
-│ Record Length    │ 590 bytes                          │ Including deletion flag   │
-│ Total Records    │ 14                                 │ Including deleted records │
-│ MDX Index        │ None                               │ Flag: 0x00                │
-│ Encryption       │ None                               │ Flag: 0x00                │
-│ Language Driver  │ plain ol' ascii                    │ Code: 0x00                │
-│ File Size        │ 9.07 KB                            │ 9,286 bytes               │
-│ Size vs Expected │ +1 byte larger than expected       │ Expected: 9.07 KB         │
-╰──────────────────┴────────────────────────────────────┴───────────────────────────╯
+╭─────────────────┬────────────────────────────────────┬───────────────────────────╮
+│ Property        │ Value                              │ Details                   │
+├─────────────────┼────────────────────────────────────┼───────────────────────────┤
+│ DBF Version     │ FoxBASE+/dBase III plus, no memory │ Byte: 0x03                │
+│ Last Update     │ 2005-07-13                         │ Raw: 05/07/13             │
+│ Header Length   │ 1025 bytes                         │ Fields area: 992 bytes    │
+│ Record Length   │ 590 bytes                          │ Including deletion flag   │
+│ Total Records   │ 14                                 │ Including deleted records │
+│ MDX Index       │ None                               │ Flag: 0x00                │
+│ Encryption      │ None                               │ Flag: 0x00                │
+│ Language Driver │ plain ol' ascii                    │ Code: 0x00                │
+│ File Size       │ 9.07 KB                            │ 9,286 bytes               │
+╰─────────────────┴────────────────────────────────────┴───────────────────────────╯
 
 Field Definitions
 ╭────┬────────────┬───────────────┬────────┬──────────┬───────╮
@@ -73,6 +72,6 @@ Performance Information
 ╰───────────────────────────┴──────────┴────────────────────────────────────╯
 
 Performance Summary for Analyze DBF File:
-  Elapsed Time: 00:00.056
+  Elapsed Time: 00:00.037
   Memory Used: 0.0 MB
-  Peak Working Set: 26.0 MB
+  Peak Working Set: 24.0 MB

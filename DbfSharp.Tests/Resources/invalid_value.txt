@@ -2,6 +2,6 @@ Analyzing DBF file: invalid_value.dbf
 
 
 Performance Summary for Analyze DBF File:
-  Elapsed Time: 00:00.063
+  Elapsed Time: 00:00.033
   Memory Used: 0.0 MB
-  Peak Working Set: 27.0 MB
+  Peak Working Set: 26.0 MB

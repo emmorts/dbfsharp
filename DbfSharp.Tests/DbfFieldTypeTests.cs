@@ -322,10 +322,10 @@ public class DbfFieldTypeTests
     }
 
     [Fact]
-    public async Task DBase30_ShouldHaveExpectedFieldStructure()
+    public void DBase30_ShouldHaveExpectedFieldStructure()
     {
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.DBase30);
-        await using var reader = await DbfReader.CreateAsync(filePath);
+        using var reader = DbfReader.Create(filePath);
 
         Assert.Equal(145, reader.Fields.Count);
 
