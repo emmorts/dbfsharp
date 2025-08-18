@@ -272,7 +272,10 @@ public class DbfMemoFileTests
     [InlineData(TestHelper.TestFiles.DBase83, DbfVersion.DBase3PlusWithMemo)]
     [InlineData(TestHelper.TestFiles.DBase8B, DbfVersion.DBase4WithMemo)]
     [InlineData(TestHelper.TestFiles.DBaseF5, DbfVersion.FoxPro2WithMemo)]
-    public void MemoFile_VersionSpecific_ShouldDetectCorrectly(string fileName, DbfVersion expectedVersion)
+    public void MemoFile_VersionSpecific_ShouldDetectCorrectly(
+        string fileName,
+        DbfVersion expectedVersion
+    )
     {
         if (!TestHelper.TestFileExists(fileName))
         {
@@ -304,10 +307,7 @@ public class DbfMemoFileTests
         }
 
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.DBase83);
-        var options = new DbfReaderOptions
-        {
-            Encoding = System.Text.Encoding.UTF8
-        };
+        var options = new DbfReaderOptions { Encoding = System.Text.Encoding.UTF8 };
 
         using var reader = DbfReader.Create(filePath, options);
         var memoFields = reader.Fields.Where(f => f.Type == FieldType.Memo).ToList();

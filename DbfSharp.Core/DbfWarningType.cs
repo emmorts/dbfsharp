@@ -18,5 +18,5 @@ public enum DbfWarningType
     /// <summary>
     /// File structure anomalies
     /// </summary>
-    StructuralIssue
+    StructuralIssue,
 }

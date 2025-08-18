@@ -130,7 +130,7 @@ public static class FieldTypeExtensions
             FieldType.Picture => typeof(byte[]),
             FieldType.Timestamp => typeof(DateTime?),
             FieldType.Currency => typeof(decimal),
-            FieldType.Binary => typeof(object), // Can be double or byte[] depending on version
+            FieldType.Binary => typeof(object), // can be double or byte[] depending on version
             FieldType.Varchar => typeof(string),
             FieldType.Autoincrement => typeof(int),
             FieldType.TimestampAlternate => typeof(DateTime?),

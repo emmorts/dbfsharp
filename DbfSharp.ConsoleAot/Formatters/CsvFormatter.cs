@@ -124,8 +124,8 @@ public sealed class CsvFormatter : IDbfFormatter
             double doubleValue => FormatFloatingPoint(doubleValue),
             float floatValue => FormatFloatingPoint(floatValue),
             bool boolValue => boolValue ? "True" : "False",
-            InvalidValue => "<INVALID>", // Clear indication of data issues
-            byte[] byteArray => $"<{byteArray.Length} bytes>", // Human-readable representation
+            InvalidValue => "<INVALID>",
+            byte[] byteArray => $"<{byteArray.Length} bytes>",
             _ => value.ToString() ?? string.Empty,
         };
     }

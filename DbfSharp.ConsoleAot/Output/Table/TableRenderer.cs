@@ -22,7 +22,7 @@ public sealed class TableRenderer
             throw new ArgumentException("Headers and column widths must have the same length");
         }
 
-        _totalWidth = columnWidths.Sum() + (columnWidths.Length * 3) + 1; // +3 for padding and borders, +1 for final border
+        _totalWidth = columnWidths.Sum() + columnWidths.Length * 3 + 1; // +3 for padding and borders, +1 for final border
     }
 
     /// <summary>
@@ -54,7 +54,13 @@ public sealed class TableRenderer
         }
 
         // Bottom border
-        AppendBorderLine(output, _style.BottomLeft, _style.BottomT, _style.BottomRight, _style.Horizontal);
+        AppendBorderLine(
+            output,
+            _style.BottomLeft,
+            _style.BottomT,
+            _style.BottomRight,
+            _style.Horizontal
+        );
     }
 
     /// <summary>
@@ -85,7 +91,13 @@ public sealed class TableRenderer
     /// <summary>
     /// Appends a border line to the output with optimal string building
     /// </summary>
-    private void AppendBorderLine(StringBuilder output, char left, char mid, char right, char horizontal)
+    private void AppendBorderLine(
+        StringBuilder output,
+        char left,
+        char mid,
+        char right,
+        char horizontal
+    )
     {
         output.Append(left);
 

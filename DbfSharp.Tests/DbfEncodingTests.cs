@@ -19,7 +19,7 @@ public class DbfEncodingTests
         using var reader = DbfReader.Create(filePath, options);
 
         Assert.NotNull(reader.Encoding);
-        
+
         var records = reader.Records.Take(3).ToList();
         foreach (var record in records)
         {
@@ -55,7 +55,7 @@ public class DbfEncodingTests
         using var reader = DbfReader.Create(filePath, options);
 
         Assert.Equal(Encoding.UTF8, reader.Encoding);
-        
+
         var records = reader.Records.Take(5).ToList();
         foreach (var record in records)
         {
@@ -92,13 +92,14 @@ public class DbfEncodingTests
                 {
                     if (stringValue.Any(c => c >= 0x0400 && c <= 0x04FF))
                     {
-                        Assert.False(stringValue.Contains('\uFFFD'), 
-                            "Cyrillic text should not contain replacement characters");
+                        Assert.False(
+                            stringValue.Contains('\uFFFD'),
+                            "Cyrillic text should not contain replacement characters"
+                        );
                     }
                 }
             }
         }
-
     }
 
     [Theory]
@@ -114,13 +115,19 @@ public class DbfEncodingTests
         using var reader = DbfReader.Create(filePath, options);
 
         Assert.Equal(encoding, reader.Encoding);
-        
+
         var record = reader.Records.First();
         for (var i = 0; i < record.FieldCount; i++)
         {
             var value = record[i];
-            Assert.True(value == null || value is string || value.GetType().IsPrimitive || 
-                       value is DateTime || value is decimal || value is byte[]);
+            Assert.True(
+                value == null
+                    || value is string
+                    || value.GetType().IsPrimitive
+                    || value is DateTime
+                    || value is decimal
+                    || value is byte[]
+            );
         }
     }
 
@@ -128,10 +135,10 @@ public class DbfEncodingTests
     public void Encoding_WithDecoderFallback_ShouldHandleInvalidCharacters()
     {
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.People);
-        var options = new DbfReaderOptions 
-        { 
+        var options = new DbfReaderOptions
+        {
             Encoding = Encoding.UTF8,
-            CharacterDecodeFallback = new DecoderReplacementFallback("?")
+            CharacterDecodeFallback = new DecoderReplacementFallback("?"),
         };
 
         using var reader = DbfReader.Create(filePath, options);
@@ -157,10 +164,14 @@ public class DbfEncodingTests
         using var reader = DbfReader.Create(filePath);
 
         var stats = reader.GetStatistics();
-        
+
         Assert.NotNull(stats.Encoding);
         Assert.False(string.IsNullOrEmpty(stats.Encoding));
-        Assert.Contains(reader.Encoding.EncodingName, stats.Encoding, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(
+            reader.Encoding.EncodingName,
+            stats.Encoding,
+            StringComparison.OrdinalIgnoreCase
+        );
     }
 
     [Fact]
@@ -170,7 +181,7 @@ public class DbfEncodingTests
         {
             TestHelper.TestFiles.People,
             TestHelper.TestFiles.DBase03,
-            TestHelper.TestFiles.DBase30
+            TestHelper.TestFiles.DBase30,
         };
 
         var encodings = new List<Encoding>();
@@ -184,7 +195,7 @@ public class DbfEncodingTests
 
             var filePath = TestHelper.GetTestFilePath(fileName);
             using var reader = DbfReader.Create(filePath);
-            
+
             encodings.Add(reader.Encoding);
             Assert.NotNull(reader.Encoding);
         }
@@ -210,8 +221,8 @@ public class DbfEncodingTests
         var recordTrimmed = readerWithTrim.Records.First();
         var recordUntrimmed = readerWithoutTrim.Records.First();
 
-        var stringFields = readerWithTrim.Fields
-            .Where(f => f.Type is FieldType.Character or FieldType.Varchar)
+        var stringFields = readerWithTrim
+            .Fields.Where(f => f.Type is FieldType.Character or FieldType.Varchar)
             .ToList();
 
         foreach (var field in stringFields)
@@ -245,7 +256,7 @@ public class DbfEncodingTests
         for (var i = 0; i < lowerCaseNames.Count; i++)
         {
             Assert.Equal(lowerCaseNames[i], originalCaseNames[i].ToLowerInvariant());
-            
+
             if (originalCaseNames[i] != originalCaseNames[i].ToLowerInvariant())
             {
                 Assert.NotEqual(lowerCaseNames[i], originalCaseNames[i]);
@@ -276,7 +287,7 @@ public class DbfEncodingTests
             Assert.True(record1.HasField(lowerFieldName));
 
             Assert.True(record2.HasField(firstFieldName));
-            
+
             if (firstFieldName != upperFieldName)
             {
                 Assert.False(record2.HasField(upperFieldName));
@@ -301,7 +312,7 @@ public class DbfEncodingTests
         var options = new DbfReaderOptions { Encoding = Encoding.UTF8 };
 
         using var reader = DbfReader.Create(filePath, options);
-        
+
         var memoFields = reader.Fields.Where(f => f.Type == FieldType.Memo).ToList();
         if (memoFields.Count == 0)
         {
@@ -332,7 +343,7 @@ public class DbfEncodingTests
 
         var readerString = reader.ToString();
         Assert.NotNull(readerString);
-        
+
         var optionsString = options.ToString();
         Assert.NotNull(optionsString);
         Assert.Contains("ASCII", optionsString);
@@ -355,7 +366,7 @@ public class DbfEncodingTests
         using var reader = DbfReader.Create(filePath, options);
 
         Assert.NotNull(reader.Encoding);
-        
+
         var stats = reader.GetStatistics();
         Assert.NotNull(stats.Encoding);
     }
@@ -373,16 +384,15 @@ public class DbfEncodingTests
         using var reader = DbfReader.Create(filePath, options);
 
         Assert.NotNull(reader.Encoding);
-        
+
         reader.Load();
         Assert.Equal(4, reader.Count);
 
         var firstRecord = reader[0];
         var nameValue = firstRecord.GetString("NAME");
-        
     }
 
-    [Fact] 
+    [Fact]
     public void DifferentVersions_ShouldHaveAppropriateEncodings()
     {
         var testCases = new[]
@@ -390,7 +400,7 @@ public class DbfEncodingTests
             (TestHelper.TestFiles.People, DbfVersion.DBase3Plus),
             (TestHelper.TestFiles.DBase03, DbfVersion.DBase3Plus),
             (TestHelper.TestFiles.DBase30, DbfVersion.VisualFoxPro),
-            (TestHelper.TestFiles.Cp1251, DbfVersion.VisualFoxPro)
+            (TestHelper.TestFiles.Cp1251, DbfVersion.VisualFoxPro),
         };
 
         foreach (var (fileName, expectedVersion) in testCases)

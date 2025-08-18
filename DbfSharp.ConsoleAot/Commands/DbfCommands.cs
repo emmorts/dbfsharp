@@ -11,7 +11,7 @@ public class DbfCommands
     /// <summary>
     /// Reads and displays DBF file contents.
     /// </summary>
-    /// <param name="filePath">Path to the DBF file to read, S3 URI (s3://bucket/key), or omit to read from stdin.</param>
+    /// <param name="filePath">Path to the DBF file to read or omit to read from stdin.</param>
     /// <param name="format">-f, The output format (table, csv, tsv, json).</param>
     /// <param name="output">-o, The output file path (default: stdout).</param>
     /// <param name="limit">-l, Maximum number of records to display.</param>
@@ -40,12 +40,25 @@ public class DbfCommands
         bool ignoreCase = true,
         bool trimStrings = true,
         bool ignoreMissingMemo = true,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         return ReadCommand.ExecuteAsync(
-            filePath, format, output, limit, skip, showDeleted, fields,
-            verbose, quiet, encoding, ignoreCase, trimStrings, ignoreMissingMemo,
-            cancellationToken);
+            filePath,
+            format,
+            output,
+            limit,
+            skip,
+            showDeleted,
+            fields,
+            verbose,
+            quiet,
+            encoding,
+            ignoreCase,
+            trimStrings,
+            ignoreMissingMemo,
+            cancellationToken
+        );
     }
 
     /// <summary>
@@ -72,9 +85,20 @@ public class DbfCommands
         bool quiet = false,
         string? encoding = null,
         bool ignoreMissingMemo = true,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         return InfoCommand.ExecuteAsync(
-            filePath, fields, header, stats, memo, verbose, quiet, encoding, ignoreMissingMemo, cancellationToken);
+            filePath,
+            fields,
+            header,
+            stats,
+            memo,
+            verbose,
+            quiet,
+            encoding,
+            ignoreMissingMemo,
+            cancellationToken
+        );
     }
 }

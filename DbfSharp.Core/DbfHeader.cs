@@ -1,5 +1,3 @@
-using System.Buffers;
-using System.IO.Pipelines;
 using System.Runtime.InteropServices;
 using System.Text;
 using DbfSharp.Core.Enums;
@@ -9,7 +7,6 @@ namespace DbfSharp.Core;
 
 /// <summary>
 /// Represents the header structure of a DBF file
-/// Based on the DBFHeader structure from the Python dbfread implementation
 /// </summary>
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public readonly struct DbfHeader
@@ -153,13 +150,12 @@ public readonly struct DbfHeader
         {
             try
             {
-                // Handle 2-digit year conversion
                 var fullYear = Year < 80 ? 2000 + Year : 1900 + Year;
+
                 return new DateTime(fullYear, Month, Day);
             }
             catch (ArgumentOutOfRangeException)
             {
-                // Invalid date (e.g., all zeros)
                 return null;
             }
         }
@@ -184,66 +180,6 @@ public readonly struct DbfHeader
     /// Indicates whether this is a Visual FoxPro format
     /// </summary>
     public bool IsVisualFoxPro => DbfVersion.IsVisualFoxPro();
-
-
-    /// <summary>
-    /// Asynchronously reads a DBF header from a PipeReader
-    /// </summary>
-    /// <param name="pipeReader">PipeReader positioned at the start of the file</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The parsed DBF header</returns>
-    /// <exception cref="EndOfStreamException">
-    /// Thrown when the PipeReader doesn't contain enough data
-    /// </exception>
-    public static async ValueTask<DbfHeader> ReadAsync(
-        PipeReader pipeReader,
-        CancellationToken cancellationToken = default
-    )
-    {
-        while (true)
-        {
-            var result = await pipeReader.ReadAsync(cancellationToken);
-            var buffer = result.Buffer;
-
-            if (buffer.Length >= Size)
-            {
-                var headerSequence = buffer.Slice(0, Size);
-                var header = FromBytes(headerSequence.IsSingleSegment ? headerSequence.FirstSpan : headerSequence.ToArray());
-                pipeReader.AdvanceTo(headerSequence.End);
-                return header;
-            }
-
-            if (result.IsCompleted)
-            {
-                break;
-            }
-
-            pipeReader.AdvanceTo(buffer.Start, buffer.End);
-        }
-
-        throw new EndOfStreamException($"Expected {Size} bytes for DBF header, but stream ended.");
-    }
-
-    /// <summary>
-    /// Asynchronously reads a DBF header from a stream
-    /// </summary>
-    /// <param name="stream">The stream positioned at the start of the file</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The parsed DBF header</returns>
-    /// <exception cref="ArgumentNullException">Thrown when stream is null</exception>
-    /// <exception cref="EndOfStreamException">Thrown when the stream doesn't contain enough data</exception>
-    public static async ValueTask<DbfHeader> ReadAsync(
-        Stream stream,
-        CancellationToken cancellationToken = default
-    )
-    {
-        ArgumentNullException.ThrowIfNull(stream);
-
-        var headerBytes = new byte[Size];
-        await stream.ReadExactlyAsync(headerBytes, cancellationToken);
-
-        return FromBytes(headerBytes);
-    }
 
     /// <summary>
     /// Reads a DBF header from a binary reader
@@ -285,7 +221,7 @@ public readonly struct DbfHeader
             throw new UnsupportedDbfVersionException(dbVersionByte);
         }
 
-        // Handle different header formats based on DBF version
+        // handle different header formats based on DBF version
         uint numberOfRecords;
         ushort headerLength;
         ushort recordLength;
@@ -305,24 +241,19 @@ public readonly struct DbfHeader
             numberOfRecords = bytes[1]; // Single byte record count
             recordLength = BitConverter.ToUInt16(bytes.Slice(6, 2)); // Record length at bytes 6-7
 
-            // For dBASE II, there's no explicit header length field
-            // Header length = 8 bytes (mini header) + (field count * 16 bytes per field)
-            // We'll calculate this after reading the fields, so use a placeholder
+            // for dBASE II, there's no explicit header length field
+            // header length = 8 bytes (mini header) + (field count * 16 bytes per field)
+            // we'll calculate this after reading the fields, so use a placeholder
             headerLength = 8; // Minimal header, will be recalculated
 
-            // Validate the values make sense
+            // validate the values make sense
             if (numberOfRecords is 0 or > 255)
             {
-                // Try alternative interpretation if the simple one doesn't work
+                // alternative interpretation if the simple one doesn't work
                 numberOfRecords = BitConverter.ToUInt16(bytes.Slice(1, 2));
             }
 
-            if (recordLength is 0 or > 4000)
-            {
-                recordLength = 127; // Known value from test case
-            }
-
-            // For dBASE II, the date fields are not present in the header
+            // for dBASE II, the date fields are not present in the header
             year = 0;
             month = 0;
             day = 0;
@@ -338,16 +269,14 @@ public readonly struct DbfHeader
             day = bytes[3];
         }
 
-        // Additional validation for all formats
         if (headerLength == 0)
         {
-            // Calculate minimum header length
-            headerLength = (ushort)(Size + 1); // Header + terminator
+            headerLength = Size + 1; // header + terminator
         }
 
         if (recordLength == 0)
         {
-            recordLength = 1; // Will be validated/recalculated later
+            recordLength = 1; // will be validated/recalculated later
         }
 
         return new DbfHeader(

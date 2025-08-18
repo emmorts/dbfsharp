@@ -1,4 +1,3 @@
-using System.Text;
 using ConsoleAppFramework;
 using DbfSharp.ConsoleAot.Commands.Configuration;
 using DbfSharp.ConsoleAot.Diagnostics;
@@ -40,7 +39,8 @@ public static class InfoCommand
         bool quiet = false,
         string? encoding = null,
         bool ignoreMissingMemo = true,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var settings = new InfoConfiguration
         {
@@ -52,7 +52,7 @@ public static class InfoCommand
             Verbose = verbose,
             Quiet = quiet,
             Encoding = encoding,
-            IgnoreMissingMemo = ignoreMissingMemo
+            IgnoreMissingMemo = ignoreMissingMemo,
         };
 
         var validationResult = ArgumentValidator.ValidateInfoArguments(settings.FilePath);
@@ -84,15 +84,12 @@ public static class InfoCommand
             }
 
             var readerOptions = CreateDbfReaderOptions(settings);
-            var tableName = inputSource.IsStdin ? "stdin" : Path.GetFileNameWithoutExtension(inputSource.OriginalPath);
 
-            await using var reader =
-                await DbfReader.CreateAsync(inputSource.Stream, readerOptions, cancellationToken);
+            using var reader = DbfReader.Create(inputSource.Stream, readerOptions);
 
-            // Subscribe to warnings if not in quiet mode
             if (!settings.Quiet)
             {
-                reader.Warning += (sender, e) => Console.WriteLine($"Warning: {e.Message}");
+                reader.Warning += (_, e) => Console.WriteLine($"Warning: {e.Message}");
             }
 
             var dbfStats = reader.GetStatistics();
@@ -112,7 +109,7 @@ public static class InfoCommand
 
             if (settings is { ShowStats: true, Verbose: true })
             {
-                await DisplaySampleDataAsync(reader, cancellationToken);
+                DisplaySampleData(reader, cancellationToken);
             }
 
             if (settings.ShowMemo && dbfStats.HasMemoFile)
@@ -129,7 +126,11 @@ public static class InfoCommand
         }
         catch (Exception ex)
         {
-            return await ExceptionMapper.HandleExceptionAsync(ex, "analyzing DBF file", settings.Verbose);
+            return await ExceptionMapper.HandleExceptionAsync(
+                ex,
+                "analyzing DBF file",
+                settings.Verbose
+            );
         }
     }
 
@@ -138,7 +139,7 @@ public static class InfoCommand
         var options = new DbfReaderOptions
         {
             IgnoreMissingMemoFile = settings.IgnoreMissingMemo,
-            ValidateFields = true
+            ValidateFields = true,
         };
 
         var validationResult = ArgumentValidator.ValidateEncoding(settings.Encoding);
@@ -164,29 +165,66 @@ public static class InfoCommand
         return options;
     }
 
-    private static void DisplayHeaderInformation(DbfReader reader, long? actualFileSize, long expectedFileSize)
+    private static void DisplayHeaderInformation(
+        DbfReader reader,
+        long? actualFileSize,
+        long expectedFileSize
+    )
     {
         var header = reader.Header;
         var table = new ConsoleTableWriter("Header Information", "Property", "Value", "Details");
-        table.AddRow("DBF Version", header.DbfVersion.GetDescription(), $"Byte: 0x{header.DbVersionByte:X2}");
-        table.AddRow("Last Update", header.LastUpdateDate?.ToString("yyyy-MM-dd") ?? "Unknown",
-            $"Raw: {header.Year:00}/{header.Month:00}/{header.Day:00}");
-        table.AddRow("Header Length", $"{header.HeaderLength} bytes",
-            $"Fields area: {header.HeaderLength - DbfHeader.Size - 1} bytes");
+        table.AddRow(
+            "DBF Version",
+            header.DbfVersion.GetDescription(),
+            $"Byte: 0x{header.DbVersionByte:X2}"
+        );
+        table.AddRow(
+            "Last Update",
+            header.LastUpdateDate?.ToString("yyyy-MM-dd") ?? "Unknown",
+            $"Raw: {header.Year:00}/{header.Month:00}/{header.Day:00}"
+        );
+        table.AddRow(
+            "Header Length",
+            $"{header.HeaderLength} bytes",
+            $"Fields area: {header.HeaderLength - DbfHeader.Size - 1} bytes"
+        );
         table.AddRow("Record Length", $"{header.RecordLength} bytes", "Including deletion flag");
-        table.AddRow("Total Records", header.NumberOfRecords.ToString("N0"), "Including deleted records");
-        table.AddRow("MDX Index", header.MdxFlag != 0 ? "Present" : "None", $"Flag: 0x{header.MdxFlag:X2}");
-        table.AddRow("Encryption", header.EncryptionFlag != 0 ? "Encrypted" : "None",
-            $"Flag: 0x{header.EncryptionFlag:X2}");
-        table.AddRow("Language Driver", header.EncodingDescription, $"Code: 0x{header.LanguageDriver:X2}");
+        table.AddRow(
+            "Total Records",
+            header.NumberOfRecords.ToString("N0"),
+            "Including deleted records"
+        );
+        table.AddRow(
+            "MDX Index",
+            header.MdxFlag != 0 ? "Present" : "None",
+            $"Flag: 0x{header.MdxFlag:X2}"
+        );
+        table.AddRow(
+            "Encryption",
+            header.EncryptionFlag != 0 ? "Encrypted" : "None",
+            $"Flag: 0x{header.EncryptionFlag:X2}"
+        );
+        table.AddRow(
+            "Language Driver",
+            header.EncodingDescription,
+            $"Code: 0x{header.LanguageDriver:X2}"
+        );
 
         if (actualFileSize.HasValue)
         {
-            table.AddRow("File Size", FileSize.Format(actualFileSize.Value), $"{actualFileSize.Value:N0} bytes");
+            table.AddRow(
+                "File Size",
+                FileSize.Format(actualFileSize.Value),
+                $"{actualFileSize.Value:N0} bytes"
+            );
         }
         else
         {
-            table.AddRow("Expected File Size", FileSize.Format(expectedFileSize), $"{expectedFileSize:N0} bytes");
+            table.AddRow(
+                "Expected File Size",
+                FileSize.Format(expectedFileSize),
+                $"{expectedFileSize:N0} bytes"
+            );
         }
 
         table.Print(TableBorderStyles.Rounded);
@@ -208,7 +246,9 @@ public static class InfoCommand
                 field.Name,
                 $"{field.Type} ({(char)field.Type})",
                 field.ActualLength.ToString(),
-                field.Type is FieldType.Numeric or FieldType.Float ? field.ActualDecimalCount.ToString() : "-"
+                field.Type is FieldType.Numeric or FieldType.Float
+                    ? field.ActualDecimalCount.ToString()
+                    : "-",
             };
 
             if (verbose)
@@ -239,14 +279,13 @@ public static class InfoCommand
         table.Print(TableBorderStyles.Rounded);
     }
 
-
-    private static async Task DisplaySampleDataAsync(DbfReader reader, CancellationToken cancellationToken)
+    private static void DisplaySampleData(DbfReader reader, CancellationToken cancellationToken)
     {
         try
         {
             var sampleRecords = new List<DbfRecord>();
             var count = 0;
-            await foreach (var record in reader.ReadRecordsAsync(cancellationToken))
+            foreach (var record in reader.Records)
             {
                 if (count >= 3)
                 {
@@ -270,7 +309,10 @@ public static class InfoCommand
                 tableHeaders.Add("...");
             }
 
-            var table = new ConsoleTableWriter("\nSample Data (first 3 records)", tableHeaders.ToArray());
+            var table = new ConsoleTableWriter(
+                "\nSample Data (first 3 records)",
+                tableHeaders.ToArray()
+            );
 
             foreach (var record in sampleRecords)
             {
@@ -308,18 +350,38 @@ public static class InfoCommand
 
     private static void DisplayPerformanceInformation(long actualFileSize, long expectedFileSize)
     {
-        var table = new ConsoleTableWriter("\nPerformance Information", "Metric", "Value", "Details");
+        var table = new ConsoleTableWriter(
+            "\nPerformance Information",
+            "Metric",
+            "Value",
+            "Details"
+        );
 
         var memoryEstimate = FileSize.EstimateMemoryUsage(actualFileSize);
-        table.AddRow("Estimated Memory Usage", FileSize.Format(memoryEstimate), "Approximate processing requirement");
+        table.AddRow(
+            "Estimated Memory Usage",
+            FileSize.Format(memoryEstimate),
+            "Approximate processing requirement"
+        );
 
-        var percentageDiff = FileSize.CalculatePercentageDifference(actualFileSize, expectedFileSize);
-        table.AddRow("Size Difference", $"{percentageDiff:F1}%",
-            percentageDiff == 0 ? "Perfect match" : "May indicate corruption");
+        var percentageDiff = FileSize.CalculatePercentageDifference(
+            actualFileSize,
+            expectedFileSize
+        );
+        table.AddRow(
+            "Size Difference",
+            $"{percentageDiff:F1}%",
+            percentageDiff == 0 ? "Perfect match" : "May indicate corruption"
+        );
 
         var isWithinBounds = FileSize.IsWithinProcessingBounds(actualFileSize);
-        table.AddRow("Processing Recommendation", isWithinBounds ? "Optimal" : "Large file",
-            isWithinBounds ? "Good performance expected" : "Consider using --limit for faster processing");
+        table.AddRow(
+            "Processing Recommendation",
+            isWithinBounds ? "Optimal" : "Large file",
+            isWithinBounds
+                ? "Good performance expected"
+                : "Consider using --limit for faster processing"
+        );
 
         table.Print(TableBorderStyles.Rounded);
 
@@ -342,7 +404,7 @@ public static class InfoCommand
             bool b => b ? "True" : "False",
             Core.Parsing.InvalidValue => "<invalid>",
             byte[] bytes => $"<{bytes.Length} bytes>",
-            _ => value.ToString() ?? "NULL"
+            _ => value.ToString() ?? "NULL",
         };
     }
 }

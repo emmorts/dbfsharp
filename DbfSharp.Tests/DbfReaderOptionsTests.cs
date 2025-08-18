@@ -1,6 +1,5 @@
 using System.Text;
 using DbfSharp.Core;
-using Xunit;
 
 namespace DbfSharp.Tests;
 
@@ -25,7 +24,7 @@ public class DbfReaderOptionsTests
         Assert.True(options.SkipDeletedRecords);
         Assert.Null(options.MaxRecords);
         Assert.False(options.UseMemoryMapping);
-        Assert.Equal(65536, options.BufferSize);
+        Assert.Equal(16384, options.BufferSize);
     }
 
     [Fact]
@@ -124,7 +123,6 @@ public class DbfReaderOptionsTests
                 break;
             }
         }
-
     }
 
     [Fact]
@@ -220,11 +218,7 @@ public class DbfReaderOptionsTests
     [Fact]
     public void ToString_ShouldReturnMeaningfulDescription()
     {
-        var options = new DbfReaderOptions
-        {
-            LowerCaseFieldNames = true,
-            MaxRecords = 1000,
-        };
+        var options = new DbfReaderOptions { LowerCaseFieldNames = true, MaxRecords = 1000 };
 
         var result = options.ToString();
 

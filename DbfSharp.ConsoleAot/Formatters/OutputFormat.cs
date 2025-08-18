@@ -8,5 +8,5 @@ public enum OutputFormat
     Table,
     Csv,
     Tsv,
-    Json
+    Json,
 }

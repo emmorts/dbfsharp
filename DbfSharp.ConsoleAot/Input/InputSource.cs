@@ -6,7 +6,8 @@ namespace DbfSharp.ConsoleAot.Input;
 public abstract class InputSource(Stream stream, string originalPath, bool isStdin) : IDisposable
 {
     public Stream Stream { get; } = stream ?? throw new ArgumentNullException(nameof(stream));
-    public string OriginalPath { get; } = originalPath ?? throw new ArgumentNullException(nameof(originalPath));
+    public string OriginalPath { get; } =
+        originalPath ?? throw new ArgumentNullException(nameof(originalPath));
     public bool IsStdin { get; } = isStdin;
 
     /// <summary>
@@ -46,7 +47,8 @@ public abstract class InputSource(Stream stream, string originalPath, bool isStd
 /// <summary>
 /// Input source backed by a regular file on disk
 /// </summary>
-public sealed class FileInputSource(Stream stream, string filePath) : InputSource(stream, filePath, false)
+public sealed class FileInputSource(Stream stream, string filePath)
+    : InputSource(stream, filePath, false)
 {
     public override long? GetFileSize()
     {
@@ -93,10 +95,14 @@ public sealed class MemoryInputSource(MemoryStream stream, string originalPath)
 /// <summary>
 /// Input source backed by a temporary file that needs cleanup when disposed
 /// </summary>
-public sealed class TemporaryFileInputSource(FileStream stream, string originalPath, string tempFilePath)
-    : InputSource(stream, originalPath, true)
+public sealed class TemporaryFileInputSource(
+    FileStream stream,
+    string originalPath,
+    string tempFilePath
+) : InputSource(stream, originalPath, true)
 {
-    private readonly string _tempFilePath = tempFilePath ?? throw new ArgumentNullException(nameof(tempFilePath));
+    private readonly string _tempFilePath =
+        tempFilePath ?? throw new ArgumentNullException(nameof(tempFilePath));
     private bool _disposed;
 
     public override bool RequiresCleanup => true;

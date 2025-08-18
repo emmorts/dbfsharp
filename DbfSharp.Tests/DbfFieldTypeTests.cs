@@ -16,7 +16,11 @@ public class DbfFieldTypeTests
     [InlineData(FieldType.Double, typeof(double), false)]
     [InlineData(FieldType.Currency, typeof(decimal), false)]
     [InlineData(FieldType.Autoincrement, typeof(int), false)]
-    public void GetExpectedNetType_ShouldReturnCorrectType(FieldType fieldType, Type expectedType, bool supportsNull)
+    public void GetExpectedNetType_ShouldReturnCorrectType(
+        FieldType fieldType,
+        Type expectedType,
+        bool supportsNull
+    )
     {
         var actualType = fieldType.GetExpectedNetType();
         var actualSupportsNull = fieldType.SupportsNull();
@@ -68,7 +72,10 @@ public class DbfFieldTypeTests
     [InlineData(FieldType.Memo, "Memo")]
     [InlineData(FieldType.General, "General/OLE")]
     [InlineData(FieldType.TimestampAlternate, "Timestamp (Alt)")]
-    public void GetDescription_ShouldReturnCorrectDescription(FieldType fieldType, string expectedDescription)
+    public void GetDescription_ShouldReturnCorrectDescription(
+        FieldType fieldType,
+        string expectedDescription
+    )
     {
         var description = fieldType.GetDescription();
         Assert.Equal(expectedDescription, description);
@@ -109,8 +116,10 @@ public class DbfFieldTypeTests
                 var value = record[field.Name];
                 if (value != null)
                 {
-                    Assert.True(value is int or decimal or double or float,
-                        $"Expected numeric type but got {value.GetType()} for field {field.Name}");
+                    Assert.True(
+                        value is int or decimal or double or float,
+                        $"Expected numeric type but got {value.GetType()} for field {field.Name}"
+                    );
                 }
             }
         }
@@ -173,8 +182,10 @@ public class DbfFieldTypeTests
                 var value = record[field.Name];
                 if (value != null)
                 {
-                    Assert.True(value is float or double,
-                        $"Expected float/double type but got {value.GetType()} for field {field.Name}");
+                    Assert.True(
+                        value is float or double,
+                        $"Expected float/double type but got {value.GetType()} for field {field.Name}"
+                    );
                 }
             }
         }
@@ -185,11 +196,10 @@ public class DbfFieldTypeTests
     public void FieldType_AllFieldTypes_ShouldParseWithoutErrors(string fileName)
     {
         var filePath = TestHelper.GetTestFilePath(fileName);
-        using var reader = DbfReader.Create(filePath, new DbfReaderOptions
-        {
-            IgnoreMissingMemoFile = true,
-            ValidateFields = true
-        });
+        using var reader = DbfReader.Create(
+            filePath,
+            new DbfReaderOptions { IgnoreMissingMemoFile = true, ValidateFields = true }
+        );
 
         foreach (var field in reader.Fields)
         {
@@ -213,16 +223,25 @@ public class DbfFieldTypeTests
                     {
                         if (field.Type == FieldType.Numeric)
                         {
-                            Assert.True(value is int or decimal or double or float,
-                                $"Field {field.Name} of type {field.Type} returned {value.GetType()} but expected numeric type");
+                            Assert.True(
+                                value is int or decimal or double or float,
+                                $"Field {field.Name} of type {field.Type} returned {value.GetType()} but expected numeric type"
+                            );
                         }
                         else
                         {
-                            Assert.True(expectedType.IsAssignableFrom(value.GetType()) ||
-                                       (expectedType.IsGenericType &&
-                                        expectedType.GetGenericTypeDefinition() == typeof(Nullable<>) &&
-                                        Nullable.GetUnderlyingType(expectedType)!.IsAssignableFrom(value.GetType())),
-                                $"Field {field.Name} of type {field.Type} returned {value.GetType()} but expected {expectedType}");
+                            Assert.True(
+                                expectedType.IsAssignableFrom(value.GetType())
+                                    || (
+                                        expectedType.IsGenericType
+                                        && expectedType.GetGenericTypeDefinition()
+                                            == typeof(Nullable<>)
+                                        && Nullable
+                                            .GetUnderlyingType(expectedType)!
+                                            .IsAssignableFrom(value.GetType())
+                                    ),
+                                $"Field {field.Name} of type {field.Type} returned {value.GetType()} but expected {expectedType}"
+                            );
                         }
                     }
                 }
@@ -322,10 +341,10 @@ public class DbfFieldTypeTests
     }
 
     [Fact]
-    public async Task DBase30_ShouldHaveExpectedFieldStructure()
+    public void DBase30_ShouldHaveExpectedFieldStructure()
     {
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.DBase30);
-        await using var reader = await DbfReader.CreateAsync(filePath);
+        using var reader = DbfReader.Create(filePath);
 
         Assert.Equal(145, reader.Fields.Count);
 

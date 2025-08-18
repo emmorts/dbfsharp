@@ -33,7 +33,7 @@ foreach (var record in reader.Records)
     var name = record.GetValue<string>("NAME");
     var birthDate = record.GetValue<DateTime?>("BIRTHDATE");
     var salary = record.GetValue<decimal?>("SALARY");
-    
+
     Console.WriteLine($"{name}, born {birthDate}, salary: {salary:C}");
 }
 ```
@@ -164,7 +164,7 @@ public class CustomFieldParser : FieldParserBase
         return fieldType == FieldType.Character;
     }
 
-    public override object? Parse(DbfField field, ReadOnlySpan<byte> data, 
+    public override object? Parse(DbfField field, ReadOnlySpan<byte> data,
         IMemoFile? memoFile, Encoding encoding, DbfReaderOptions options)
     {
         // Custom parsing logic
@@ -250,13 +250,128 @@ foreach (DbfField field in reader.Fields)
 
 ## Performance
 
+`DbfSharp.Core` is optimized for both high throughput and low memory usage. Performance benchmarks measured on **AMD Ryzen 5 7600X** with **.NET 9.0**:
+
+### Key Performance Metrics (1,000,000 records)
+
+| Method                     | Time    | Throughput    | Memory | Best For                          |
+|----------------------------|---------|---------------|--------|-----------------------------------|
+| Raw field bytes access     | 137ms   | 7.3M rows/sec | 23MB   | Performance-critical applications |
+| Zero-allocation span API   | 185ms   | 5.4M rows/sec | 86MB   | Large datasets with convenience   |
+| Memory-mapped files        | 289ms   | 3.5M rows/sec | 23MB   | Very large files, low memory      |
+| Memory-optimized streaming | 299ms   | 3.3M rows/sec | 24MB   | General high-performance use      |
+| Default streaming          | 756ms   | 1.3M rows/sec | 716MB  | Typical business applications     |
+| Load all into memory       | 2,082ms | 480K rows/sec | 764MB  | Random access, LINQ queries       |
+
+### Performance Scaling Across Dataset Sizes
+
+| Records       | Raw Field Bytes   | Span API          | Memory-Mapped     | Default Streaming |
+|---------------|-------------------|-------------------|-------------------|-------------------|
+| **100**       | 52μs (1.9M/sec)   | 56μs (1.8M/sec)   | 79μs (1.3M/sec)   | 129μs (775K/sec)  |
+| **10,000**    | 1.2ms (8.7M/sec)  | 1.7ms (5.8M/sec)  | 2.4ms (4.2M/sec)  | 7.5ms (1.3M/sec)  |
+| **100,000**   | 13.7ms (7.3M/sec) | 18.3ms (5.5M/sec) | 30.1ms (3.3M/sec) | 73.2ms (1.4M/sec) |
+| **1,000,000** | 137ms (7.3M/sec)  | 185ms (5.4M/sec)  | 289ms (3.5M/sec)  | 756ms (1.3M/sec)  |
+
+### Memory Usage Comparison
+
+| Approach             | 100 records | 10K records | 100K records | 1M records |
+|----------------------|-------------|-------------|--------------|------------|
+| Raw field bytes      | 61KB        | 319KB       | 2.4MB        | 23MB       |
+| Memory-mapped        | 23KB        | 256KB       | 2.4MB        | 23MB       |
+| Zero-allocation span | 67KB        | 866KB       | 8.6MB        | 86MB       |
+| Default streaming    | 125KB       | 6.9MB       | 69MB         | 716MB      |
+| Load into memory     | 131KB       | 7.5MB       | 74MB         | 764MB      |
+
+### Code Examples by Use Case
+
+#### Maximum Performance - 7.3M rows/sec
+Use when you need the fastest possible processing:
+
+```csharp
+using var dbf = DbfReader.Create("data.dbf");
+
+foreach (var record in dbf.EnumerateSpanRecords())
+{
+    var nameBytes = record.GetFieldBytes(1); // Zero allocations
+    // Process raw bytes directly
+}
+```
+
+#### Memory Constrained - 3.5M rows/sec, 23MB for 1M rows
+Use for large files when memory usage is critical:
+
+```csharp
+var options = new DbfReaderOptions { UseMemoryMapping = true };
+using var dbf = DbfReader.Create("large_file.dbf", options);
+
+foreach (var record in dbf.EnumerateSpanRecords())
+{
+    var name = record.GetString(1); // Fast string conversion
+    var id = record.GetInt32(0);
+}
+```
+
+#### Balanced Approach - 1.3M rows/sec
+Default streaming mode balances performance and memory:
+
+```csharp
+using var dbf = DbfReader.Create("data.dbf");
+
+foreach (var record in dbf.Records)
+{
+    var name = record.GetString("NAME");
+    var id = record.GetInt32("ID");
+}
+```
+
+#### Random Access - 500K rows/sec (after loading)
+Best for analysis requiring frequent lookups:
+
+```csharp
+using var dbf = DbfReader.Create("data.dbf");
+dbf.Load(); // One-time load cost
+
+// Now random access is very fast
+var record = dbf[1000];
+var filteredRecords = dbf.Records
+    .Where(r => r.GetDecimal("SALARY") > 50000)
+    .ToList();
+```
+
+### When to Use Each Approach
+
+**Raw Field Bytes (`GetFieldBytes()`)** - *Maximum throughput*
+- **Use when:** Processing millions of records, custom parsing logic, performance-critical applications
+- **Avoid when:** You need convenient object access or complex field parsing
+
+**Zero-Allocation Span API (`EnumerateSpanRecords()`)** - *Best overall performance*
+- **Use when:** Need both speed and convenience, processing large datasets
+- **Avoid when:** Memory is extremely constrained
+
+**Memory-Mapped Files** - *Large files with memory constraints*
+- **Use when:** Files >500MB, running on memory-limited systems, need decent performance
+- **Avoid when:** File size <10MB (overhead not worth it)
+
+**Default Streaming** - *General purpose*
+- **Use when:** Moderate file sizes, need convenient object access, typical business applications
+- **Avoid when:** Processing millions of records frequently
+
+**Load Into Memory** - *Analysis and random access*
+- **Use when:** Need LINQ queries, random access by index, multiple passes over data
+- **Avoid when:** File size >100MB or memory is limited
+
 ### Optimization Tips
 
-- Use streaming for large files (don't call `Load()` unless you need random access)
-- Adjust buffer size for better I/O performance
-- Use memory mapping for large files on 64-bit systems
-- Limit record count with `MaxRecords` for sampling large files
+1. **Choose the right access pattern:**
+   - Use `EnumerateSpanRecords()` for maximum performance
+   - Use `Records` for convenient object access
+   - Use `Load()` only when you need random access
 
-### Benchmarks
+2. **Memory management:**
+   - Enable memory mapping for files >100MB: `options.UseMemoryMapping = true`
+   - Use memory-optimized options: `DbfReaderOptions.CreateMemoryOptimized()`
 
-TBD
+3. **Field access optimization:**
+   - Access by index (`record[0]`) is faster than by name (`record["NAME"]`)
+   - Use `GetFieldBytes()` for raw data processing
+   - Cache field indices for repeated access

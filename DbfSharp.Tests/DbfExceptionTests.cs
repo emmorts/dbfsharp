@@ -10,7 +10,9 @@ public class DbfExceptionTests
     {
         const string nonExistentFile = "non_existent_file.dbf";
 
-        var exception = Assert.Throws<DbfNotFoundException>(() => DbfReader.Create(nonExistentFile));
+        var exception = Assert.Throws<DbfNotFoundException>(() =>
+            DbfReader.Create(nonExistentFile)
+        );
 
         Assert.Equal(nonExistentFile, exception.FilePath);
         Assert.NotNull(exception.Message);
@@ -60,7 +62,9 @@ public class DbfExceptionTests
         var filePath = TestHelper.GetTestFilePath(TestHelper.TestFiles.DBase83MissingMemo);
         var options = new DbfReaderOptions { IgnoreMissingMemoFile = false };
 
-        var exception = Assert.Throws<MissingMemoFileException>(() => DbfReader.Create(filePath, options));
+        var exception = Assert.Throws<MissingMemoFileException>(() =>
+            DbfReader.Create(filePath, options)
+        );
 
         Assert.NotNull(exception.Message);
         Assert.NotNull(exception.DbfFilePath);
@@ -101,18 +105,14 @@ public class DbfExceptionTests
             var record = reader[0];
             Assert.Fail("Expected exception when accessing by index on unloaded reader");
         }
-        catch (InvalidOperationException)
-        {
-        }
+        catch (InvalidOperationException) { }
 
         try
         {
             var count = reader.Count;
             Assert.True(count >= 0);
         }
-        catch (InvalidOperationException)
-        {
-        }
+        catch (InvalidOperationException) { }
     }
 
     [Fact]
@@ -201,9 +201,7 @@ public class DbfExceptionTests
             Assert.NotNull(reader);
             var record = reader.Records.First();
         }
-        catch (NotSupportedException)
-        {
-        }
+        catch (NotSupportedException) { }
     }
 
     [Fact]
@@ -255,9 +253,7 @@ public class DbfExceptionTests
                     var dateValue = record.GetDateTime(charField.Name);
                     var boolValue = record.GetBoolean(charField.Name);
                 }
-                catch (InvalidCastException)
-                {
-                }
+                catch (InvalidCastException) { }
             }
         }
     }
@@ -333,7 +329,9 @@ public class DbfExceptionTests
 
         using var stream = new MemoryStream(fakeDbfHeader);
 
-        var exception = Assert.Throws<UnsupportedDbfVersionException>(() => DbfReader.Create(stream));
+        var exception = Assert.Throws<UnsupportedDbfVersionException>(() =>
+            DbfReader.Create(stream)
+        );
 
         Assert.Equal(unsupportedVersionByte, exception.VersionByte);
         Assert.Contains($"0x{unsupportedVersionByte:X2}", exception.Message);
@@ -341,7 +339,7 @@ public class DbfExceptionTests
     }
 
     [Fact]
-    public async Task UnsupportedDbfVersion_CreateAsync_ShouldThrowUnsupportedDbfVersionException()
+    public void UnsupportedDbfVersion_Create_ShouldThrowUnsupportedDbfVersionException()
     {
         const byte unsupportedVersionByte = 0x99;
 
@@ -356,7 +354,9 @@ public class DbfExceptionTests
 
         using var stream = new MemoryStream(fakeDbfHeader);
 
-        var exception = await Assert.ThrowsAsync<UnsupportedDbfVersionException>(() => DbfReader.CreateAsync(stream));
+        var exception = Assert.Throws<UnsupportedDbfVersionException>(() =>
+            DbfReader.Create(stream)
+        );
 
         Assert.Equal(unsupportedVersionByte, exception.VersionByte);
         Assert.Contains($"0x{unsupportedVersionByte:X2}", exception.Message);
@@ -365,17 +365,7 @@ public class DbfExceptionTests
     [Fact]
     public void SupportedDbfVersions_ShouldNotThrowUnsupportedDbfVersionException()
     {
-        var supportedVersions = new byte[]
-        {
-            0x02,
-            0x03,
-            0x30,
-            0x31,
-            0x32,
-            0x83,
-            0x8B,
-            0xF5
-        };
+        var supportedVersions = new byte[] { 0x02, 0x03, 0x30, 0x31, 0x32, 0x83, 0x8B, 0xF5 };
 
         foreach (var versionByte in supportedVersions)
         {
@@ -396,11 +386,11 @@ public class DbfExceptionTests
             }
             catch (UnsupportedDbfVersionException)
             {
-                Assert.Fail($"Supported DBF version 0x{versionByte:X2} should not throw UnsupportedDbfVersionException");
+                Assert.Fail(
+                    $"Supported DBF version 0x{versionByte:X2} should not throw UnsupportedDbfVersionException"
+                );
             }
-            catch (Exception)
-            {
-            }
+            catch (Exception) { }
         }
     }
 
@@ -414,10 +404,8 @@ public class DbfExceptionTests
         Assert.True(typeof(DbfException).IsSubclassOf(typeof(Exception)));
     }
 
-    private class NonSeekableMemoryStream : MemoryStream
+    private class NonSeekableMemoryStream(byte[] buffer) : MemoryStream(buffer)
     {
-        public NonSeekableMemoryStream(byte[] buffer) : base(buffer) { }
-
         public override bool CanSeek => false;
 
         public override long Seek(long offset, SeekOrigin origin)

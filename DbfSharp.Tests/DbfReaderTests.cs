@@ -481,7 +481,7 @@ public class DbfReaderTests
         var options = new DbfReaderOptions
         {
             MaxRecords = maxRecords,
-            IgnoreMissingMemoFile = true
+            IgnoreMissingMemoFile = true,
         };
 
         using var reader = DbfReader.Create(filePath, options);

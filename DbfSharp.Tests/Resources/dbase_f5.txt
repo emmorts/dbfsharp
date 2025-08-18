@@ -1,20 +1,19 @@
 Analyzing DBF file: dbase_f5.dbf
 
 Header Information
-╭──────────────────┬───────────────────────────────────┬───────────────────────────╮
-│ Property         │ Value                             │ Details                   │
-├──────────────────┼───────────────────────────────────┼───────────────────────────┤
-│ DBF Version      │ FoxPro 2.x (or earlier) with memo │ Byte: 0xF5                │
-│ Last Update      │ 2004-02-28                        │ Raw: 04/02/28             │
-│ Header Length    │ 1921 bytes                        │ Fields area: 1888 bytes   │
-│ Record Length    │ 969 bytes                         │ Including deletion flag   │
-│ Total Records    │ 975                               │ Including deleted records │
-│ MDX Index        │ None                              │ Flag: 0x00                │
-│ Encryption       │ None                              │ Flag: 0x00                │
-│ Language Driver  │ plain ol' ascii                   │ Code: 0x00                │
-│ File Size        │ 924.51 KB                         │ 946,697 bytes             │
-│ Size vs Expected │ +1 byte larger than expected      │ Expected: 924.51 KB       │
-╰──────────────────┴───────────────────────────────────┴───────────────────────────╯
+╭─────────────────┬───────────────────────────────────┬───────────────────────────╮
+│ Property        │ Value                             │ Details                   │
+├─────────────────┼───────────────────────────────────┼───────────────────────────┤
+│ DBF Version     │ FoxPro 2.x (or earlier) with memo │ Byte: 0xF5                │
+│ Last Update     │ 2004-02-28                        │ Raw: 04/02/28             │
+│ Header Length   │ 1921 bytes                        │ Fields area: 1888 bytes   │
+│ Record Length   │ 969 bytes                         │ Including deletion flag   │
+│ Total Records   │ 975                               │ Including deleted records │
+│ MDX Index       │ None                              │ Flag: 0x00                │
+│ Encryption      │ None                              │ Flag: 0x00                │
+│ Language Driver │ plain ol' ascii                   │ Code: 0x00                │
+│ File Size       │ 924.51 KB                         │ 946,697 bytes             │
+╰─────────────────┴───────────────────────────────────┴───────────────────────────╯
 
 Field Definitions
 ╭────┬─────────┬───────────────┬────────┬──────────┬───────╮
@@ -100,6 +99,6 @@ Performance Information
 ╰───────────────────────────┴─────────┴────────────────────────────────────╯
 
 Performance Summary for Analyze DBF File:
-  Elapsed Time: 00:00.092
-  Memory Used: 3.0 MB
-  Peak Working Set: 29.0 MB
+  Elapsed Time: 00:00.067
+  Memory Used: 2.0 MB
+  Peak Working Set: 26.0 MB

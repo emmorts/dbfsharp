@@ -23,7 +23,9 @@ public static class InputSourceResultExtensions
                 return inputSource.Stream.Length;
             }
         }
-        catch { /* ignore */ }
+        catch
+        { /* ignore */
+        }
         return null;
     }
 }

@@ -1,20 +1,19 @@
 Analyzing DBF file: dbase_30.dbf
 
 Header Information
-╭──────────────────┬──────────────────────────────┬───────────────────────────╮
-│ Property         │ Value                        │ Details                   │
-├──────────────────┼──────────────────────────────┼───────────────────────────┤
-│ DBF Version      │ Visual FoxPro                │ Byte: 0x30                │
-│ Last Update      │ 2006-09-09                   │ Raw: 06/09/09             │
-│ Header Length    │ 4936 bytes                   │ Fields area: 4903 bytes   │
-│ Record Length    │ 3907 bytes                   │ Including deletion flag   │
-│ Total Records    │ 34                           │ Including deleted records │
-│ MDX Index        │ Present                      │ Flag: 0x03                │
-│ Encryption       │ None                         │ Flag: 0x00                │
-│ Language Driver  │ Windows ANSI                 │ Code: 0x03                │
-│ File Size        │ 134.55 KB                    │ 137,775 bytes             │
-│ Size vs Expected │ +1 byte larger than expected │ Expected: 134.54 KB       │
-╰──────────────────┴──────────────────────────────┴───────────────────────────╯
+╭─────────────────┬───────────────┬───────────────────────────╮
+│ Property        │ Value         │ Details                   │
+├─────────────────┼───────────────┼───────────────────────────┤
+│ DBF Version     │ Visual FoxPro │ Byte: 0x30                │
+│ Last Update     │ 2006-09-09    │ Raw: 06/09/09             │
+│ Header Length   │ 4936 bytes    │ Fields area: 4903 bytes   │
+│ Record Length   │ 3907 bytes    │ Including deletion flag   │
+│ Total Records   │ 34            │ Including deleted records │
+│ MDX Index       │ Present       │ Flag: 0x03                │
+│ Encryption      │ None          │ Flag: 0x00                │
+│ Language Driver │ Windows ANSI  │ Code: 0x03                │
+│ File Size       │ 134.55 KB     │ 137,775 bytes             │
+╰─────────────────┴───────────────┴───────────────────────────╯
 
 Field Definitions
 ╭─────┬────────────┬───────────────┬────────┬──────────┬───────╮
@@ -186,6 +185,6 @@ Performance Information
 ╰───────────────────────────┴───────────┴────────────────────────────────────╯
 
 Performance Summary for Analyze DBF File:
-  Elapsed Time: 00:00.068
+  Elapsed Time: 00:00.045
   Memory Used: 0.0 MB
-  Peak Working Set: 26.0 MB
+  Peak Working Set: 25.0 MB

@@ -20,7 +20,8 @@ public static class StreamUtilities
         var fileInfo = new FileInfo(filePath);
         if (fileInfo.Length > MemoryMappingThreshold)
         {
-            return (Stream?)TryCreateMemoryMappedStream(filePath) ?? CreateStandardFileStream(filePath);
+            return (Stream?)TryCreateMemoryMappedStream(filePath)
+                ?? CreateStandardFileStream(filePath);
         }
 
         return CreateStandardFileStream(filePath);
@@ -33,7 +34,8 @@ public static class StreamUtilities
         Stream source,
         Stream destination,
         IProgress<long>? progress = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var buffer = ArrayPool<byte>.Shared.Rent(DefaultBufferSize);
         var totalBytesWritten = 0L;
@@ -63,7 +65,8 @@ public static class StreamUtilities
         Stream inputStream,
         string extension = ".dbf",
         IProgress<long>? progress = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var tempFile = Path.GetTempFileName();
         var tempDir = Path.GetDirectoryName(tempFile) ?? Path.GetTempPath();
@@ -83,15 +86,22 @@ public static class StreamUtilities
                 FileAccess.Write,
                 FileShare.None,
                 DefaultBufferSize,
-                FileOptions.WriteThrough | FileOptions.RandomAccess);
+                FileOptions.WriteThrough | FileOptions.RandomAccess
+            );
 
-            var totalBytes = await CopyWithProgressAsync(inputStream, outputStream, progress, cancellationToken);
+            var totalBytes = await CopyWithProgressAsync(
+                inputStream,
+                outputStream,
+                progress,
+                cancellationToken
+            );
             await outputStream.FlushAsync(cancellationToken);
 
             if (totalBytes < MinimumDataThreshold)
             {
                 throw new InvalidOperationException(
-                    $"Insufficient data received ({totalBytes} bytes). Minimum required: {MinimumDataThreshold} bytes.");
+                    $"Insufficient data received ({totalBytes} bytes). Minimum required: {MinimumDataThreshold} bytes."
+                );
             }
 
             return tempDbfFile;
@@ -127,7 +137,8 @@ public static class StreamUtilities
         if (bytesRead < MinimumDataThreshold)
         {
             throw new InvalidOperationException(
-                $"Insufficient data in stream ({bytesRead} bytes). Minimum required: {MinimumDataThreshold} bytes.");
+                $"Insufficient data in stream ({bytesRead} bytes). Minimum required: {MinimumDataThreshold} bytes."
+            );
         }
     }
 
@@ -153,7 +164,8 @@ public static class StreamUtilities
                 mode: FileMode.Open,
                 mapName: "dbf_read",
                 capacity: 0,
-                access: MemoryMappedFileAccess.Read);
+                access: MemoryMappedFileAccess.Read
+            );
 
             return mmf.CreateViewStream(0, 0, MemoryMappedFileAccess.Read);
         }
@@ -171,7 +183,8 @@ public static class StreamUtilities
             FileAccess.Read,
             FileShare.Read,
             DefaultBufferSize,
-            FileOptions.SequentialScan);
+            FileOptions.SequentialScan
+        );
     }
 
     private static void CleanupFile(string filePath)
@@ -181,7 +194,8 @@ public static class StreamUtilities
             File.SetAttributes(filePath, FileAttributes.Normal);
             File.Delete(filePath);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+        catch (Exception ex)
+            when (ex is IOException or UnauthorizedAccessException or ArgumentException)
         {
             // temp files will be cleaned up by OS eventually
         }

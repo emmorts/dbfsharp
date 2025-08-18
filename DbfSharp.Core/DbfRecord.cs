@@ -71,7 +71,10 @@ public readonly record struct DbfRecord : IEnumerable<KeyValuePair<string, objec
         {
             if (string.IsNullOrEmpty(fieldName))
             {
-                throw new ArgumentException("Field name cannot be null or empty", nameof(fieldName));
+                throw new ArgumentException(
+                    "Field name cannot be null or empty",
+                    nameof(fieldName)
+                );
             }
 
             var index = GetFieldIndex(fieldName);
@@ -511,7 +514,7 @@ public readonly record struct DbfRecord : IEnumerable<KeyValuePair<string, objec
                 null => "null",
                 DateTime dt => dt.ToString(CultureInfo.CurrentCulture),
                 byte[] bytes => $"byte[{bytes.Length}]",
-                _ => _values[i]!.ToString()
+                _ => _values[i]!.ToString(),
             };
 
             fields[i] = $"{_reader.FieldNames[i]}={valueStr}";

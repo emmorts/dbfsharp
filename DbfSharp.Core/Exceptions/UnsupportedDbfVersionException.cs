@@ -16,7 +16,9 @@ public class UnsupportedDbfVersionException : DbfException
     /// </summary>
     /// <param name="versionByte">The raw version byte that was not recognized</param>
     public UnsupportedDbfVersionException(byte versionByte)
-        : base($"Unsupported or unrecognized DBF version: 0x{versionByte:X2}. This DBF format version is not supported by DbfSharp.")
+        : base(
+            $"Unsupported or unrecognized DBF version: 0x{versionByte:X2}. This DBF format version is not supported by DbfSharp."
+        )
     {
         VersionByte = versionByte;
     }
@@ -38,7 +40,11 @@ public class UnsupportedDbfVersionException : DbfException
     /// <param name="versionByte">The raw version byte that was not recognized</param>
     /// <param name="message">The message that describes the error</param>
     /// <param name="innerException">The exception that is the cause of the current exception</param>
-    public UnsupportedDbfVersionException(byte versionByte, string message, Exception innerException)
+    public UnsupportedDbfVersionException(
+        byte versionByte,
+        string message,
+        Exception innerException
+    )
         : base(message, innerException)
     {
         VersionByte = versionByte;

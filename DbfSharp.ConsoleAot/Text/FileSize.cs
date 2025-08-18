@@ -75,7 +75,7 @@ public static class FileSize
         {
             0 => "Exact match",
             > 0 => $"+{Format(difference)} larger than expected",
-            < 0 => $"{Format(-difference)} smaller than expected"
+            < 0 => $"{Format(-difference)} smaller than expected",
         };
     }
 
@@ -92,7 +92,7 @@ public static class FileSize
             return actualSize == 0 ? 0 : double.PositiveInfinity;
         }
 
-        return ((double)(actualSize - expectedSize) / expectedSize) * 100;
+        return (double)(actualSize - expectedSize) / expectedSize * 100;
     }
 
     /// <summary>
@@ -101,7 +101,10 @@ public static class FileSize
     /// <param name="fileSize">The file size to check</param>
     /// <param name="maxRecommendedSize">Maximum recommended size for memory processing</param>
     /// <returns>True if the file size is within acceptable bounds</returns>
-    public static bool IsWithinProcessingBounds(long fileSize, long maxRecommendedSize = 1024 * 1024 * 1024)
+    public static bool IsWithinProcessingBounds(
+        long fileSize,
+        long maxRecommendedSize = 1024 * 1024 * 1024
+    )
     {
         return fileSize > 0 && fileSize <= maxRecommendedSize;
     }
@@ -112,7 +115,10 @@ public static class FileSize
     /// <param name="totalSize">Total expected size (if known)</param>
     /// <param name="reportIntervalBytes">How often to report progress in bytes</param>
     /// <returns>A progress reporter for file operations</returns>
-    public static IProgress<long> CreateProgressReporter(long? totalSize = null, long reportIntervalBytes = 10 * 1024 * 1024)
+    public static IProgress<long> CreateProgressReporter(
+        long? totalSize = null,
+        long reportIntervalBytes = 10 * 1024 * 1024
+    )
     {
         var lastReported = 0L;
 
@@ -142,7 +148,7 @@ public static class FileSize
             <= 1024 * 1024 => fileSize * 3,
             <= 10 * 1024 * 1024 => fileSize * 2,
             <= 100 * 1024 * 1024 => (long)(fileSize * 1.5),
-            _ => fileSize + (100 * 1024 * 1024)
+            _ => fileSize + 100 * 1024 * 1024,
         };
     }
 

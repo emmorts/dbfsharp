@@ -44,12 +44,24 @@ public sealed class JsonFormatter : IDbfFormatter
         if (underlyingStream != null)
         {
             // direct stream writing - most efficient path
-            await WriteToStreamDirectlyAsync(records, fields, reader, underlyingStream, cancellationToken);
+            await WriteToStreamDirectlyAsync(
+                records,
+                fields,
+                reader,
+                underlyingStream,
+                cancellationToken
+            );
         }
         else
         {
             // fallback: use a bridge that converts UTF-8 bytes to characters
-            await WriteWithTextWriterBridgeAsync(records, fields, reader, writer, cancellationToken);
+            await WriteWithTextWriterBridgeAsync(
+                records,
+                fields,
+                reader,
+                writer,
+                cancellationToken
+            );
         }
     }
 
@@ -62,7 +74,7 @@ public sealed class JsonFormatter : IDbfFormatter
         {
             StreamWriter streamWriter => streamWriter.BaseStream,
             // todo: add other TextWriter types that expose streams
-            _ => null
+            _ => null,
         };
     }
 

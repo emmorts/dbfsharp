@@ -109,7 +109,7 @@ public class DbfReaderBasicTests
         );
 
         Assert.Equal(expectedVersion, reader.Header.DbfVersion);
-        
+
         if (expectedRecords > 0)
         {
             Assert.Equal((uint)expectedRecords, reader.Header.NumberOfRecords);

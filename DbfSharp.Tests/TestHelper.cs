@@ -187,7 +187,7 @@ public static class TestHelper
             TestFiles.DBase83MissingMemo,
             TestFiles.DBase8B,
             TestFiles.DBaseF5,
-            TestFiles.Cp1251
+            TestFiles.Cp1251,
         };
 
         return theoryData;

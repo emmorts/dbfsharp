@@ -40,9 +40,13 @@ public sealed class TableFormatter : IDbfFormatter
         var headers = fields.Select(f => BuildColumnHeader(f, reader)).ToArray();
         var maxRecords = _configuration.MaxDisplayRecords ?? DefaultMaxDisplayRecords;
 
-        // Use two-pass approach for optimal column width calculation
         var (columnWidths, recordsList, totalRecords) = CalculateOptimalColumnWidths(
-            records, fields, headers, maxRecords, cancellationToken);
+            records,
+            fields,
+            headers,
+            maxRecords,
+            cancellationToken
+        );
 
         if (recordsList.Count == 0)
         {
@@ -50,33 +54,43 @@ public sealed class TableFormatter : IDbfFormatter
             return;
         }
 
-        // Create and render table using the unified TableRenderer
-        await RenderTableAsync(recordsList, headers, columnWidths, totalRecords, maxRecords, writer, cancellationToken);
+        await RenderTableAsync(
+            recordsList,
+            headers,
+            columnWidths,
+            totalRecords,
+            maxRecords,
+            writer
+        );
     }
 
     /// <summary>
     /// Calculates optimal column widths by sampling data and determines final record set
     /// </summary>
-    private static (int[] ColumnWidths, List<string[]> Records, int TotalRecords) CalculateOptimalColumnWidths(
+    private static (
+        int[] ColumnWidths,
+        List<string[]> Records,
+        int TotalRecords
+    ) CalculateOptimalColumnWidths(
         IEnumerable<DbfRecord> records,
         string[] fields,
         string[] headers,
         int maxRecords,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var columnWidths = headers.Select(h => Math.Max(h.Length, MinColumnWidth)).ToArray();
         var recordsList = new List<string[]>();
         var sampleRecords = new List<string[]>();
         var totalRecords = 0;
 
-        // First pass: collect records and sample for width calculation
+        // first pass: collect records and sample for width calculation
         foreach (var record in records)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             var rowValues = BuildTableRow(record, fields);
 
-            // Update column widths based on this row
             for (var i = 0; i < rowValues.Length && i < columnWidths.Length; i++)
             {
                 var cellWidth = Math.Min(rowValues[i].Length, MaxColumnWidth);
@@ -89,11 +103,10 @@ public sealed class TableFormatter : IDbfFormatter
             }
             else if (totalRecords == maxRecords)
             {
-                // Add overflow indicator
+                // overflow indicator
                 recordsList.Add(Enumerable.Repeat("...", fields.Length).ToArray());
             }
 
-            // Keep sampling even after maxRecords for better width calculation
             if (sampleRecords.Count < SampleSize)
             {
                 sampleRecords.Add(rowValues);
@@ -102,7 +115,6 @@ public sealed class TableFormatter : IDbfFormatter
             totalRecords++;
         }
 
-        // Optimize column widths based on content distribution
         OptimizeColumnWidths(columnWidths, sampleRecords);
 
         return (columnWidths, recordsList, totalRecords);
@@ -120,20 +132,20 @@ public sealed class TableFormatter : IDbfFormatter
 
         for (var colIndex = 0; colIndex < columnWidths.Length; colIndex++)
         {
-            var columnValues = sampleRecords.Select(row =>
-                colIndex < row.Length ? row[colIndex] : "").ToArray();
+            var columnValues = sampleRecords
+                .Select(row => colIndex < row.Length ? row[colIndex] : "")
+                .ToArray();
 
-            // Calculate statistics for this column
             var avgLength = columnValues.Average(v => v.Length);
             var maxLength = columnValues.Max(v => v.Length);
 
-            // If most values are much shorter than the max, cap the width
+            // if most values are much shorter than the max, cap the width
             if (avgLength < maxLength * 0.5 && maxLength > 20)
             {
                 columnWidths[colIndex] = Math.Min(columnWidths[colIndex], (int)(avgLength * 2));
             }
 
-            // Ensure minimum width
+            // ensure min width
             columnWidths[colIndex] = Math.Max(columnWidths[colIndex], MinColumnWidth);
         }
     }
@@ -147,29 +159,27 @@ public sealed class TableFormatter : IDbfFormatter
         int[] columnWidths,
         int totalRecords,
         int maxRecords,
-        TextWriter writer,
-        CancellationToken cancellationToken)
+        TextWriter writer
+    )
     {
         var tableRenderer = new TableRenderer(headers, columnWidths);
 
-        // For console output, use direct rendering
         if (writer == Console.Out)
         {
             tableRenderer.RenderToConsole(records);
         }
         else
         {
-            // For file output, render to string builder then write
             var output = new StringBuilder();
             tableRenderer.RenderToStringBuilder(records, output);
             await writer.WriteAsync(output.ToString());
         }
 
-        // Add record count and overflow information
         if (records.Count > 0 && records[^1][0] == "...")
         {
             await writer.WriteLineAsync(
-                $"\nShowing {records.Count - 1:N0} of {totalRecords:N0} records (limit: {maxRecords:N0}).");
+                $"\nShowing {records.Count - 1:N0} of {totalRecords:N0} records (limit: {maxRecords:N0})."
+            );
             if (_configuration.ShowWarnings)
             {
                 await writer.WriteLineAsync("Use --format csv or --limit to see more records.");
@@ -212,7 +222,6 @@ public sealed class TableFormatter : IDbfFormatter
             var value = record[fields[i]];
             var formatted = FormatValueForTable(value);
 
-            // Truncate long values for table display
             if (formatted.Length > MaxColumnWidth)
             {
                 formatted = formatted[..(MaxColumnWidth - 3)] + "...";

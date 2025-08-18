@@ -7,7 +7,9 @@ namespace DbfSharp.ConsoleAot.Text;
 /// </summary>
 public static class EncodingResolver
 {
-    private static readonly Dictionary<string, string> CommonEncodingAliases = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, string> CommonEncodingAliases = new(
+        StringComparer.OrdinalIgnoreCase
+    )
     {
         ["utf8"] = "UTF-8",
         ["utf-8"] = "UTF-8",
@@ -21,7 +23,7 @@ public static class EncodingResolver
         ["latin1"] = "ISO-8859-1",
         ["cp437"] = "IBM437",
         ["dos"] = "IBM437",
-        ["oem"] = "IBM437"
+        ["oem"] = "IBM437",
     };
 
     /// <summary>
@@ -36,7 +38,10 @@ public static class EncodingResolver
     {
         var encoding = TryResolve(encodingName);
 
-        return encoding ?? throw new ArgumentException($"Encoding '{encodingName}' is not recognized or supported.");
+        return encoding
+            ?? throw new ArgumentException(
+                $"Encoding '{encodingName}' is not recognized or supported."
+            );
     }
 
     /// <summary>

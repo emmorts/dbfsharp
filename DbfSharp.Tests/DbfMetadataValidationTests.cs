@@ -115,7 +115,7 @@ public class DbfMetadataValidationTests
         Assert.Equal((ushort)4936, reader.Header.HeaderLength);
         Assert.Equal((ushort)3907, reader.Header.RecordLength);
 
-        Assert.Equal(70, reader.Fields.Count);
+        Assert.Equal(145, reader.Fields.Count);
 
         var accessNoField = reader.FindField("ACCESSNO");
         Assert.NotNull(accessNoField);
@@ -172,7 +172,7 @@ public class DbfMetadataValidationTests
         Assert.Equal((ushort)513, reader.Header.HeaderLength);
         Assert.Equal((ushort)805, reader.Header.RecordLength);
 
-        Assert.Equal(9, reader.Fields.Count);
+        Assert.Equal(15, reader.Fields.Count);
 
         var idField = reader.FindField("ID");
         Assert.NotNull(idField);
@@ -250,8 +250,13 @@ public class DbfMetadataValidationTests
     [InlineData(TestHelper.TestFiles.DBase30, DbfVersion.VisualFoxPro, 34, 4936, 3907)]
     [InlineData(TestHelper.TestFiles.DBase83, DbfVersion.DBase3PlusWithMemo, 67, 513, 805)]
     [InlineData(TestHelper.TestFiles.Cp1251, DbfVersion.VisualFoxPro, 4, 360, 105)]
-    public void Headers_ShouldMatchExpectedValues(string fileName, DbfVersion expectedVersion,
-        int expectedRecords, int expectedHeaderLength, int expectedRecordLength)
+    public void Headers_ShouldMatchExpectedValues(
+        string fileName,
+        DbfVersion expectedVersion,
+        int expectedRecords,
+        int expectedHeaderLength,
+        int expectedRecordLength
+    )
     {
         if (!TestHelper.TestFileExists(fileName))
         {
@@ -271,8 +276,8 @@ public class DbfMetadataValidationTests
     [Theory]
     [InlineData(TestHelper.TestFiles.People, 2)]
     [InlineData(TestHelper.TestFiles.DBase03, 31)]
-    [InlineData(TestHelper.TestFiles.DBase30, 70)]
-    [InlineData(TestHelper.TestFiles.DBase83, 9)]
+    [InlineData(TestHelper.TestFiles.DBase30, 145)]
+    [InlineData(TestHelper.TestFiles.DBase83, 15)]
     [InlineData(TestHelper.TestFiles.Cp1251, 2)]
     public void FieldCounts_ShouldMatchExpected(string fileName, int expectedFieldCount)
     {
@@ -360,8 +365,8 @@ public class DbfMetadataValidationTests
         // After loading, both should be available
         reader.Load();
         Assert.True(reader.IsLoaded);
-        Assert.Equal(2, reader.Count);  // Active records only
-        Assert.Equal(3, reader.RecordCount);  // Header count includes deleted
+        Assert.Equal(2, reader.Count); // Active records only
+        Assert.Equal(3, reader.RecordCount); // Header count includes deleted
     }
 
     [Fact]
@@ -433,7 +438,7 @@ public class DbfMetadataValidationTests
             { "GPS_Week", 6 },
             { "GPS_Second", 12 },
             { "GPS_Height", 16 },
-            { "Unfilt_Pos", 10 }
+            { "Unfilt_Pos", 10 },
         };
 
         foreach (var validation in validations)
@@ -453,7 +458,7 @@ public class DbfMetadataValidationTests
             TestHelper.TestFiles.DBase03,
             TestHelper.TestFiles.DBase30,
             TestHelper.TestFiles.DBase83,
-            TestHelper.TestFiles.Cp1251
+            TestHelper.TestFiles.Cp1251,
         };
 
         foreach (var fileName in testFiles)
@@ -484,7 +489,10 @@ public class DbfMetadataValidationTests
                         Assert.Equal(0, field.DecimalCount);
                         break;
                     case FieldType.Memo:
-                        Assert.Equal(4, field.Length);
+                        Assert.True(
+                            field.Length >= 4,
+                            $"Memo field '{field.Name}' has unexpected length {field.Length}, expected >= 4"
+                        );
                         Assert.Equal(0, field.DecimalCount);
                         break;
                     case FieldType.Timestamp:

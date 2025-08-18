@@ -1,20 +1,19 @@
 Analyzing DBF file: dbase_31.dbf
 
 Header Information
-╭──────────────────┬──────────────────────────────────────┬───────────────────────────╮
-│ Property         │ Value                                │ Details                   │
-├──────────────────┼──────────────────────────────────────┼───────────────────────────┤
-│ DBF Version      │ Visual FoxPro, autoincrement enabled │ Byte: 0x31                │
-│ Last Update      │ 2002-08-02                           │ Raw: 02/08/02             │
-│ Header Length    │ 648 bytes                            │ Fields area: 615 bytes    │
-│ Record Length    │ 95 bytes                             │ Including deletion flag   │
-│ Total Records    │ 77                                   │ Including deleted records │
-│ MDX Index        │ Present                              │ Flag: 0x01                │
-│ Encryption       │ None                                 │ Flag: 0x00                │
-│ Language Driver  │ Windows ANSI                         │ Code: 0x03                │
-│ File Size        │ 7.78 KB                              │ 7,963 bytes               │
-│ Size vs Expected │ Exact match                          │ Expected: 7.78 KB         │
-╰──────────────────┴──────────────────────────────────────┴───────────────────────────╯
+╭─────────────────┬──────────────────────────────────────┬───────────────────────────╮
+│ Property        │ Value                                │ Details                   │
+├─────────────────┼──────────────────────────────────────┼───────────────────────────┤
+│ DBF Version     │ Visual FoxPro, autoincrement enabled │ Byte: 0x31                │
+│ Last Update     │ 2002-08-02                           │ Raw: 02/08/02             │
+│ Header Length   │ 648 bytes                            │ Fields area: 615 bytes    │
+│ Record Length   │ 95 bytes                             │ Including deletion flag   │
+│ Total Records   │ 77                                   │ Including deleted records │
+│ MDX Index       │ Present                              │ Flag: 0x01                │
+│ Encryption      │ None                                 │ Flag: 0x00                │
+│ Language Driver │ Windows ANSI                         │ Code: 0x03                │
+│ File Size       │ 7.78 KB                              │ 7,963 bytes               │
+╰─────────────────┴──────────────────────────────────────┴───────────────────────────╯
 
 Field Definitions
 ╭────┬────────────┬───────────────┬────────┬──────────┬───────╮
@@ -52,6 +51,6 @@ Performance Information
 ╰───────────────────────────┴──────────┴────────────────────────────────────╯
 
 Performance Summary for Analyze DBF File:
-  Elapsed Time: 00:00.053
+  Elapsed Time: 00:00.036
   Memory Used: 0.0 MB
-  Peak Working Set: 25.0 MB
+  Peak Working Set: 24.0 MB

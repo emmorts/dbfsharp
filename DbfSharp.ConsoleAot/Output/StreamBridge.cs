@@ -58,9 +58,13 @@ internal sealed class StreamBridge(TextWriter writer) : Stream
         }
 
         char[]? rentedBuffer = null;
-        var charBuffer = maxCharCount <= SmallBufferThreshold
-            ? stackalloc char[maxCharCount]
-            : (rentedBuffer = System.Buffers.ArrayPool<char>.Shared.Rent(maxCharCount)).AsSpan(0, maxCharCount);
+        var charBuffer =
+            maxCharCount <= SmallBufferThreshold
+                ? stackalloc char[maxCharCount]
+                : (rentedBuffer = System.Buffers.ArrayPool<char>.Shared.Rent(maxCharCount)).AsSpan(
+                    0,
+                    maxCharCount
+                );
 
         try
         {
@@ -79,7 +83,12 @@ internal sealed class StreamBridge(TextWriter writer) : Stream
         }
     }
 
-    public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+    public override async Task WriteAsync(
+        byte[] buffer,
+        int offset,
+        int count,
+        CancellationToken cancellationToken
+    )
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
@@ -92,8 +101,10 @@ internal sealed class StreamBridge(TextWriter writer) : Stream
         await WriteAsyncCore(segment, cancellationToken);
     }
 
-    public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer,
-        CancellationToken cancellationToken = default)
+    public override async ValueTask WriteAsync(
+        ReadOnlyMemory<byte> buffer,
+        CancellationToken cancellationToken = default
+    )
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
@@ -117,14 +128,22 @@ internal sealed class StreamBridge(TextWriter writer) : Stream
     /// <summary>
     /// Core async write implementation that works with array segments to avoid span limitations
     /// </summary>
-    private async ValueTask WriteAsyncCore(ArraySegment<byte> buffer, CancellationToken cancellationToken)
+    private async ValueTask WriteAsyncCore(
+        ArraySegment<byte> buffer,
+        CancellationToken cancellationToken
+    )
     {
         if (buffer.Count == 0)
         {
             return;
         }
 
-        var maxCharCount = _decoder.GetCharCount(buffer.Array!, buffer.Offset, buffer.Count, flush: false);
+        var maxCharCount = _decoder.GetCharCount(
+            buffer.Array!,
+            buffer.Offset,
+            buffer.Count,
+            flush: false
+        );
         if (maxCharCount == 0)
         {
             return;
@@ -134,11 +153,20 @@ internal sealed class StreamBridge(TextWriter writer) : Stream
 
         try
         {
-            var charCount = _decoder.GetChars(buffer.Array!, buffer.Offset, buffer.Count, rentedCharBuffer, 0,
-                flush: false);
+            var charCount = _decoder.GetChars(
+                buffer.Array!,
+                buffer.Offset,
+                buffer.Count,
+                rentedCharBuffer,
+                0,
+                flush: false
+            );
             if (charCount > 0)
             {
-                await _writer.WriteAsync(rentedCharBuffer.AsMemory(0, charCount), cancellationToken);
+                await _writer.WriteAsync(
+                    rentedCharBuffer.AsMemory(0, charCount),
+                    cancellationToken
+                );
             }
         }
         finally
@@ -189,7 +217,14 @@ internal sealed class StreamBridge(TextWriter writer) : Stream
             var rentedBuffer = System.Buffers.ArrayPool<char>.Shared.Rent(finalCharCount);
             try
             {
-                var actualCharCount = _decoder.GetChars(emptyBytes, 0, 0, rentedBuffer, 0, flush: true);
+                var actualCharCount = _decoder.GetChars(
+                    emptyBytes,
+                    0,
+                    0,
+                    rentedBuffer,
+                    0,
+                    flush: true
+                );
                 if (actualCharCount > 0)
                 {
                     _writer.Write(rentedBuffer.AsSpan(0, actualCharCount));
@@ -221,7 +256,10 @@ internal sealed class StreamBridge(TextWriter writer) : Stream
             var actualCharCount = _decoder.GetChars(emptyBytes, 0, 0, rentedBuffer, 0, flush: true);
             if (actualCharCount > 0)
             {
-                await _writer.WriteAsync(rentedBuffer.AsMemory(0, actualCharCount), cancellationToken);
+                await _writer.WriteAsync(
+                    rentedBuffer.AsMemory(0, actualCharCount),
+                    cancellationToken
+                );
             }
         }
         finally

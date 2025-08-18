@@ -99,7 +99,10 @@ public sealed class Db4MemoFile : IMemoFile
 
             if (!_options.IgnoreMissingMemoFile)
             {
-                throw new InvalidDataException($"Failed to open memo file '{filePath}': {ex.Message}", ex);
+                throw new InvalidDataException(
+                    $"Failed to open memo file '{filePath}': {ex.Message}",
+                    ex
+                );
             }
         }
     }
@@ -168,8 +171,9 @@ public sealed class Db4MemoFile : IMemoFile
         if (_options.ValidateFields && !memoHeader.HasValidSignature)
         {
             throw new InvalidDataException(
-                $"Invalid memo header signature at index {index}. " +
-                $"Expected 0x{ExpectedReservedValue:X8}, got 0x{memoHeader.Reserved:X8}");
+                $"Invalid memo header signature at index {index}. "
+                    + $"Expected 0x{ExpectedReservedValue:X8}, got 0x{memoHeader.Reserved:X8}"
+            );
         }
 
         var dataLength = (int)memoHeader.Length;
@@ -178,15 +182,14 @@ public sealed class Db4MemoFile : IMemoFile
         if (dataLength <= remainingFileLength)
         {
             // use ArrayPool for large allocations, stack for small ones
-            return dataLength <= 1024
-                ? ReadSmallMemo(dataLength)
-                : ReadLargeMemo(dataLength);
+            return dataLength <= 1024 ? ReadSmallMemo(dataLength) : ReadLargeMemo(dataLength);
         }
 
         if (_options.ValidateFields)
         {
             throw new InvalidDataException(
-                $"Memo at index {index} claims length {dataLength} but only {remainingFileLength} bytes remain in file");
+                $"Memo at index {index} claims length {dataLength} but only {remainingFileLength} bytes remain in file"
+            );
         }
 
         return null;

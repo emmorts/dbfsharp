@@ -11,7 +11,7 @@ namespace DbfSharp.Core.Memo;
 public sealed class VfpMemoFile : IMemoFile
 {
     private const int HeaderSize = 512; // VFP memo file header is always 512 bytes
-    private const int BlockHeaderSize = 8; // Block header is 8 bytes (type + length)
+    private const int BlockHeaderSize = 8; // block header is 8 bytes (type + length)
     private const int DefaultBlockSize = 64;
     private const int SmallMemoThreshold = 4096;
 
@@ -25,12 +25,17 @@ public sealed class VfpMemoFile : IMemoFile
     /// Visual FoxPro memo file header structure
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    private readonly struct VfpMemoHeader(uint nextBlock, ushort reserved1, ushort blockSize, uint reserved2)
+    private readonly struct VfpMemoHeader(
+        uint nextBlock,
+        ushort reserved1,
+        ushort blockSize,
+        uint reserved2
+    )
     {
-        public readonly uint NextBlock = nextBlock; // Next available block
-        public readonly ushort Reserved1 = reserved1; // Reserved
-        public readonly ushort BlockSize = blockSize; // Size of each block
-        public readonly uint Reserved2 = reserved2; // Reserved (remaining bytes)
+        public readonly uint NextBlock = nextBlock; // next available block
+        public readonly ushort Reserved1 = reserved1; // reserved
+        public readonly ushort BlockSize = blockSize; // size of each block
+        public readonly uint Reserved2 = reserved2; // reserved (remaining bytes)
 
         /// <summary>
         /// Reads a VFP memo header from the given span
@@ -42,8 +47,10 @@ public sealed class VfpMemoFile : IMemoFile
         {
             if (data.Length < HeaderSize)
             {
-                throw new ArgumentException($"Insufficient data for memo header, need {HeaderSize} bytes",
-                    nameof(data));
+                throw new ArgumentException(
+                    $"Insufficient data for memo header, need {HeaderSize} bytes",
+                    nameof(data)
+                );
             }
 
             var nextBlock = MemoryMarshal.Read<uint>(data);
@@ -70,8 +77,8 @@ public sealed class VfpMemoFile : IMemoFile
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     private readonly struct VfpMemoBlockHeader(uint type, uint length)
     {
-        public readonly uint Type = type; // Memo type (0=Picture, 1=Text, 2=Object)
-        public readonly uint Length = length; // Length of memo data
+        public readonly uint Type = type; // memo type (0=Picture, 1=Text, 2=Object)
+        public readonly uint Length = length; // length of memo data
 
         /// <summary>
         /// Reads a memo block header from the given span
@@ -83,8 +90,10 @@ public sealed class VfpMemoFile : IMemoFile
         {
             if (data.Length < BlockHeaderSize)
             {
-                throw new ArgumentException($"Insufficient data for block header, need {BlockHeaderSize} bytes",
-                    nameof(data));
+                throw new ArgumentException(
+                    $"Insufficient data for block header, need {BlockHeaderSize} bytes",
+                    nameof(data)
+                );
             }
 
             var type = MemoryMarshal.Read<uint>(data);
@@ -152,7 +161,9 @@ public sealed class VfpMemoFile : IMemoFile
 
             if (!_header.IsValid)
             {
-                throw new InvalidDataException($"Invalid memo file header: block size is {_header.BlockSize}");
+                throw new InvalidDataException(
+                    $"Invalid memo file header: block size is {_header.BlockSize}"
+                );
             }
 
             IsValid = true;
@@ -164,7 +175,10 @@ public sealed class VfpMemoFile : IMemoFile
 
             if (!_options.IgnoreMissingMemoFile)
             {
-                throw new InvalidDataException($"Failed to open memo file '{filePath}': {ex.Message}", ex);
+                throw new InvalidDataException(
+                    $"Failed to open memo file '{filePath}': {ex.Message}",
+                    ex
+                );
             }
         }
     }
@@ -174,7 +188,9 @@ public sealed class VfpMemoFile : IMemoFile
     {
         if (_fileStream!.Length < HeaderSize)
         {
-            throw new InvalidDataException($"File too small for VFP memo header, need {HeaderSize} bytes");
+            throw new InvalidDataException(
+                $"File too small for VFP memo header, need {HeaderSize} bytes"
+            );
         }
 
         // use ArrayPool for header reading since it's exactly 512 bytes
@@ -187,7 +203,9 @@ public sealed class VfpMemoFile : IMemoFile
             var bytesRead = _fileStream.Read(actualBuffer);
             if (bytesRead < HeaderSize)
             {
-                throw new InvalidDataException($"Could not read complete header, got {bytesRead} bytes");
+                throw new InvalidDataException(
+                    $"Could not read complete header, got {bytesRead} bytes"
+                );
             }
 
             return VfpMemoHeader.ReadFromSpan(actualBuffer);
@@ -271,7 +289,8 @@ public sealed class VfpMemoFile : IMemoFile
         if (_options.ValidateFields)
         {
             throw new InvalidDataException(
-                $"Memo at index {index} claims length {dataLength} but only {remainingFileLength} bytes remain in file");
+                $"Memo at index {index} claims length {dataLength} but only {remainingFileLength} bytes remain in file"
+            );
         }
 
         return null;

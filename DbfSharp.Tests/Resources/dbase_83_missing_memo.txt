@@ -1,20 +1,19 @@
 Analyzing DBF file: dbase_83_missing_memo.dbf
 
 Header Information
-╭──────────────────┬────────────────────────────────────┬───────────────────────────╮
-│ Property         │ Value                              │ Details                   │
-├──────────────────┼────────────────────────────────────┼───────────────────────────┤
-│ DBF Version      │ FoxBASE+/dBASE III PLUS, with memo │ Byte: 0x83                │
-│ Last Update      │ 2003-12-18                         │ Raw: 103/12/18            │
-│ Header Length    │ 513 bytes                          │ Fields area: 480 bytes    │
-│ Record Length    │ 805 bytes                          │ Including deletion flag   │
-│ Total Records    │ 67                                 │ Including deleted records │
-│ MDX Index        │ None                               │ Flag: 0x00                │
-│ Encryption       │ None                               │ Flag: 0x00                │
-│ Language Driver  │ plain ol' ascii                    │ Code: 0x00                │
-│ File Size        │ 53.17 KB                           │ 54,449 bytes              │
-│ Size vs Expected │ +1 byte larger than expected       │ Expected: 53.17 KB        │
-╰──────────────────┴────────────────────────────────────┴───────────────────────────╯
+╭─────────────────┬────────────────────────────────────┬───────────────────────────╮
+│ Property        │ Value                              │ Details                   │
+├─────────────────┼────────────────────────────────────┼───────────────────────────┤
+│ DBF Version     │ FoxBASE+/dBASE III PLUS, with memo │ Byte: 0x83                │
+│ Last Update     │ 2003-12-18                         │ Raw: 103/12/18            │
+│ Header Length   │ 513 bytes                          │ Fields area: 480 bytes    │
+│ Record Length   │ 805 bytes                          │ Including deletion flag   │
+│ Total Records   │ 67                                 │ Including deleted records │
+│ MDX Index       │ None                               │ Flag: 0x00                │
+│ Encryption      │ None                               │ Flag: 0x00                │
+│ Language Driver │ plain ol' ascii                    │ Code: 0x00                │
+│ File Size       │ 53.17 KB                           │ 54,449 bytes              │
+╰─────────────────┴────────────────────────────────────┴───────────────────────────╯
 
 Field Definitions
 ╭────┬───────────┬───────────────┬────────┬──────────┬───────╮
@@ -56,6 +55,6 @@ Performance Information
 ╰───────────────────────────┴───────────┴────────────────────────────────────╯
 
 Performance Summary for Analyze DBF File:
-  Elapsed Time: 00:00.058
+  Elapsed Time: 00:00.037
   Memory Used: 0.0 MB
-  Peak Working Set: 26.0 MB
+  Peak Working Set: 24.0 MB

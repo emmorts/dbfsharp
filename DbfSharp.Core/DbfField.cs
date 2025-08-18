@@ -1,5 +1,3 @@
-using System.Buffers;
-using System.IO.Pipelines;
 using System.Text;
 using DbfSharp.Core.Enums;
 
@@ -7,9 +5,8 @@ namespace DbfSharp.Core;
 
 /// <summary>
 /// Represents a field descriptor in a DBF file
-/// Based on the DBFField structure from the Python dbfread implementation
 /// </summary>
-public readonly struct DbfField
+public readonly struct DbfField : IEquatable<DbfField>
 {
     /// <summary>
     /// Size of each field descriptor in bytes
@@ -124,19 +121,9 @@ public readonly struct DbfField
     }
 
     /// <summary>
-    /// Gets the expected .NET type for this field
-    /// </summary>
-    public Type ExpectedNetType => Type.GetExpectedNetType();
-
-    /// <summary>
     /// Indicates whether this field type uses memo files
     /// </summary>
     public bool UsesMemoFile => Type.UsesMemoFile();
-
-    /// <summary>
-    /// Indicates whether this field type supports null values
-    /// </summary>
-    public bool SupportsNull => Type.SupportsNull();
 
     /// <summary>
     /// Gets the actual field length, handling special cases
@@ -171,153 +158,66 @@ public readonly struct DbfField
     }
 
     /// <summary>
-    /// Asynchronously reads field descriptors from a pipe reader.
+    /// Finds the correct field terminator in a byte buffer, handling embedded 0x0D bytes in Visual FoxPro files
     /// </summary>
-    public static async ValueTask<DbfField[]> ReadFieldsAsync(
-        PipeReader pipeReader,
-        Encoding encoding,
-        int fieldCount,
-        bool lowerCaseNames = false,
-        DbfVersion dbfVersion = DbfVersion.Unknown,
-        ushort headerLength = 0,
-        CancellationToken cancellationToken = default
-    )
+    private static int FindCorrectTerminatorSync(ReadOnlySpan<byte> buffer, DbfVersion dbfVersion)
     {
-        ArgumentNullException.ThrowIfNull(pipeReader);
-        ArgumentNullException.ThrowIfNull(encoding);
-
-        if (dbfVersion == DbfVersion.DBase2)
-        {
-            return await ReadDBase2FieldsAsync(pipeReader, encoding, lowerCaseNames, cancellationToken);
-        }
-
-        var fields = new List<DbfField>();
-        var terminatorFound = false;
-
-        while (!terminatorFound)
-        {
-            ReadResult result;
-            try
-            {
-                result = await pipeReader.ReadAsync(cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                break;
-            }
-
-            var buffer = result.Buffer;
-
-            if (result.IsCanceled)
-            {
-                break;
-            }
-
-            if (buffer.IsEmpty && result.IsCompleted)
-            {
-                break; // End of stream
-            }
-
-            var sequenceReader = new SequenceReader<byte>(buffer);
-
-            while (sequenceReader.TryPeek(out var b))
-            {
-                if (b == 0x0D)
-                {
-                    terminatorFound = true;
-                    sequenceReader.Advance(1); // Consume terminator
-                    break;
-                }
-
-                if (sequenceReader.Remaining < Size)
-                {
-                    // Not enough data for a full field. Need more from the pipe.
-                    break;
-                }
-
-                var fieldData = sequenceReader.Sequence.Slice(sequenceReader.Position, Size);
-                var field = FromBytes(fieldData.ToArray(), encoding, lowerCaseNames);
-                fields.Add(field);
-
-                sequenceReader.Advance(Size);
-            }
-
-            var consumed = sequenceReader.Position;
-            pipeReader.AdvanceTo(consumed, result.Buffer.End);
-
-            if (result.IsCompleted)
-            {
-                break;
-            }
-        }
-
-        return fields.ToArray();
-    }
-
-    /// <summary>
-    /// Finds the correct field terminator by looking for 0x0D bytes that appear at reasonable positions
-    /// for field boundaries, avoiding false positives within field definition data.
-    /// </summary>
-    private static SequencePosition? FindCorrectTerminator(ReadOnlySequence<byte> buffer, DbfVersion dbfVersion)
-    {
-        // For most DBF versions, the first 0x0D is the terminator
-        // For dBASE III+ with memo (0x83) and Visual FoxPro versions, we need to be more careful due to embedded 0x0D bytes
+        // for most DBF versions, the first 0x0D is the terminator
+        // for dBASE III+ with memo (0x83) and Visual FoxPro versions, we need to be more careful due to embedded 0x0D bytes
 
         if (dbfVersion != DbfVersion.DBase3PlusWithMemo && !dbfVersion.IsVisualFoxPro())
         {
-            return buffer.PositionOf((byte)0x0D);
+            return buffer.IndexOf((byte)0x0D);
         }
 
-        // For dBASE III+ with memo and Visual FoxPro, look for terminators that are at reasonable positions
-        // This avoids false positives from 0x0D bytes within field definition data
-        var position = buffer.Start;
-        var searchBuffer = buffer;
+        // for dBASE III+ with memo and Visual FoxPro, look for terminators that are at reasonable positions
+        // this avoids false positives from 0x0D bytes within field definition data
+        var searchStart = 0;
 
-        while (true)
+        while (searchStart < buffer.Length)
         {
-            var terminator = searchBuffer.PositionOf((byte)0x0D);
-            if (terminator == null)
+            var terminatorIndex = buffer[searchStart..].IndexOf((byte)0x0D);
+            if (terminatorIndex < 0)
             {
                 break;
             }
 
-            var absolutePosition = buffer.GetPosition((int)searchBuffer.Slice(0, terminator.Value).Length, position);
-            var offsetToTerminator = buffer.Slice(0, absolutePosition).Length;
+            var absoluteTerminatorPos = searchStart + terminatorIndex;
 
-            // Check if this terminator is at a field boundary (multiple of 32 bytes) OR
+            // check if this terminator is at a field boundary (multiple of 32 bytes) OR
             // if it's preceded by null bytes (padding), which is common in Visual FoxPro
-            if (offsetToTerminator % Size == 0 || IsValidTerminatorPosition(buffer, absolutePosition))
+            if (
+                absoluteTerminatorPos % Size == 0
+                || IsValidTerminatorPositionSync(buffer, absoluteTerminatorPos)
+            )
             {
-                return absolutePosition;
+                return absoluteTerminatorPos;
             }
 
-            // Move past this terminator and continue searching
-            var nextStart = buffer.GetPosition(1, absolutePosition);
-            searchBuffer = buffer.Slice(nextStart);
-            position = nextStart;
+            searchStart = absoluteTerminatorPos + 1;
         }
 
-        return null;
+        return -1;
     }
 
     /// <summary>
-    /// Check if a terminator position is valid by examining the preceding bytes for null padding
+    /// Check if a terminator position is valid by examining the preceding bytes for null padding (sync version)
     /// </summary>
-    private static bool IsValidTerminatorPosition(ReadOnlySequence<byte> buffer, SequencePosition terminatorPosition)
+    private static bool IsValidTerminatorPositionSync(
+        ReadOnlySpan<byte> buffer,
+        int terminatorPosition
+    )
     {
-        // Look at the 16 bytes before the terminator to see if they're mostly null (padding)
-        var terminatorOffset = buffer.Slice(0, terminatorPosition).Length;
-        if (terminatorOffset < 16)
+        // look at the 16 bytes before the terminator to see if they're mostly null (padding)
+        if (terminatorPosition < 16)
         {
             return false;
         }
 
-        var precedingBytes = buffer.Slice(terminatorOffset - 16, 16);
+        var precedingBytes = buffer.Slice(terminatorPosition - 16, 16);
         var nullCount = 0;
 
-        // Check if the preceding bytes are mostly null (padding)
-        var reader = new SequenceReader<byte>(precedingBytes);
-        while (reader.TryRead(out var b))
+        foreach (var b in precedingBytes)
         {
             if (b == 0)
             {
@@ -325,79 +225,8 @@ public readonly struct DbfField
             }
         }
 
-        // If more than 75% of the preceding bytes are null, this is likely valid padding before a terminator
+        // if more than 75% of the preceding bytes are null, this is likely valid padding before a terminator
         return nullCount >= 12; // 12 out of 16 bytes = 75%
-    }
-
-    /// <summary>
-    /// Asynchronously reads field descriptors from a stream.
-    /// </summary>
-    public static async ValueTask<DbfField[]> ReadFieldsAsync(
-        Stream stream,
-        Encoding encoding,
-        int fieldCount,
-        bool lowerCaseNames = false,
-        DbfVersion dbfVersion = DbfVersion.Unknown,
-        ushort headerLength = 0,
-        CancellationToken cancellationToken = default
-    )
-    {
-        ArgumentNullException.ThrowIfNull(stream);
-        ArgumentNullException.ThrowIfNull(encoding);
-
-        if (dbfVersion == DbfVersion.DBase2)
-        {
-            return await ReadDBase2FieldsAsync(stream, encoding, lowerCaseNames, cancellationToken);
-        }
-
-        var fields = new List<DbfField>();
-        var firstByteBuf = new byte[1];
-        var fieldBytes = new byte[Size];
-
-        while (true)
-        {
-            var currentPosition = stream.Position;
-            var bytesRead = await stream.ReadAsync(firstByteBuf.AsMemory(0, 1), cancellationToken);
-
-            if (bytesRead == 0 || firstByteBuf[0] == 0x0D || firstByteBuf[0] == 0x1A)
-            {
-                break;
-            }
-
-            fieldBytes[0] = firstByteBuf[0];
-            await stream.ReadExactlyAsync(
-                new Memory<byte>(fieldBytes, 1, Size - 1),
-                cancellationToken
-            );
-
-            try
-            {
-                var field = FromBytes(fieldBytes, encoding, lowerCaseNames);
-                if (string.IsNullOrWhiteSpace(field.Name) || field.ActualLength == 0)
-                {
-                    stream.Position = currentPosition;
-                    break;
-                }
-                fields.Add(field);
-            }
-            catch (ArgumentException)
-            {
-                stream.Position = currentPosition;
-                break;
-            }
-            catch (Exception)
-            {
-                stream.Position = currentPosition;
-                break;
-            }
-
-            if (fields.Count >= 255)
-            {
-                break;
-            }
-        }
-
-        return fields.ToArray();
     }
 
     /// <summary>
@@ -406,7 +235,6 @@ public readonly struct DbfField
     public static DbfField[] ReadFields(
         BinaryReader reader,
         Encoding encoding,
-        int fieldCount,
         bool lowerCaseNames = false,
         DbfVersion dbfVersion = DbfVersion.Unknown
     )
@@ -421,7 +249,6 @@ public readonly struct DbfField
 
         var fields = new List<DbfField>();
 
-        // Read remaining stream data to find terminator (similar to async version)
         var startPosition = reader.BaseStream.Position;
         var remainingLength = reader.BaseStream.Length - startPosition;
         if (remainingLength <= 0)
@@ -429,43 +256,29 @@ public readonly struct DbfField
             return fields.ToArray();
         }
 
-        var bufferSize = (int)Math.Min(remainingLength, 64 * 1024); // Read in chunks like async version
+        var bufferSize = (int)Math.Min(remainingLength, 64 * 1024);
         var buffer = reader.ReadBytes(bufferSize);
-        reader.BaseStream.Position = startPosition; // Reset position
+        reader.BaseStream.Position = startPosition;
 
-        // Find terminator in buffer (equivalent to async buffer.PositionOf((byte)0x0D))
-        var terminatorPos = -1;
-        for (var i = 0; i < buffer.Length; i++)
-        {
-            if (buffer[i] == 0x0D)
-            {
-                terminatorPos = i;
-                break;
-            }
-        }
-
-        // Process only data up to terminator (equivalent to async buffer.Slice(0, terminator.Value))
+        var terminatorPos = FindCorrectTerminatorSync(buffer, dbfVersion);
         var dataLength = terminatorPos >= 0 ? terminatorPos : buffer.Length;
 
-        // Check for immediate terminator (no field definitions)
+        // check for immediate terminator (no field definitions)
         if (dataLength > 0 && (buffer[0] == 0x0D || buffer[0] == 0x1A))
         {
-            // No field definitions, advance stream position past terminator
+            // no field definitions, advance stream position past terminator
             reader.BaseStream.Position = startPosition + 1;
             return fields.ToArray();
         }
 
-        // Process fields from the buffer
         var bufferPos = 0;
         while (bufferPos + Size <= dataLength)
         {
-            // Check for terminator at field start (equivalent to async fieldSequence.FirstSpan[0] check)
             if (buffer[bufferPos] == 0x0D || buffer[bufferPos] == 0x1A || buffer[bufferPos] == 0x00)
             {
                 break;
             }
 
-            // Extract field bytes
             var fieldBytes = new ReadOnlySpan<byte>(buffer, bufferPos, Size);
 
             try
@@ -496,121 +309,7 @@ public readonly struct DbfField
             }
         }
 
-        // Advance stream position to after processed fields
         reader.BaseStream.Position = startPosition + bufferPos;
-
-        return fields.ToArray();
-    }
-
-    private static async ValueTask<DbfField[]> ReadDBase2FieldsAsync(
-        PipeReader pipeReader,
-        Encoding encoding,
-        bool lowerCaseNames,
-        CancellationToken cancellationToken
-    )
-    {
-        var fields = new List<DbfField>();
-        byte[]? rentedBuffer = null;
-
-        try
-        {
-            rentedBuffer = ArrayPool<byte>.Shared.Rent(DBase2Size);
-
-            while (fields.Count < 128)
-            {
-                var result = await pipeReader.ReadAsync(cancellationToken);
-                var buffer = result.Buffer;
-
-                if (buffer.Length < DBase2Size)
-                {
-                    if (result.IsCompleted)
-                    {
-                        break;
-                    }
-
-                    pipeReader.AdvanceTo(buffer.Start, buffer.End);
-                    continue;
-                }
-
-                var fieldSequence = buffer.Slice(0, DBase2Size);
-                if (fieldSequence.IsSingleSegment)
-                {
-                    if (!IsValidDBase2Field(fieldSequence.FirstSpan))
-                    {
-                        pipeReader.AdvanceTo(buffer.Start);
-                        break;
-                    }
-                    fields.Add(FromDBase2Bytes(fieldSequence.FirstSpan, encoding, lowerCaseNames));
-                }
-                else
-                {
-                    var fieldBytes = rentedBuffer.AsSpan(0, DBase2Size);
-                    fieldSequence.CopyTo(fieldBytes);
-                    if (!IsValidDBase2Field(fieldBytes))
-                    {
-                        pipeReader.AdvanceTo(buffer.Start);
-                        break;
-                    }
-                    fields.Add(FromDBase2Bytes(fieldBytes, encoding, lowerCaseNames));
-                }
-
-                pipeReader.AdvanceTo(fieldSequence.End);
-            }
-
-            return fields.ToArray();
-        }
-        finally
-        {
-            if (rentedBuffer != null)
-            {
-                ArrayPool<byte>.Shared.Return(rentedBuffer);
-            }
-        }
-    }
-
-    private static async ValueTask<DbfField[]> ReadDBase2FieldsAsync(
-        Stream stream,
-        Encoding encoding,
-        bool lowerCaseNames,
-        CancellationToken cancellationToken
-    )
-    {
-        var fields = new List<DbfField>();
-        var fieldBytes = new byte[DBase2Size];
-
-        while (true)
-        {
-            var currentPosition = stream.Position;
-            var bytesRead = await stream.ReadAsync(fieldBytes.AsMemory(0, DBase2Size), cancellationToken);
-
-            if (bytesRead != DBase2Size)
-            {
-                stream.Position = currentPosition;
-                break;
-            }
-
-            if (!IsValidDBase2Field(fieldBytes))
-            {
-                stream.Position = currentPosition;
-                break;
-            }
-
-            try
-            {
-                var field = FromDBase2Bytes(fieldBytes, encoding, lowerCaseNames);
-                fields.Add(field);
-            }
-            catch (Exception)
-            {
-                stream.Position = currentPosition;
-                break;
-            }
-
-            if (fields.Count >= 128)
-            {
-                break;
-            }
-        }
 
         return fields.ToArray();
     }
@@ -932,6 +631,11 @@ public readonly struct DbfField
     public override bool Equals(object? obj)
     {
         return obj is DbfField other && Equals(other);
+    }
+
+    bool IEquatable<DbfField>.Equals(DbfField other)
+    {
+        return Equals(other);
     }
 
     private bool Equals(DbfField other)

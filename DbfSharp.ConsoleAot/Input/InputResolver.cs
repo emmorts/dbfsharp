@@ -25,8 +25,9 @@ public static class InputResolver
         if (!IsStdinAvailable())
         {
             throw new InvalidOperationException(
-                "No input file specified and no data available from stdin. " +
-                "Provide a file path or pipe data to stdin (e.g., 'cat file.dbf | dbfsharp read').");
+                "No input file specified and no data available from stdin. "
+                    + "Provide a file path or pipe data to stdin (e.g., 'cat file.dbf | dbfsharp read')."
+            );
         }
 
         return await CreateStdinInputSourceAsync();
@@ -73,7 +74,8 @@ public static class InputResolver
 
             return true;
         }
-        catch (Exception ex) when (ex is IOException or InvalidOperationException or ObjectDisposedException)
+        catch (Exception ex)
+            when (ex is IOException or InvalidOperationException or ObjectDisposedException)
         {
             return false;
         }
@@ -145,7 +147,8 @@ public static class InputResolver
             FileAccess.Read,
             FileShare.Read,
             bufferSize: 65536,
-            FileOptions.DeleteOnClose | FileOptions.SequentialScan);
+            FileOptions.DeleteOnClose | FileOptions.SequentialScan
+        );
 
         return new TemporaryFileInputSource(fileStream, "stdin", tempFile);
     }

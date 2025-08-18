@@ -59,7 +59,10 @@ public sealed class Db3MemoFile : IMemoFile
 
             if (!_options.IgnoreMissingMemoFile)
             {
-                throw new InvalidDataException($"Failed to open memo file '{filePath}': {ex.Message}", ex);
+                throw new InvalidDataException(
+                    $"Failed to open memo file '{filePath}': {ex.Message}",
+                    ex
+                );
             }
         }
     }
@@ -141,9 +144,7 @@ public sealed class Db3MemoFile : IMemoFile
             dataBuilder.Append(actualData);
         }
 
-        return dataBuilder.Length > 0
-            ? new TextMemo(dataBuilder.ToReadOnlyMemory())
-            : null;
+        return dataBuilder.Length > 0 ? new TextMemo(dataBuilder.ToReadOnlyMemory()) : null;
     }
 
     /// <summary>

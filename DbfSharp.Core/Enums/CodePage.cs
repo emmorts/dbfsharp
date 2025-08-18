@@ -92,7 +92,7 @@ public static class CodePage
 
         try
         {
-            // Handle special encoding names that .NET uses different names for
+            // special encoding names that .NET uses different names for
             var encodingName = codePage.EncodingName switch
             {
                 "cp437" => "ibm437",
@@ -117,12 +117,10 @@ public static class CodePage
         }
         catch (ArgumentException)
         {
-            // Encoding not supported on this platform
             return null;
         }
         catch (NotSupportedException)
         {
-            // Encoding not supported on this platform
             return null;
         }
     }
@@ -155,7 +153,7 @@ public static class CodePage
             return encoding;
         }
 
-        // Fallback to ASCII for unknown language drivers
+        // fallback to ASCII for unknown language drivers
         return Encoding.ASCII;
     }
 

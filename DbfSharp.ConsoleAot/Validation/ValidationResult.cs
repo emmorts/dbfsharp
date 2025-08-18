@@ -17,6 +17,11 @@ public sealed record ValidationResult
 
     public static ValidationResult Failure(string errorMessage, string? suggestion = null)
     {
-        return new ValidationResult { IsValid = false, ErrorMessage = errorMessage, Suggestion = suggestion };
+        return new ValidationResult
+        {
+            IsValid = false,
+            ErrorMessage = errorMessage,
+            Suggestion = suggestion,
+        };
     }
 }

@@ -1,6 +1,5 @@
 using DbfSharp.Core;
 using DbfSharp.Core.Enums;
-using Xunit;
 
 namespace DbfSharp.Tests;
 
@@ -57,34 +56,27 @@ public class DbfFieldTests
     [InlineData(FieldType.Integer, false)]
     public void SupportsNull_ShouldReturnCorrectValue(FieldType dbfType, bool expected)
     {
-        // Act
         var actual = dbfType.SupportsNull();
 
-        // Assert
         Assert.Equal(expected, actual);
     }
 
     [Fact]
     public void ToString_ShouldReturnNameAndType()
     {
-        // Arrange
         var field = new DbfField("TEST", FieldType.Character, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0);
 
-        // Act
         var result = field.ToString();
 
-        // Assert
         Assert.Equal("TEST (Character, 10)", result);
     }
 
     [Fact]
     public void Equals_ShouldReturnTrueForSameField()
     {
-        // Arrange
         var field1 = new DbfField("TEST", FieldType.Character, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0);
         var field2 = new DbfField("TEST", FieldType.Character, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0);
 
-        // Act & Assert
         Assert.True(field1.Equals(field2));
         Assert.True(field1 == field2);
         Assert.False(field1 != field2);
@@ -94,11 +86,9 @@ public class DbfFieldTests
     [Fact]
     public void Equals_ShouldReturnFalseForDifferentField()
     {
-        // Arrange
         var field1 = new DbfField("TEST1", FieldType.Character, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0);
         var field2 = new DbfField("TEST2", FieldType.Numeric, 0, 12, 2, 0, 0, 0, 0, 0, 0, 0);
 
-        // Act & Assert
         Assert.False(field1.Equals(field2));
         Assert.False(field1 == field2);
         Assert.True(field1 != field2);
@@ -121,19 +111,39 @@ public class DbfFieldTests
     [InlineData("L", 2, 0, DbfVersion.DBase3Plus, false)] // Invalid logical length
     [InlineData("D", 9, 0, DbfVersion.DBase3Plus, false)] // Invalid date length
     [InlineData("M", 11, 0, DbfVersion.DBase3Plus, false)] // Invalid memo length
-    public void Validate_ShouldWorkForVariousFieldTypes(string type, byte length, byte decimalCount, DbfVersion version, bool expected)
+    public void Validate_ShouldWorkForVariousFieldTypes(
+        string type,
+        byte length,
+        byte decimalCount,
+        DbfVersion version,
+        bool expected
+    )
     {
-        // Arrange
         var fieldType = FieldTypeExtensions.FromChar(type[0]);
-        var field = new DbfField("TEST", fieldType.Value, 0, length, decimalCount, 0, 0, 0, 0, 0, 0, 0);
+        var field = new DbfField(
+            "TEST",
+            fieldType.Value,
+            0,
+            length,
+            decimalCount,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+        );
 
-        // Act
         var exception = Record.Exception(() => field.Validate(version));
 
-        // Assert
         if (expected)
+        {
             Assert.Null(exception);
+        }
         else
+        {
             Assert.NotNull(exception);
+        }
     }
 }

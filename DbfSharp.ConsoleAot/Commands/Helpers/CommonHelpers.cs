@@ -52,7 +52,7 @@ public static class CommonHelpers
             _ when bytes >= gb => $"{bytes / gb:F2} GB",
             _ when bytes >= mb => $"{bytes / mb:F2} MB",
             _ when bytes >= kb => $"{bytes / kb:F2} KB",
-            _ => $"{bytes} bytes"
+            _ => $"{bytes} bytes",
         };
     }
 
@@ -73,7 +73,7 @@ public static class CommonHelpers
             bool b => b ? "True" : "False",
             Core.Parsing.InvalidValue => "<invalid>",
             byte[] bytes => $"<{bytes.Length} bytes>",
-            _ => value.ToString() ?? "NULL"
+            _ => value.ToString() ?? "NULL",
         };
     }
 }

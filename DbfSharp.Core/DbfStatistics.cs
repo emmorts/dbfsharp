@@ -162,7 +162,7 @@ public sealed class DbfStatistics
             $"Header Size: {HeaderLength} bytes",
             $"Encoding: {Encoding}",
             $"Memo File: {(HasMemoFile ? MemoFilePath ?? "Yes" : "No")}",
-            $"Mode: {(IsLoaded ? "Loaded" : "Streaming")}"
+            $"Mode: {(IsLoaded ? "Loaded" : "Streaming")}",
         };
 
         return string.Join(Environment.NewLine, lines);

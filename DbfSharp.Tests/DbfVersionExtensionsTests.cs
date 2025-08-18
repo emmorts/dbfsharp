@@ -1,5 +1,4 @@
 using DbfSharp.Core.Enums;
-using Xunit;
 
 namespace DbfSharp.Tests;
 
@@ -13,10 +12,8 @@ public class DbfVersionExtensionsTests
     [InlineData(DbfVersion.Unknown, "Unknown (0xFF)")]
     public void GetDescription_ShouldReturnCorrectString(DbfVersion version, string expected)
     {
-        // Act
         var actual = version.GetDescription();
 
-        // Assert
         Assert.Equal(expected, actual);
     }
 
@@ -28,10 +25,8 @@ public class DbfVersionExtensionsTests
     [InlineData(DbfVersion.Unknown, false)]
     public void IsLegacyFormat_ShouldReturnCorrectValue(DbfVersion version, bool expected)
     {
-        // Act
         var actual = version.IsLegacyFormat();
 
-        // Assert
         Assert.Equal(expected, actual);
     }
 }

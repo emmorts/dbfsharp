@@ -1,4 +1,3 @@
-using DbfSharp.ConsoleAot.Commands;
 using DbfSharp.ConsoleAot.Commands.Configuration;
 
 namespace DbfSharp.ConsoleAot.Formatters;
@@ -14,7 +13,10 @@ public static class FormatterFactory
     /// <param name="format">The desired output format</param>
     /// <param name="configuration">Read command settings for extracting formatter options</param>
     /// <returns>The configured formatter instance</returns>
-    public static IDbfFormatter CreateFormatter(OutputFormat format, ReadConfiguration configuration)
+    public static IDbfFormatter CreateFormatter(
+        OutputFormat format,
+        ReadConfiguration configuration
+    )
     {
         var options = CreateFormatterOptions(configuration);
 

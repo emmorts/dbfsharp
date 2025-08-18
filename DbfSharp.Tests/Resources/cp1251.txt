@@ -1,20 +1,19 @@
 Analyzing DBF file: cp1251.dbf
 
 Header Information
-╭──────────────────┬──────────────────────────────┬───────────────────────────╮
-│ Property         │ Value                        │ Details                   │
-├──────────────────┼──────────────────────────────┼───────────────────────────┤
-│ DBF Version      │ Visual FoxPro                │ Byte: 0x30                │
-│ Last Update      │ 2003-10-07                   │ Raw: 03/10/07             │
-│ Header Length    │ 360 bytes                    │ Fields area: 327 bytes    │
-│ Record Length    │ 105 bytes                    │ Including deletion flag   │
-│ Total Records    │ 4                            │ Including deleted records │
-│ MDX Index        │ Present                      │ Flag: 0x01                │
-│ Encryption       │ None                         │ Flag: 0x00                │
-│ Language Driver  │ Russian Windows              │ Code: 0xC9                │
-│ File Size        │ 781 bytes                    │ 781 bytes                 │
-│ Size vs Expected │ +1 byte larger than expected │ Expected: 780 bytes       │
-╰──────────────────┴──────────────────────────────┴───────────────────────────╯
+╭─────────────────┬─────────────────┬───────────────────────────╮
+│ Property        │ Value           │ Details                   │
+├─────────────────┼─────────────────┼───────────────────────────┤
+│ DBF Version     │ Visual FoxPro   │ Byte: 0x30                │
+│ Last Update     │ 2003-10-07      │ Raw: 03/10/07             │
+│ Header Length   │ 360 bytes       │ Fields area: 327 bytes    │
+│ Record Length   │ 105 bytes       │ Including deletion flag   │
+│ Total Records   │ 4               │ Including deleted records │
+│ MDX Index       │ Present         │ Flag: 0x01                │
+│ Encryption      │ None            │ Flag: 0x00                │
+│ Language Driver │ Russian Windows │ Code: 0xC9                │
+│ File Size       │ 781 bytes       │ 781 bytes                 │
+╰─────────────────┴─────────────────┴───────────────────────────╯
 
 Field Definitions
 ╭───┬──────┬───────────────┬────────┬──────────┬───────╮
@@ -43,6 +42,6 @@ Performance Information
 ╰───────────────────────────┴─────────┴────────────────────────────────────╯
 
 Performance Summary for Analyze DBF File:
-  Elapsed Time: 00:00.051
+  Elapsed Time: 00:00.039
   Memory Used: 0.0 MB
-  Peak Working Set: 25.0 MB
+  Peak Working Set: 24.0 MB

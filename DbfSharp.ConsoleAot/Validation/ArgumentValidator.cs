@@ -15,7 +15,12 @@ public static class ArgumentValidator
     /// <param name="limit">Maximum number of records to process</param>
     /// <param name="skip">Number of records to skip</param>
     /// <returns>Validation result with error details if invalid</returns>
-    public static ValidationResult ValidateReadArguments(string? filePath, string? outputPath, int? limit, int skip)
+    public static ValidationResult ValidateReadArguments(
+        string? filePath,
+        string? outputPath,
+        int? limit,
+        int skip
+    )
     {
         var inputValidation = ValidateInputSource(filePath);
         if (!inputValidation.IsValid)
@@ -68,7 +73,8 @@ public static class ArgumentValidator
         {
             return ValidationResult.Failure(
                 "No input file specified and no data available from stdin.",
-                "Provide a file path or pipe data to stdin (e.g., 'cat file.dbf | dbfsharp read').");
+                "Provide a file path or pipe data to stdin (e.g., 'cat file.dbf | dbfsharp read')."
+            );
         }
 
         return ValidationResult.Success();
@@ -85,7 +91,8 @@ public static class ArgumentValidator
             {
                 return ValidationResult.Failure(
                     $"File '{filePath}' does not exist.",
-                    "Verify the file path and ensure the file exists.");
+                    "Verify the file path and ensure the file exists."
+                );
             }
 
             var fileInfo = new FileInfo(filePath);
@@ -93,7 +100,8 @@ public static class ArgumentValidator
             {
                 return ValidationResult.Failure(
                     $"File '{filePath}' is empty.",
-                    "Ensure the file contains valid DBF data.");
+                    "Ensure the file contains valid DBF data."
+                );
             }
 
             var extension = Path.GetExtension(filePath).ToLowerInvariant();
@@ -101,7 +109,8 @@ public static class ArgumentValidator
             {
                 return ValidationResult.Failure(
                     $"File '{filePath}' does not have a recognized DBF extension.",
-                    "DBF files typically have extensions like .dbf, .dbt, .ndx, or .mdx.");
+                    "DBF files typically have extensions like .dbf, .dbt, .ndx, or .mdx."
+                );
             }
 
             return ValidationResult.Success();
@@ -110,13 +119,15 @@ public static class ArgumentValidator
         {
             return ValidationResult.Failure(
                 $"Access denied to file '{filePath}'.",
-                "Check file permissions or run with appropriate privileges.");
+                "Check file permissions or run with appropriate privileges."
+            );
         }
         catch (Exception ex) when (ex is IOException or ArgumentException or NotSupportedException)
         {
             return ValidationResult.Failure(
                 $"Cannot access file '{filePath}': {ex.Message}",
-                "Verify the file path is valid and accessible.");
+                "Verify the file path is valid and accessible."
+            );
         }
     }
 
@@ -139,7 +150,8 @@ public static class ArgumentValidator
             {
                 return ValidationResult.Failure(
                     $"Output directory '{directory}' does not exist.",
-                    "Create the directory or specify a different output path.");
+                    "Create the directory or specify a different output path."
+                );
             }
 
             if (File.Exists(fullPath))
@@ -153,13 +165,15 @@ public static class ArgumentValidator
         {
             return ValidationResult.Failure(
                 $"Invalid output path '{outputPath}'.",
-                "Ensure the path contains only valid characters and is not too long.");
+                "Ensure the path contains only valid characters and is not too long."
+            );
         }
         catch (Exception ex) when (ex is NotSupportedException or PathTooLongException)
         {
             return ValidationResult.Failure(
                 $"Invalid output path '{outputPath}': {ex.Message}",
-                "Use a shorter path or avoid special characters.");
+                "Use a shorter path or avoid special characters."
+            );
         }
     }
 
@@ -177,13 +191,15 @@ public static class ArgumentValidator
         {
             return ValidationResult.Failure(
                 $"Cannot write to output file '{fullPath}': Access denied.",
-                "Check file permissions or choose a different output location.");
+                "Check file permissions or choose a different output location."
+            );
         }
         catch (IOException ex)
         {
             return ValidationResult.Failure(
                 $"Cannot write to output file '{fullPath}': {ex.Message}",
-                "Ensure the file is not in use by another process.");
+                "Ensure the file is not in use by another process."
+            );
         }
     }
 
@@ -208,13 +224,15 @@ public static class ArgumentValidator
         {
             return ValidationResult.Failure(
                 $"Cannot create files in directory '{directory}': Access denied.",
-                "Check directory permissions or choose a different location.");
+                "Check directory permissions or choose a different location."
+            );
         }
         catch (IOException ex)
         {
             return ValidationResult.Failure(
                 $"Cannot create files in directory '{directory}': {ex.Message}",
-                "Ensure the directory is writable and has sufficient space.");
+                "Ensure the directory is writable and has sufficient space."
+            );
         }
     }
 
@@ -227,14 +245,16 @@ public static class ArgumentValidator
         {
             return ValidationResult.Failure(
                 "Limit must be a non-negative number.",
-                "Use 0 or a positive number, or omit --limit to show all records.");
+                "Use 0 or a positive number, or omit --limit to show all records."
+            );
         }
 
         if (limit == 0)
         {
             return ValidationResult.Failure(
                 "Limit cannot be zero.",
-                "Use a positive number or omit --limit to show all records.");
+                "Use a positive number or omit --limit to show all records."
+            );
         }
 
         return ValidationResult.Success();
@@ -249,7 +269,8 @@ public static class ArgumentValidator
         {
             return ValidationResult.Failure(
                 "Skip must be a non-negative number.",
-                "Use 0 or a positive number to skip records from the beginning.");
+                "Use 0 or a positive number to skip records from the beginning."
+            );
         }
 
         return ValidationResult.Success();
@@ -262,7 +283,12 @@ public static class ArgumentValidator
     {
         var knownExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            ".dbf", ".dbt", ".ndx", ".mdx", ".fpt", ".cdx"
+            ".dbf",
+            ".dbt",
+            ".ndx",
+            ".mdx",
+            ".fpt",
+            ".cdx",
         };
 
         return knownExtensions.Contains(extension);
@@ -285,7 +311,10 @@ public static class ArgumentValidator
         {
             var message = $"Encoding '{encodingName}' is not supported or the name is misspelled. ";
 
-            return ValidationResult.Failure(message, "Common examples include: UTF-8, Windows-1252 (ANSI), IBM437 (DOS).");
+            return ValidationResult.Failure(
+                message,
+                "Common examples include: UTF-8, Windows-1252 (ANSI), IBM437 (DOS)."
+            );
         }
 
         return ValidationResult.Success();

@@ -70,7 +70,13 @@ public class ConsoleTableWriter
         }
 
         // Bottom border
-        PrintLine(style.BottomLeft, style.BottomT, style.BottomRight, style.Horizontal, columnWidths);
+        PrintLine(
+            style.BottomLeft,
+            style.BottomT,
+            style.BottomRight,
+            style.Horizontal,
+            columnWidths
+        );
     }
 
     private int[] CalculateColumnWidths()
@@ -94,7 +100,13 @@ public class ConsoleTableWriter
         return columnWidths;
     }
 
-    private static void PrintLine(char left, char mid, char right, char horizontal, IReadOnlyList<int> widths)
+    private static void PrintLine(
+        char left,
+        char mid,
+        char right,
+        char horizontal,
+        IReadOnlyList<int> widths
+    )
     {
         Console.Write(left);
         for (var i = 0; i < widths.Count; i++)

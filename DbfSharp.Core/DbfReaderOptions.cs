@@ -30,7 +30,7 @@ public record DbfReaderOptions
     /// Gets or sets whether to ignore missing memo files instead of throwing an exception.
     /// Default is false - missing memo files will cause an exception.
     /// </summary>
-    public bool IgnoreMissingMemoFile { get; set; } = false;
+    public bool IgnoreMissingMemoFile { get; set; }
 
     /// <summary>
     /// Gets or sets how to handle character decoding errors.
@@ -61,13 +61,13 @@ public record DbfReaderOptions
     /// When true, all field values will be returned as byte arrays.
     /// Default is false.
     /// </summary>
-    public bool RawMode { get; set; } = false;
+    public bool RawMode { get; set; }
 
     /// <summary>
     /// Gets or sets the buffer size used for reading files.
-    /// Default is 64KB. Larger values may improve performance for large files.
+    /// Default is 16KB for better memory efficiency. Larger values may improve performance for large files.
     /// </summary>
-    public int BufferSize { get; set; } = 65536;
+    public int BufferSize { get; set; } = 16384;
 
     /// <summary>
     /// Gets or sets whether to validate field definitions when reading the header.
@@ -106,7 +106,7 @@ public record DbfReaderOptions
             BufferSize = 128 * 1024,
             UseMemoryMapping = Environment.Is64BitProcess,
             ValidateFields = false,
-            TrimStrings = false
+            TrimStrings = false,
         };
     }
 
@@ -119,10 +119,28 @@ public record DbfReaderOptions
         return new DbfReaderOptions
         {
             EnableStringInterning = true,
-            BufferSize = 16 * 1024,
+            BufferSize = 4 * 1024,
             UseMemoryMapping = false,
             RawMode = false,
-            TrimStrings = true
+            TrimStrings = true,
+        };
+    }
+
+    /// <summary>
+    /// Creates options optimized for minimal memory allocation during enumeration
+    /// </summary>
+    /// <returns>DbfReaderOptions configured for zero-allocation reading</returns>
+    public static DbfReaderOptions CreateZeroAllocationOptimized()
+    {
+        return new DbfReaderOptions
+        {
+            EnableStringInterning = false,
+            BufferSize = 1024,
+            UseMemoryMapping = false,
+            RawMode = false,
+            TrimStrings = false,
+            ValidateFields = false,
+            SkipDeletedRecords = true,
         };
     }
 
@@ -200,7 +218,7 @@ public record DbfReaderOptions
             options.Add("MemoryMapped");
         }
 
-        if (BufferSize != 65536)
+        if (BufferSize != 16384)
         {
             options.Add($"Buffer={BufferSize}");
         }

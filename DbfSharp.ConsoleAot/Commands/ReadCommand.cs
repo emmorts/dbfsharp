@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using System.Text;
 using ConsoleAppFramework;
 using DbfSharp.ConsoleAot.Commands.Configuration;
@@ -51,7 +50,8 @@ public static class ReadCommand
         bool ignoreCase = true,
         bool trimStrings = true,
         bool ignoreMissingMemo = true,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var settings = new ReadConfiguration
         {
@@ -67,12 +67,15 @@ public static class ReadCommand
             Encoding = encoding,
             IgnoreCase = ignoreCase,
             TrimStrings = trimStrings,
-            IgnoreMissingMemo = ignoreMissingMemo
+            IgnoreMissingMemo = ignoreMissingMemo,
         };
 
-        var validationResult =
-            ArgumentValidator.ValidateReadArguments(settings.FilePath, settings.OutputPath, settings.Limit,
-                settings.Skip);
+        var validationResult = ArgumentValidator.ValidateReadArguments(
+            settings.FilePath,
+            settings.OutputPath,
+            settings.Limit,
+            settings.Skip
+        );
         if (!validationResult.IsValid)
         {
             await Console.Error.WriteLineAsync(validationResult.ErrorMessage);
@@ -110,9 +113,7 @@ public static class ReadCommand
                 }
             }
 
-            var tableName = inputSource.IsStdin ? "stdin" : Path.GetFileNameWithoutExtension(inputSource.OriginalPath);
-
-            await using var reader = await CreateDbfReaderAsync(inputSource.Stream, tableName, settings);
+            using var reader = CreateDbfReader(inputSource.Stream, settings);
 
             if (settings is { Verbose: true, Quiet: false })
             {
@@ -128,24 +129,38 @@ public static class ReadCommand
 
             if (settings.Format == OutputFormat.Table)
             {
-                var records = await GetRecordsToDisplayAsync(reader, settings, cancellationToken);
-                await FormatAndOutputAsync(records, fieldsToDisplay, reader, settings, cancellationToken);
+                var records = GetRecordsToDisplay(reader, settings);
+                await FormatAndOutputAsync(
+                    records,
+                    fieldsToDisplay,
+                    reader,
+                    settings,
+                    cancellationToken
+                );
             }
             else
             {
-                await FormatAndOutputStreamingAsync(reader, fieldsToDisplay, settings, cancellationToken);
+                await FormatAndOutputStreamingAsync(
+                    reader,
+                    fieldsToDisplay,
+                    settings,
+                    cancellationToken
+                );
             }
 
             return ExceptionMapper.ExitCodes.Success;
         }
         catch (Exception ex)
         {
-            return await ExceptionMapper.HandleExceptionAsync(ex, "reading DBF file", settings.Verbose);
+            return await ExceptionMapper.HandleExceptionAsync(
+                ex,
+                "reading DBF file",
+                settings.Verbose
+            );
         }
     }
 
-    private static async Task<DbfReader> CreateDbfReaderAsync(Stream stream, string tableName,
-        ReadConfiguration settings)
+    private static DbfReader CreateDbfReader(Stream stream, ReadConfiguration settings)
     {
         var readerOptions = new DbfReaderOptions
         {
@@ -154,13 +169,16 @@ public static class ReadCommand
             IgnoreMissingMemoFile = settings.IgnoreMissingMemo,
             ValidateFields = false,
             CharacterDecodeFallback = null,
-            SkipDeletedRecords = !settings.ShowDeleted
+            SkipDeletedRecords = !settings.ShowDeleted,
         };
 
         var validationResult = ArgumentValidator.ValidateEncoding(settings.Encoding);
         if (validationResult.IsValid && !string.IsNullOrEmpty(settings.Encoding))
         {
-            readerOptions = readerOptions with { Encoding = EncodingResolver.Resolve(settings.Encoding) };
+            readerOptions = readerOptions with
+            {
+                Encoding = EncodingResolver.Resolve(settings.Encoding),
+            };
         }
         else if (!validationResult.IsValid && !settings.Quiet)
         {
@@ -172,26 +190,25 @@ public static class ReadCommand
             }
         }
 
-        var reader = await DbfReader.CreateAsync(stream, readerOptions);
-        
+        var reader = DbfReader.Create(stream, readerOptions);
+
         // Subscribe to warnings if not in quiet mode
         if (!settings.Quiet)
         {
-            reader.Warning += (sender, e) => Console.WriteLine($"Warning: {e.Message}");
+            reader.Warning += (_, e) => Console.WriteLine($"Warning: {e.Message}");
         }
-        
+
         return reader;
     }
 
-    private static async Task<List<DbfRecord>> GetRecordsToDisplayAsync(DbfReader reader, ReadConfiguration settings,
-        CancellationToken cancellationToken)
+    private static List<DbfRecord> GetRecordsToDisplay(DbfReader reader, ReadConfiguration settings)
     {
         var records = new List<DbfRecord>();
-        var recordsToEnumerate = reader.ReadRecordsAsync(cancellationToken);
+        var recordsToEnumerate = reader.Records;
 
         var count = 0;
         var skipped = 0;
-        await foreach (var record in recordsToEnumerate)
+        foreach (var record in recordsToEnumerate)
         {
             if (skipped < settings.Skip)
             {
@@ -218,7 +235,8 @@ public static class ReadCommand
             return reader.FieldNames.ToArray();
         }
 
-        var selectedFields = settings.Fields.Split(',', StringSplitOptions.RemoveEmptyEntries)
+        var selectedFields = settings
+            .Fields.Split(',', StringSplitOptions.RemoveEmptyEntries)
             .Select(f => f.Trim())
             .Where(f => !string.IsNullOrEmpty(f))
             .ToArray();
@@ -257,8 +275,13 @@ public static class ReadCommand
         return validFields.ToArray();
     }
 
-    private static async Task FormatAndOutputAsync(IEnumerable<DbfRecord> records, string[] fields, DbfReader reader,
-        ReadConfiguration settings, CancellationToken cancellationToken)
+    private static async Task FormatAndOutputAsync(
+        IEnumerable<DbfRecord> records,
+        string[] fields,
+        DbfReader reader,
+        ReadConfiguration settings,
+        CancellationToken cancellationToken
+    )
     {
         if (fields.Length == 0)
         {
@@ -275,14 +298,20 @@ public static class ReadCommand
                 Directory.CreateDirectory(directory);
             }
 
-            await using var fileWriter = new StreamWriter(settings.OutputPath, false, Encoding.UTF8, bufferSize: 65536);
+            await using var fileWriter = new StreamWriter(
+                settings.OutputPath,
+                false,
+                Encoding.UTF8,
+                bufferSize: 65536
+            );
             await formatter.WriteAsync(records, fields, reader, fileWriter, cancellationToken);
 
             if (!settings.Quiet)
             {
                 var outputFileInfo = new FileInfo(settings.OutputPath);
                 Console.WriteLine(
-                    $"Output written to: {settings.OutputPath} ({FileSize.Format(outputFileInfo.Length)})");
+                    $"Output written to: {settings.OutputPath} ({FileSize.Format(outputFileInfo.Length)})"
+                );
             }
         }
         else
@@ -295,7 +324,8 @@ public static class ReadCommand
         DbfReader reader,
         string[] fields,
         ReadConfiguration settings,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var formatter = FormatterFactory.CreateFormatter(settings.Format, settings);
 
@@ -307,10 +337,15 @@ public static class ReadCommand
                 Directory.CreateDirectory(directory);
             }
 
-            await using var fileWriter = new StreamWriter(settings.OutputPath, false, Encoding.UTF8, bufferSize: 65536);
+            await using var fileWriter = new StreamWriter(
+                settings.OutputPath,
+                false,
+                Encoding.UTF8,
+                bufferSize: 65536
+            );
 
             var records = new List<DbfRecord>();
-            await foreach (var record in CreateFilteredRecordStreamAsync(reader, settings, cancellationToken))
+            foreach (var record in CreateFilteredRecordStream(reader, settings, cancellationToken))
             {
                 records.Add(record);
             }
@@ -321,13 +356,14 @@ public static class ReadCommand
             {
                 var outputFileInfo = new FileInfo(settings.OutputPath);
                 Console.WriteLine(
-                    $"Output written to: {settings.OutputPath} ({FileSize.Format(outputFileInfo.Length)})");
+                    $"Output written to: {settings.OutputPath} ({FileSize.Format(outputFileInfo.Length)})"
+                );
             }
         }
         else
         {
             var records = new List<DbfRecord>();
-            await foreach (var record in CreateFilteredRecordStreamAsync(reader, settings, cancellationToken))
+            foreach (var record in CreateFilteredRecordStream(reader, settings, cancellationToken))
             {
                 records.Add(record);
             }
@@ -336,16 +372,17 @@ public static class ReadCommand
         }
     }
 
-    private static async IAsyncEnumerable<DbfRecord> CreateFilteredRecordStreamAsync(
+    private static IEnumerable<DbfRecord> CreateFilteredRecordStream(
         DbfReader reader,
         ReadConfiguration settings,
-        [EnumeratorCancellation] CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
-        var recordsAsyncEnumerable = reader.ReadRecordsAsync(cancellationToken);
+        var recordsEnumerable = reader.Records;
         var count = 0;
         var skipped = 0;
 
-        await foreach (var record in recordsAsyncEnumerable)
+        foreach (var record in recordsEnumerable)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -382,7 +419,10 @@ public static class ReadCommand
         {
             var expectedSize = FileSize.CalculateExpectedSize(reader);
             table.AddRow("File Size", FileSize.Format(fileSize.Value));
-            table.AddRow("Size Status", FileSize.FormatSizeDifference(fileSize.Value, expectedSize));
+            table.AddRow(
+                "Size Status",
+                FileSize.FormatSizeDifference(fileSize.Value, expectedSize)
+            );
         }
 
         table.Print(TableBorderStyles.Rounded);

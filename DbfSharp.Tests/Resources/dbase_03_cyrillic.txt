@@ -1,20 +1,19 @@
 Analyzing DBF file: dbase_03_cyrillic.dbf
 
 Header Information
-╭──────────────────┬────────────────────────────────────┬───────────────────────────╮
-│ Property         │ Value                              │ Details                   │
-├──────────────────┼────────────────────────────────────┼───────────────────────────┤
-│ DBF Version      │ FoxBASE+/dBase III plus, no memory │ Byte: 0x03                │
-│ Last Update      │ 2024-04-11                         │ Raw: 124/04/11            │
-│ Header Length    │ 97 bytes                           │ Fields area: 64 bytes     │
-│ Record Length    │ 41 bytes                           │ Including deletion flag   │
-│ Total Records    │ 2                                  │ Including deleted records │
-│ MDX Index        │ None                               │ Flag: 0x00                │
-│ Encryption       │ None                               │ Flag: 0x00                │
-│ Language Driver  │ UTF-8 Unicode                      │ Code: 0xF0                │
-│ File Size        │ 180 bytes                          │ 180 bytes                 │
-│ Size vs Expected │ +1 byte larger than expected       │ Expected: 179 bytes       │
-╰──────────────────┴────────────────────────────────────┴───────────────────────────╯
+╭─────────────────┬────────────────────────────────────┬───────────────────────────╮
+│ Property        │ Value                              │ Details                   │
+├─────────────────┼────────────────────────────────────┼───────────────────────────┤
+│ DBF Version     │ FoxBASE+/dBase III plus, no memory │ Byte: 0x03                │
+│ Last Update     │ 2024-04-11                         │ Raw: 124/04/11            │
+│ Header Length   │ 97 bytes                           │ Fields area: 64 bytes     │
+│ Record Length   │ 41 bytes                           │ Including deletion flag   │
+│ Total Records   │ 2                                  │ Including deleted records │
+│ MDX Index       │ None                               │ Flag: 0x00                │
+│ Encryption      │ None                               │ Flag: 0x00                │
+│ Language Driver │ UTF-8 Unicode                      │ Code: 0xF0                │
+│ File Size       │ 180 bytes                          │ 180 bytes                 │
+╰─────────────────┴────────────────────────────────────┴───────────────────────────╯
 
 Field Definitions
 ╭───┬───────┬───────────────┬────────┬──────────┬───────╮
@@ -42,6 +41,6 @@ Performance Information
 ╰───────────────────────────┴───────────┴────────────────────────────────────╯
 
 Performance Summary for Analyze DBF File:
-  Elapsed Time: 00:00.051
+  Elapsed Time: 00:00.034
   Memory Used: 0.0 MB
-  Peak Working Set: 25.0 MB
+  Peak Working Set: 24.0 MB

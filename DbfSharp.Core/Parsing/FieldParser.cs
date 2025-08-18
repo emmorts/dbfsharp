@@ -196,7 +196,14 @@ public class FieldParser : FieldParserBase
         }
 
         var text = Encoding.ASCII.GetString(trimmed);
-        if (float.TryParse(text, NumberStyles.Float | NumberStyles.AllowParentheses, CultureInfo.InvariantCulture, out var result))
+        if (
+            float.TryParse(
+                text,
+                NumberStyles.Float | NumberStyles.AllowParentheses,
+                CultureInfo.InvariantCulture,
+                out var result
+            )
+        )
         {
             return result;
         }
@@ -303,7 +310,6 @@ public class FieldParser : FieldParserBase
             return null;
         }
 
-
         // Replace comma with dot for decimal separator (some locales use comma)
         text = text.Replace(',', '.');
 
@@ -341,12 +347,14 @@ public class FieldParser : FieldParserBase
         {
             var bytesStr = string.Join(" ", data.ToArray().Select(b => $"{b:X2}"));
             var trimmedBytesStr = string.Join(" ", trimmed.ToArray().Select(b => $"{b:X2}"));
-            Console.WriteLine($"[DEBUG] FieldParser.ParseNumeric - Field {field.Name}: Invalid data 'db.d' found");
+            Console.WriteLine(
+                $"[DEBUG] FieldParser.ParseNumeric - Field {field.Name}: Invalid data 'db.d' found"
+            );
             Console.WriteLine($"[DEBUG] Original bytes: [{bytesStr}]");
             Console.WriteLine($"[DEBUG] Trimmed bytes: [{trimmedBytesStr}]");
             Console.WriteLine($"[DEBUG] Text: '{text}'");
         }
-        
+
         throw new FormatException($"Invalid numeric format: '{text}'");
     }
 
@@ -431,7 +439,7 @@ public class FieldParser : FieldParserBase
         }
 
         var value = BitConverter.ToInt64(data);
-        return (decimal)value / 10000m;
+        return value / 10000m;
     }
 
     /// <summary>
