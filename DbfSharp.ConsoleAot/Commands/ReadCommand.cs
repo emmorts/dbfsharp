@@ -9,6 +9,8 @@ using DbfSharp.ConsoleAot.Text;
 using DbfSharp.ConsoleAot.Validation;
 using DbfSharp.Core;
 using DbfSharp.Core.Enums;
+using DbfSharp.Core.Geometry;
+using DbfSharp.Core.Utils;
 
 namespace DbfSharp.ConsoleAot.Commands;
 
@@ -92,63 +94,22 @@ public static class ReadCommand
             return ExceptionMapper.ExitCodes.InvalidArgument;
         }
 
-        using var performanceMonitor = verbose ? new PerformanceProfiler("Read DBF File") : null;
+        using var performanceMonitor = verbose ? new PerformanceProfiler("Read File") : null;
 
         try
         {
-            using var inputSource = await InputResolver.ResolveAsync(settings.FilePath);
+            // Determine input strategy
+            var inputStrategy = InputResolver.DetermineStrategy(settings.FilePath);
 
-            if (!settings.Quiet)
+            switch (inputStrategy)
             {
-                Console.WriteLine($"Reading DBF file: {inputSource.GetDisplayName()}");
-
-                var fileSize = inputSource.GetFileSize();
-                if (fileSize.HasValue)
-                {
-                    var warning = FileSize.CreatePerformanceWarning(fileSize.Value);
-                    if (warning != null)
-                    {
-                        Console.WriteLine($"⚠️  {warning}");
-                    }
-                }
+                case InputResolutionStrategy.Shapefile:
+                    return await ProcessShapefileAsync(settings, cancellationToken);
+                case InputResolutionStrategy.DbfOnly:
+                case InputResolutionStrategy.Stdin:
+                default:
+                    return await ProcessDbfOnlyAsync(settings, cancellationToken);
             }
-
-            using var reader = CreateDbfReader(inputSource.Stream, settings);
-
-            if (settings is { Verbose: true, Quiet: false })
-            {
-                DisplayFileInfo(reader, inputSource);
-            }
-
-            var fieldsToDisplay = GetFieldsToDisplay(settings, reader);
-            if (fieldsToDisplay.Length == 0)
-            {
-                await Console.Error.WriteLineAsync("Error: No valid fields to display.");
-                return ExceptionMapper.ExitCodes.InvalidArgument;
-            }
-
-            if (settings.Format == OutputFormat.Table)
-            {
-                var records = GetRecordsToDisplay(reader, settings);
-                await FormatAndOutputAsync(
-                    records,
-                    fieldsToDisplay,
-                    reader,
-                    settings,
-                    cancellationToken
-                );
-            }
-            else
-            {
-                await FormatAndOutputStreamingAsync(
-                    reader,
-                    fieldsToDisplay,
-                    settings,
-                    cancellationToken
-                );
-            }
-
-            return ExceptionMapper.ExitCodes.Success;
         }
         catch (Exception ex)
         {
@@ -158,6 +119,436 @@ public static class ReadCommand
                 settings.Verbose
             );
         }
+    }
+
+    /// <summary>
+    /// Processes a shapefile input (includes geometry)
+    /// </summary>
+    private static async Task<int> ProcessShapefileAsync(
+        ReadConfiguration settings,
+        CancellationToken cancellationToken
+    )
+    {
+        using var shapefileSource = await InputResolver.ResolveShapefileAsync(settings.FilePath);
+
+        if (!settings.Quiet)
+        {
+            Console.WriteLine($"Reading shapefile: {shapefileSource.DisplayName}");
+
+            // Display shapefile diagnostics
+            var diagnostics = ShapefileDetector.GetDiagnostics(shapefileSource.Components);
+            foreach (var diagnostic in diagnostics)
+            {
+                Console.WriteLine($"Info: {diagnostic}");
+            }
+        }
+
+        // If GeoJSON format is requested or shapefile has geometry, use shapefile processing
+        if (settings.Format == OutputFormat.GeoJson || shapefileSource.Components.HasGeometry)
+        {
+            return await ProcessShapefileWithGeometryAsync(
+                shapefileSource,
+                settings,
+                cancellationToken
+            );
+        }
+        else
+        {
+            // Fall back to DBF-only processing if no geometry or non-geo format
+            return await ProcessDbfOnlyFromShapefileAsync(
+                shapefileSource,
+                settings,
+                cancellationToken
+            );
+        }
+    }
+
+    /// <summary>
+    /// Processes a shapefile with geometry data
+    /// </summary>
+    private static async Task<int> ProcessShapefileWithGeometryAsync(
+        ShapefileInputSource shapefileSource,
+        ReadConfiguration settings,
+        CancellationToken cancellationToken
+    )
+    {
+        if (!shapefileSource.Components.HasGeometry)
+        {
+            await Console.Error.WriteLineAsync(
+                "Error: Shapefile geometry files (.shp/.shx) not found."
+            );
+            return ExceptionMapper.ExitCodes.FileNotFound;
+        }
+
+        try
+        {
+            using var shapefileReader = shapefileSource.CreateShapefileReader();
+
+            if (settings is { Verbose: true, Quiet: false })
+            {
+                DisplayShapefileInfo(shapefileReader, shapefileSource);
+            }
+
+            var fieldsToDisplay = GetShapefileFieldsToDisplay(settings, shapefileReader);
+
+            // Create features enumerable
+            var features = GetShapefileFeaturesToDisplay(
+                shapefileReader,
+                settings,
+                cancellationToken
+            );
+
+            await FormatAndOutputShapefileAsync(
+                features,
+                fieldsToDisplay,
+                shapefileReader,
+                settings,
+                cancellationToken
+            );
+
+            return ExceptionMapper.ExitCodes.Success;
+        }
+        catch (Exception ex)
+        {
+            return await ExceptionMapper.HandleExceptionAsync(
+                ex,
+                "reading shapefile",
+                settings.Verbose
+            );
+        }
+    }
+
+    /// <summary>
+    /// Processes DBF-only data from a shapefile source
+    /// </summary>
+    private static async Task<int> ProcessDbfOnlyFromShapefileAsync(
+        ShapefileInputSource shapefileSource,
+        ReadConfiguration settings,
+        CancellationToken cancellationToken
+    )
+    {
+        if (shapefileSource.DbfSource == null)
+        {
+            await Console.Error.WriteLineAsync("Error: DBF file not found in shapefile dataset.");
+            return ExceptionMapper.ExitCodes.FileNotFound;
+        }
+
+        using var reader = CreateDbfReader(shapefileSource.DbfSource.Stream, settings);
+
+        if (settings is { Verbose: true, Quiet: false })
+        {
+            DisplayFileInfo(reader, shapefileSource.DbfSource);
+        }
+
+        var fieldsToDisplay = GetFieldsToDisplay(settings, reader);
+        if (fieldsToDisplay.Length == 0)
+        {
+            await Console.Error.WriteLineAsync("Error: No valid fields to display.");
+            return ExceptionMapper.ExitCodes.InvalidArgument;
+        }
+
+        if (settings.Format == OutputFormat.Table)
+        {
+            var records = GetRecordsToDisplay(reader, settings);
+            await FormatAndOutputAsync(
+                records,
+                fieldsToDisplay,
+                reader,
+                settings,
+                cancellationToken
+            );
+        }
+        else
+        {
+            await FormatAndOutputStreamingAsync(
+                reader,
+                fieldsToDisplay,
+                settings,
+                cancellationToken
+            );
+        }
+
+        return ExceptionMapper.ExitCodes.Success;
+    }
+
+    /// <summary>
+    /// Processes DBF-only input (no associated geometry)
+    /// </summary>
+    private static async Task<int> ProcessDbfOnlyAsync(
+        ReadConfiguration settings,
+        CancellationToken cancellationToken
+    )
+    {
+        using var inputSource = await InputResolver.ResolveAsync(settings.FilePath);
+
+        if (!settings.Quiet)
+        {
+            Console.WriteLine($"Reading DBF file: {inputSource.GetDisplayName()}");
+
+            var fileSize = inputSource.GetFileSize();
+            if (fileSize.HasValue)
+            {
+                var warning = FileSize.CreatePerformanceWarning(fileSize.Value);
+                if (warning != null)
+                {
+                    Console.WriteLine($"⚠️  {warning}");
+                }
+            }
+        }
+
+        using var reader = CreateDbfReader(inputSource.Stream, settings);
+
+        if (settings is { Verbose: true, Quiet: false })
+        {
+            DisplayFileInfo(reader, inputSource);
+        }
+
+        var fieldsToDisplay = GetFieldsToDisplay(settings, reader);
+        if (fieldsToDisplay.Length == 0)
+        {
+            await Console.Error.WriteLineAsync("Error: No valid fields to display.");
+            return ExceptionMapper.ExitCodes.InvalidArgument;
+        }
+
+        if (settings.Format == OutputFormat.Table)
+        {
+            var records = GetRecordsToDisplay(reader, settings);
+            await FormatAndOutputAsync(
+                records,
+                fieldsToDisplay,
+                reader,
+                settings,
+                cancellationToken
+            );
+        }
+        else
+        {
+            await FormatAndOutputStreamingAsync(
+                reader,
+                fieldsToDisplay,
+                settings,
+                cancellationToken
+            );
+        }
+
+        return ExceptionMapper.ExitCodes.Success;
+    }
+
+    /// <summary>
+    /// Gets fields to display for shapefile features
+    /// </summary>
+    private static string[] GetShapefileFieldsToDisplay(
+        ReadConfiguration settings,
+        ShapefileReader shapefileReader
+    )
+    {
+        if (!shapefileReader.HasAttributes || shapefileReader.DbfReader == null)
+        {
+            return Array.Empty<string>();
+        }
+
+        var dbfReader = shapefileReader.DbfReader;
+
+        if (string.IsNullOrWhiteSpace(settings.Fields))
+        {
+            return dbfReader.FieldNames.ToArray();
+        }
+
+        var selectedFields = settings
+            .Fields.Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(f => f.Trim())
+            .Where(f => !string.IsNullOrEmpty(f))
+            .ToArray();
+
+        var validFields = new List<string>();
+        var invalidFields = new List<string>();
+
+        foreach (var fieldName in selectedFields)
+        {
+            if (dbfReader.HasField(fieldName))
+            {
+                validFields.Add(fieldName);
+            }
+            else
+            {
+                invalidFields.Add(fieldName);
+            }
+        }
+
+        if (invalidFields.Count > 0 && !settings.Quiet)
+        {
+            var fieldList = string.Join(", ", invalidFields.Select(f => $"'{f}'"));
+            Console.WriteLine($"Warning: Fields not found: {fieldList}");
+
+            if (validFields.Count == 0)
+            {
+                Console.WriteLine("Available fields: " + string.Join(", ", dbfReader.FieldNames));
+            }
+        }
+
+        return validFields.ToArray();
+    }
+
+    /// <summary>
+    /// Gets shapefile features to display based on configuration
+    /// </summary>
+    private static IEnumerable<ShapefileFeature> GetShapefileFeaturesToDisplay(
+        ShapefileReader shapefileReader,
+        ReadConfiguration settings,
+        CancellationToken cancellationToken
+    )
+    {
+        var count = 0;
+        var skipped = 0;
+
+        foreach (var feature in shapefileReader.Features)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (skipped < settings.Skip)
+            {
+                skipped++;
+                continue;
+            }
+
+            if (settings.Limit.HasValue && count >= settings.Limit.Value)
+            {
+                break;
+            }
+
+            yield return feature;
+            count++;
+        }
+    }
+
+    /// <summary>
+    /// Formats and outputs shapefile features
+    /// </summary>
+    private static async Task FormatAndOutputShapefileAsync(
+        IEnumerable<ShapefileFeature> features,
+        string[] fields,
+        ShapefileReader shapefileReader,
+        ReadConfiguration settings,
+        CancellationToken cancellationToken
+    )
+    {
+        var formatter = FormatterFactory.CreateFormatter(settings.Format, settings);
+
+        if (settings.OutputPath != null)
+        {
+            var directory = Path.GetDirectoryName(settings.OutputPath);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            await using var fileWriter = new StreamWriter(
+                settings.OutputPath,
+                false,
+                Encoding.UTF8,
+                bufferSize: 65536
+            );
+
+            if (formatter is GeoJsonFormatter geoJsonFormatter)
+            {
+                await geoJsonFormatter.WriteAsync(
+                    features,
+                    fields,
+                    shapefileReader,
+                    fileWriter,
+                    cancellationToken
+                );
+            }
+            else
+            {
+                // Convert features to DBF records for non-GeoJSON formats
+                var records = features
+                    .Where(f => f.HasAttributes)
+                    .Select(f => f.Attributes!.Value)
+                    .ToList();
+
+                // For non-GeoJSON formats, we need to create a mock DbfReader
+                // This is a limitation - we'll require GeoJSON for full shapefile output
+                await Console.Error.WriteLineAsync(
+                    "Error: Non-GeoJSON output for shapefiles not yet supported."
+                );
+                return;
+            }
+
+            if (!settings.Quiet)
+            {
+                var outputFileInfo = new FileInfo(settings.OutputPath);
+                Console.WriteLine(
+                    $"Output written to: {settings.OutputPath} ({FileSize.Format(outputFileInfo.Length)})"
+                );
+            }
+        }
+        else
+        {
+            if (formatter is GeoJsonFormatter geoJsonFormatter)
+            {
+                await geoJsonFormatter.WriteAsync(
+                    features,
+                    fields,
+                    shapefileReader,
+                    Console.Out,
+                    cancellationToken
+                );
+            }
+            else
+            {
+                await Console.Error.WriteLineAsync(
+                    "Error: Non-GeoJSON output for shapefiles requires file output."
+                );
+            }
+        }
+    }
+
+    /// <summary>
+    /// Displays shapefile information
+    /// </summary>
+    private static void DisplayShapefileInfo(
+        ShapefileReader shapefileReader,
+        ShapefileInputSource inputSource
+    )
+    {
+        var table = new ConsoleTableWriter("\nShapefile Information", "Property", "Value");
+
+        // Basic shapefile info
+        table.AddRow("Dataset Name", inputSource.DisplayName);
+        table.AddRow("Shape Type", shapefileReader.ShapeType.GetDescription());
+        table.AddRow("Total Features", shapefileReader.RecordCount.ToString("N0"));
+        table.AddRow("Bounding Box", shapefileReader.BoundingBox.ToString());
+
+        // Component file info
+        var components = inputSource.Components;
+        table.AddRow("Components", $"{components.ComponentCount} files detected");
+
+        if (components.HasGeometry)
+        {
+            table.AddRow("Geometry Files", "SHP + SHX");
+        }
+
+        if (components.HasAttributes && shapefileReader.DbfReader != null)
+        {
+            table.AddRow(
+                "Attributes",
+                $"DBF ({shapefileReader.DbfReader.FieldNames.Count} fields)"
+            );
+        }
+
+        if (components.HasProjection)
+        {
+            table.AddRow("Projection", "PRJ file available");
+        }
+
+        if (components.HasEncoding)
+        {
+            table.AddRow("Encoding", "CPG file available");
+        }
+
+        table.Print(TableBorderStyles.Rounded);
+        Console.WriteLine();
     }
 
     private static DbfReader CreateDbfReader(Stream stream, ReadConfiguration settings)

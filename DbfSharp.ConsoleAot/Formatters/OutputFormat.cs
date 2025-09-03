@@ -9,4 +9,5 @@ public enum OutputFormat
     Csv,
     Tsv,
     Json,
+    GeoJson,
 }

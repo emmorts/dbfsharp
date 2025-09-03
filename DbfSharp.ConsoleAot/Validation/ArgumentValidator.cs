@@ -105,11 +105,11 @@ public static class ArgumentValidator
             }
 
             var extension = Path.GetExtension(filePath).ToLowerInvariant();
-            if (!IsKnownDbfExtension(extension))
+            if (!IsKnownFileExtension(extension))
             {
                 return ValidationResult.Failure(
-                    $"File '{filePath}' does not have a recognized DBF extension.",
-                    "DBF files typically have extensions like .dbf, .dbt, .ndx, or .mdx."
+                    $"File '{filePath}' does not have a recognized file extension.",
+                    "Supported files include DBF (.dbf) and shapefile components (.shp, .shx, .dbf, .prj, .cpg)."
                 );
             }
 
@@ -274,6 +274,30 @@ public static class ArgumentValidator
         }
 
         return ValidationResult.Success();
+    }
+
+    /// <summary>
+    /// Checks if a file extension is supported (DBF or shapefile component)
+    /// </summary>
+    private static bool IsKnownFileExtension(string extension)
+    {
+        return IsKnownDbfExtension(extension) || IsShapefileExtension(extension);
+    }
+
+    /// <summary>
+    /// Checks if a file extension is a shapefile component
+    /// </summary>
+    private static bool IsShapefileExtension(string extension)
+    {
+        var shapefileExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ".shp",
+            ".shx",
+            ".prj",
+            ".cpg",
+        };
+
+        return shapefileExtensions.Contains(extension);
     }
 
     /// <summary>

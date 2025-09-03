@@ -1,4 +1,5 @@
 using DbfSharp.ConsoleAot.Text;
+using DbfSharp.Core.Utils;
 
 namespace DbfSharp.ConsoleAot.Input;
 
@@ -152,4 +153,135 @@ public static class InputResolver
 
         return new TemporaryFileInputSource(fileStream, "stdin", tempFile);
     }
+
+    /// <summary>
+    /// Resolves a shapefile input source with automatic component detection
+    /// </summary>
+    /// <param name="filePath">Path to any component of the shapefile dataset (may be null for stdin)</param>
+    /// <returns>A shapefile input source with all detected components</returns>
+    public static async Task<ShapefileInputSource> ResolveShapefileAsync(string? filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            // Handle stdin case - treat as DBF-only
+            var stdinDbfSource = await ResolveAsync(null);
+            var components = new ShapefileDetector.ShapefileComponents(
+                null,
+                null,
+                "stdin",
+                null,
+                null
+            );
+            return new ShapefileInputSource(components, null, null, stdinDbfSource, "stdin");
+        }
+
+        // Detect all shapefile components
+        var detectedComponents = ShapefileDetector.DetectAndValidateComponents(filePath);
+
+        // Create input sources for available components
+        InputSource? shpSource = null;
+        InputSource? shxSource = null;
+        InputSource? dbfSource = null;
+
+        try
+        {
+            if (!string.IsNullOrEmpty(detectedComponents.ShpPath))
+            {
+                shpSource = CreateFileInputSource(detectedComponents.ShpPath);
+            }
+
+            if (!string.IsNullOrEmpty(detectedComponents.ShxPath))
+            {
+                shxSource = CreateFileInputSource(detectedComponents.ShxPath);
+            }
+
+            if (!string.IsNullOrEmpty(detectedComponents.DbfPath))
+            {
+                dbfSource = CreateFileInputSource(detectedComponents.DbfPath);
+            }
+
+            // Determine display name
+            var displayName = detectedComponents.BaseName ?? Path.GetFileName(filePath);
+
+            return new ShapefileInputSource(
+                detectedComponents,
+                shpSource,
+                shxSource,
+                dbfSource,
+                displayName
+            );
+        }
+        catch
+        {
+            // Clean up on error
+            shpSource?.Dispose();
+            shxSource?.Dispose();
+            dbfSource?.Dispose();
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Determines the optimal input resolution strategy for a given file path
+    /// </summary>
+    /// <param name="filePath">The file path to analyze</param>
+    /// <returns>The recommended input resolution strategy</returns>
+    public static InputResolutionStrategy DetermineStrategy(string? filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            return InputResolutionStrategy.Stdin;
+        }
+
+        var fileType = ShapefileDetector.GetFileType(filePath);
+
+        return fileType switch
+        {
+            ShapefileFileType.Shapefile or ShapefileFileType.ShapeIndex =>
+                InputResolutionStrategy.Shapefile,
+            ShapefileFileType.Attributes => DetectShapefileComponents(filePath)
+                ? InputResolutionStrategy.Shapefile
+                : InputResolutionStrategy.DbfOnly,
+            ShapefileFileType.Projection or ShapefileFileType.CodePage =>
+                InputResolutionStrategy.Shapefile,
+            _ => InputResolutionStrategy.DbfOnly,
+        };
+    }
+
+    /// <summary>
+    /// Checks if a DBF file has associated shapefile components
+    /// </summary>
+    private static bool DetectShapefileComponents(string dbfPath)
+    {
+        try
+        {
+            var components = ShapefileDetector.DetectComponents(dbfPath);
+            return components.HasGeometry;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+}
+
+/// <summary>
+/// Enumeration of input resolution strategies
+/// </summary>
+public enum InputResolutionStrategy
+{
+    /// <summary>
+    /// Read from standard input
+    /// </summary>
+    Stdin,
+
+    /// <summary>
+    /// Read DBF file only (no associated geometry)
+    /// </summary>
+    DbfOnly,
+
+    /// <summary>
+    /// Read complete shapefile dataset (geometry + attributes)
+    /// </summary>
+    Shapefile,
 }
