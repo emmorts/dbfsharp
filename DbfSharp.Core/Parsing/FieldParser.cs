@@ -103,7 +103,7 @@ public class FieldParser : FieldParserBase
             {
                 return parser(this, field, data, memoFile, encoding, options);
             }
-            catch (Exception ex) when (!(ex is FieldParsingException))
+            catch (Exception ex) when (ex is not FieldParsingException)
             {
                 if (options.ValidateFields)
                 {
