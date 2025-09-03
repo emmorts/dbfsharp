@@ -40,7 +40,7 @@ namespace DbfSharp.Core;
 /// }
 /// </code>
 /// </example>
-public sealed class ShapefileReader : IDisposable
+public sealed partial class ShapefileReader : IDisposable
 {
     private readonly Stream _shpStream;
     private readonly Stream? _shxStream;

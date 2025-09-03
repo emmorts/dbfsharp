@@ -24,6 +24,13 @@ public class DbfCommands
     /// <param name="ignoreCase">Treats field names as case-insensitive.</param>
     /// <param name="trimStrings">Trims leading and trailing whitespace from string fields.</param>
     /// <param name="ignoreMissingMemo">Prevents failure if a required memo file (.dbt) is missing.</param>
+    /// <param name="boundingBox">Filter by bounding box "minX,minY,maxX,maxY" (shapefile only).</param>
+    /// <param name="containsPoint">Filter geometries containing point "x,y" (shapefile only).</param>
+    /// <param name="intersectsWith">Filter geometries intersecting with bounding box "minX,minY,maxX,maxY" (shapefile only).</param>
+    /// <param name="nearestPoint">Find features nearest to point "x,y" (shapefile only).</param>
+    /// <param name="nearestCount">Number of nearest features to return (default: 1).</param>
+    /// <param name="nearestDistance">Maximum distance for nearest neighbor search.</param>
+    /// <param name="buildSpatialIndex">Build spatial index for faster queries (recommended for large files).</param>
     /// <param name="cancellationToken">A cancellation token for the operation.</param>
     [Command("read")]
     public Task<int> Read(
@@ -40,6 +47,13 @@ public class DbfCommands
         bool ignoreCase = true,
         bool trimStrings = true,
         bool ignoreMissingMemo = true,
+        string? boundingBox = null,
+        string? containsPoint = null,
+        string? intersectsWith = null,
+        string? nearestPoint = null,
+        int? nearestCount = null,
+        double? nearestDistance = null,
+        bool buildSpatialIndex = false,
         CancellationToken cancellationToken = default
     )
     {
@@ -57,6 +71,13 @@ public class DbfCommands
             ignoreCase,
             trimStrings,
             ignoreMissingMemo,
+            boundingBox,
+            containsPoint,
+            intersectsWith,
+            nearestPoint,
+            nearestCount,
+            nearestDistance,
+            buildSpatialIndex,
             cancellationToken
         );
     }

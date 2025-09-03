@@ -77,7 +77,7 @@ public sealed class GeoJsonFormatter : IDbfFormatter, IShapefileFormatter
         var options = new JsonWriterOptions { Indented = _configuration.PrettyPrint };
 
         using var memoryStream = new MemoryStream();
-        using var utf8Writer = new Utf8JsonWriter(memoryStream, options);
+        await using var utf8Writer = new Utf8JsonWriter(memoryStream, options);
 
         // Start FeatureCollection
         utf8Writer.WriteStartObject();

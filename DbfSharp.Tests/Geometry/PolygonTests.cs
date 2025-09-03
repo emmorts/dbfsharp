@@ -59,7 +59,7 @@ public class PolygonTests
             new Coordinate(1, 2),
             new Coordinate(1, 1),
         };
-        var polygon = new Polygon(new[] { exteriorRing, interiorRing });
+        var polygon = new Polygon([exteriorRing, interiorRing]);
         Assert.Equal(2, polygon.RingCount);
         Assert.Equal(1, polygon.InteriorRingCount);
         Assert.Equal(10, polygon.CoordinateCount);
@@ -117,7 +117,7 @@ public class PolygonTests
             new Polygon((IEnumerable<IEnumerable<Coordinate>>)null!)
         );
         Assert.Throws<ArgumentNullException>(() =>
-            new Polygon(new IEnumerable<Coordinate>[] { null! })
+            new Polygon([null!])
         );
         Assert.Throws<ArgumentException>(() =>
             new Polygon(new[] { new Coordinate(0, 0), new Coordinate(1, 0) })
@@ -179,7 +179,7 @@ public class PolygonTests
             new Coordinate(1, 1),
         };
 
-        var polygon = new Polygon(new[] { exteriorRing, interiorRing });
+        var polygon = new Polygon([exteriorRing, interiorRing]);
         Assert.True(polygon.Contains(new Coordinate(0.5, 0.5))); // In exterior, not in hole
         Assert.False(polygon.Contains(new Coordinate(1.5, 1.5))); // In hole
     }

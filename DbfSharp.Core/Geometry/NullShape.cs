@@ -24,7 +24,7 @@ public sealed class NullShape : Shape
     /// <inheritdoc />
     public override IEnumerable<Coordinate> GetCoordinates()
     {
-        return Enumerable.Empty<Coordinate>();
+        return [];
     }
 
     /// <inheritdoc />
@@ -42,7 +42,7 @@ public sealed class NullShape : Shape
     /// <inheritdoc />
     public override IEnumerable<string> GetValidationErrors()
     {
-        return Enumerable.Empty<string>(); // No validation errors for null shapes
+        return []; // No validation errors for null shapes
     }
 
     public override string ToString() => "NULL";

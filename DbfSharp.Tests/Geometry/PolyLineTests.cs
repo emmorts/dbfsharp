@@ -148,7 +148,7 @@ public class PolyLineTests
     {
         var part1 = new[] { new Coordinate(0, 0), new Coordinate(1, 1) };
         var part2 = new[] { new Coordinate(2, 2), new Coordinate(3, 3) };
-        var polyLine = new PolyLine(new[] { part1, part2 });
+        var polyLine = new PolyLine([part1, part2]);
         var retrievedPart = polyLine.GetPart(1);
         Assert.Equal(2, retrievedPart.Count);
         Assert.Equal(new Coordinate(2, 2), retrievedPart[0]);
@@ -168,7 +168,7 @@ public class PolyLineTests
     {
         var part1 = new[] { new Coordinate(0, 0), new Coordinate(1, 1) };
         var part2 = new[] { new Coordinate(2, 2), new Coordinate(3, 3) };
-        var polyLine = new PolyLine(new[] { part1, part2 });
+        var polyLine = new PolyLine([part1, part2]);
         var allCoordinates = polyLine.GetCoordinates().ToList();
         Assert.Equal(4, allCoordinates.Count);
         Assert.Equal(new Coordinate(0, 0), allCoordinates[0]);
@@ -211,7 +211,7 @@ public class PolyLineTests
     {
         var part1 = new[] { new Coordinate(0, 0), new Coordinate(3, 4) }; // Length = 5
         var part2 = new[] { new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1) }; // Length = 2
-        var polyLine = new PolyLine(new[] { part1, part2 });
+        var polyLine = new PolyLine([part1, part2]);
         var part0Length = polyLine.GetPartLength(0);
         var part1Length = polyLine.GetPartLength(1);
         Assert.Equal(5.0, part0Length);
@@ -273,7 +273,7 @@ public class PolyLineTests
     {
         var part1 = new[] { new Coordinate(0, 0), new Coordinate(1, 1) };
         var part2 = new[] { new Coordinate(2, 2), new Coordinate(3, 3) };
-        var polyLine = new PolyLine(new[] { part1, part2 });
+        var polyLine = new PolyLine([part1, part2]);
         var reducedPolyLine = polyLine.RemovePart(0);
         Assert.Equal(2, polyLine.PartCount); // Original should be unchanged
         Assert.Equal(1, reducedPolyLine.PartCount);
@@ -352,7 +352,7 @@ public class PolyLineTests
     {
         var part1 = new[] { new Coordinate(0, 0), new Coordinate(1, 1) };
         var part2 = new[] { new Coordinate(2, 2), new Coordinate(3, 3) };
-        var polyLine = new PolyLine(new[] { part1, part2 });
+        var polyLine = new PolyLine([part1, part2]);
         var result = polyLine.ToString();
         Assert.Equal("POLYLINE (2 parts, 4 coordinates)", result);
     }
@@ -381,7 +381,7 @@ public class PolyLineTests
         var part1 = new[] { new Coordinate(0, 0), new Coordinate(1, 1) };
         var part2 = new[] { new Coordinate(2, 2), new Coordinate(3, 3) };
         var polyLine1 = new PolyLine(part1);
-        var polyLine2 = new PolyLine(new[] { part1, part2 });
+        var polyLine2 = new PolyLine([part1, part2]);
         Assert.False(polyLine1.Equals(polyLine2));
     }
 

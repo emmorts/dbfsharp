@@ -74,7 +74,7 @@ public static class EpsgDatabase
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            return new List<EpsgDefinition>();
+            return [];
         }
 
         var searchTerm = name.Trim().ToLowerInvariant();
@@ -130,7 +130,7 @@ public static class EpsgDatabase
     {
         if (string.IsNullOrWhiteSpace(region))
         {
-            return new List<EpsgDefinition>();
+            return [];
         }
 
         var regionUpper = region.Trim().ToUpperInvariant();
@@ -343,7 +343,7 @@ public static class EpsgDatabase
             var words = definition
                 .Name.ToLowerInvariant()
                 .Split(
-                    new[] { ' ', '/', '-', '_', '(', ')', '[', ']' },
+                    [' ', '/', '-', '_', '(', ')', '[', ']'],
                     StringSplitOptions.RemoveEmptyEntries
                 );
 
@@ -356,7 +356,7 @@ public static class EpsgDatabase
 
                 if (!index.ContainsKey(word))
                 {
-                    index[word] = new List<int>();
+                    index[word] = [];
                 }
 
                 index[word].Add(definition.Code);
@@ -366,7 +366,7 @@ public static class EpsgDatabase
             var fullName = definition.Name.ToLowerInvariant();
             if (!index.ContainsKey(fullName))
             {
-                index[fullName] = new List<int>();
+                index[fullName] = [];
             }
 
             index[fullName].Add(definition.Code);

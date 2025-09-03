@@ -44,7 +44,7 @@ public sealed class Polygon : Shape
                 if (!ringArray[0].Equals(ringArray[^1]))
                 {
                     // Auto-close the ring
-                    ringArray = ringArray.Concat(new[] { ringArray[0] }).ToArray();
+                    ringArray = ringArray.Concat([ringArray[0]]).ToArray();
                 }
 
                 return ringArray;
@@ -69,7 +69,7 @@ public sealed class Polygon : Shape
     /// </summary>
     /// <param name="coordinates">The coordinates for the exterior ring</param>
     public Polygon(IEnumerable<Coordinate> coordinates)
-        : this(new[] { coordinates }) { }
+        : this([coordinates]) { }
 
     /// <summary>
     /// Initializes a new single-ring polygon with the specified coordinate array
@@ -328,7 +328,7 @@ public sealed class Polygon : Shape
             );
         }
 
-        var newRings = _rings.Concat(new[] { coordinates.ToArray() });
+        var newRings = _rings.Concat([coordinates.ToArray()]);
         return new Polygon(newRings);
     }
 

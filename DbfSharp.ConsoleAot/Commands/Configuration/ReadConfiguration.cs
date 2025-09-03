@@ -1,4 +1,5 @@
 using DbfSharp.ConsoleAot.Formatters;
+using DbfSharp.Core.Spatial;
 
 namespace DbfSharp.ConsoleAot.Commands.Configuration;
 
@@ -20,4 +21,14 @@ public record ReadConfiguration
     public bool IgnoreCase { get; init; }
     public bool TrimStrings { get; init; }
     public bool IgnoreMissingMemo { get; init; }
+    
+    // Spatial query options
+    public string? BoundingBox { get; init; }
+    public string? ContainsPoint { get; init; }
+    public string? IntersectsWith { get; init; }
+    public SpatialRelationship? SpatialRelation { get; init; }
+    public double? NearestDistance { get; init; }
+    public string? NearestPoint { get; init; }
+    public int? NearestCount { get; init; }
+    public bool BuildSpatialIndex { get; init; }
 }

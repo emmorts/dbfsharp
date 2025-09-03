@@ -55,7 +55,7 @@ public class TransformationEngineTests
             new Coordinate(-122.4094, 37.7849), // Nearby point
             new Coordinate(-122.3994, 37.7949), // Another nearby point
         };
-        var originalPolyLine = new PolyLine(new[] { coordinates });
+        var originalPolyLine = new PolyLine([coordinates]);
         var transformedShape = TransformationEngine.Transform(originalPolyLine, source, target);
         Assert.IsType<PolyLine>(transformedShape);
         var transformedPolyLine = (PolyLine)transformedShape;
@@ -86,7 +86,7 @@ public class TransformationEngineTests
             new Coordinate(-122.5, 37.8),
             new Coordinate(-122.5, 37.7), // Closed ring
         };
-        var originalPolygon = new Polygon(new[] { ring });
+        var originalPolygon = new Polygon([ring]);
         var transformedShape = TransformationEngine.Transform(originalPolygon, source, target);
         Assert.IsType<Polygon>(transformedShape);
         var transformedPolygon = (Polygon)transformedShape;

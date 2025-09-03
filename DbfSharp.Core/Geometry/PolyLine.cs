@@ -62,7 +62,7 @@ public sealed class PolyLine : Shape
     /// </summary>
     /// <param name="coordinates">The coordinates for the single line segment</param>
     public PolyLine(IEnumerable<Coordinate> coordinates)
-        : this(new[] { coordinates }) { }
+        : this([coordinates]) { }
 
     /// <summary>
     /// Initializes a new single-part polyline with the specified coordinate array
@@ -225,7 +225,7 @@ public sealed class PolyLine : Shape
             throw new ArgumentNullException(nameof(coordinates));
         }
 
-        var newParts = _parts.Concat(new[] { coordinates.ToArray() });
+        var newParts = _parts.Concat([coordinates.ToArray()]);
         return new PolyLine(newParts);
     }
 

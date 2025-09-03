@@ -523,14 +523,44 @@ public static class InfoCommand
         {
             var index = shapefileReader.Index!;
             table.AddRow(
-                "Spatial Index",
+                "File Index (.shx)",
                 "Available",
                 $"{index.RecordCount} entries for random access"
             );
         }
         else
         {
-            table.AddRow("Spatial Index", "Missing", "Sequential access only");
+            table.AddRow("File Index (.shx)", "Missing", "Sequential access only");
+        }
+
+        // Spatial index information (R-tree)
+        try
+        {
+            if (shapefileReader.HasSpatialIndex)
+            {
+                var spatialStats = shapefileReader.GetSpatialIndexStatistics();
+                table.AddRow(
+                    "R-Tree Spatial Index",
+                    "Built",
+                    $"{spatialStats.TotalEntries} geometries in {spatialStats.LeafCount + spatialStats.InternalCount} nodes"
+                );
+            }
+            else
+            {
+                table.AddRow(
+                    "R-Tree Spatial Index",
+                    "Not built",
+                    "Build with spatial queries for better performance"
+                );
+            }
+        }
+        catch
+        {
+            table.AddRow(
+                "R-Tree Spatial Index",
+                "Not available",
+                "Spatial operations not supported for this geometry type"
+            );
         }
 
         table.Print(TableBorderStyles.Rounded);

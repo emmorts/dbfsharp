@@ -29,7 +29,7 @@ public class GeoJsonFormatterTests
         var feature = new ShapefileFeature(1, point, null, 0, 20);
         var features = new[] { feature };
         var fields = Array.Empty<string>();
-        using var writer = new StringWriter();
+        await using var writer = new StringWriter();
         await formatter.WriteAsync(features, fields, null!, writer);
         var json = writer.ToString();
         Assert.NotNull(json);
@@ -64,7 +64,7 @@ public class GeoJsonFormatterTests
         var feature = new ShapefileFeature(1, point, null, 0, 20);
         var features = new[] { feature };
         var fields = Array.Empty<string>();
-        using var writer = new StringWriter();
+        await using var writer = new StringWriter();
         await formatter.WriteAsync(features, fields, null!, writer);
         var json = writer.ToString();
         using var document = JsonDocument.Parse(json);
@@ -94,7 +94,7 @@ public class GeoJsonFormatterTests
         var feature = new ShapefileFeature(1, multiPoint, null, 0, 20);
         var features = new[] { feature };
         var fields = Array.Empty<string>();
-        using var writer = new StringWriter();
+        await using var writer = new StringWriter();
         await formatter.WriteAsync(features, fields, null!, writer);
         var json = writer.ToString();
         using var document = JsonDocument.Parse(json);
@@ -129,7 +129,7 @@ public class GeoJsonFormatterTests
         var feature = new ShapefileFeature(1, polyLine, null, 0, 20);
         var features = new[] { feature };
         var fields = Array.Empty<string>();
-        using var writer = new StringWriter();
+        await using var writer = new StringWriter();
         await formatter.WriteAsync(features, fields, null!, writer);
         var json = writer.ToString();
         using var document = JsonDocument.Parse(json);
@@ -153,11 +153,11 @@ public class GeoJsonFormatterTests
         var formatter = new GeoJsonFormatter(CreateTestConfiguration());
         var part1 = new[] { new Coordinate(0, 0), new Coordinate(1, 1) };
         var part2 = new[] { new Coordinate(2, 2), new Coordinate(3, 3) };
-        var multiPolyLine = new PolyLine(new[] { part1, part2 });
+        var multiPolyLine = new PolyLine([part1, part2]);
         var feature = new ShapefileFeature(1, multiPolyLine, null, 0, 20);
         var features = new[] { feature };
         var fields = Array.Empty<string>();
-        using var writer = new StringWriter();
+        await using var writer = new StringWriter();
         await formatter.WriteAsync(features, fields, null!, writer);
         var json = writer.ToString();
         using var document = JsonDocument.Parse(json);
@@ -187,11 +187,11 @@ public class GeoJsonFormatterTests
             new Coordinate(0, 1),
             new Coordinate(0, 0), // Closed ring
         };
-        var polygon = new Polygon(new[] { exteriorRing });
+        var polygon = new Polygon([exteriorRing]);
         var feature = new ShapefileFeature(1, polygon, null, 0, 20);
         var features = new[] { feature };
         var fields = Array.Empty<string>();
-        using var writer = new StringWriter();
+        await using var writer = new StringWriter();
         await formatter.WriteAsync(features, fields, null!, writer);
         var json = writer.ToString();
         using var document = JsonDocument.Parse(json);
@@ -230,11 +230,11 @@ public class GeoJsonFormatterTests
             new Coordinate(0.5, 1.5),
             new Coordinate(0.5, 0.5),
         };
-        var polygon = new Polygon(new[] { exteriorRing, interiorRing });
+        var polygon = new Polygon([exteriorRing, interiorRing]);
         var feature = new ShapefileFeature(1, polygon, null, 0, 20);
         var features = new[] { feature };
         var fields = Array.Empty<string>();
-        using var writer = new StringWriter();
+        await using var writer = new StringWriter();
         await formatter.WriteAsync(features, fields, null!, writer);
         var json = writer.ToString();
         using var document = JsonDocument.Parse(json);
@@ -253,7 +253,7 @@ public class GeoJsonFormatterTests
         var feature = new ShapefileFeature(1, NullShape.Instance, null, 0, 20);
         var features = new[] { feature };
         var fields = Array.Empty<string>();
-        using var writer = new StringWriter();
+        await using var writer = new StringWriter();
         await formatter.WriteAsync(features, fields, null!, writer);
         var json = writer.ToString();
         using var document = JsonDocument.Parse(json);
@@ -273,7 +273,7 @@ public class GeoJsonFormatterTests
         var feature = new ShapefileFeature(1, point, null, 0, 20);
         var features = new[] { feature };
         var fields = Array.Empty<string>();
-        using var writer = new StringWriter();
+        await using var writer = new StringWriter();
         await formatter.WriteAsync(features, fields, null!, writer);
         var json = writer.ToString();
         using var document = JsonDocument.Parse(json);
@@ -300,7 +300,7 @@ public class GeoJsonFormatterTests
         var feature = new ShapefileFeature(1, point, null, 0, 20);
         var features = new[] { feature };
         var fields = Array.Empty<string>();
-        using var writer = new StringWriter();
+        await using var writer = new StringWriter();
         await formatter.WriteAsync(features, fields, null!, writer);
         var json = writer.ToString();
         Assert.Contains("\n", json); // Should have newlines when pretty printed
@@ -323,7 +323,7 @@ public class GeoJsonFormatterTests
         var feature = new ShapefileFeature(1, point, null, 0, 20);
         var features = new[] { feature };
         var fields = Array.Empty<string>();
-        using var writer = new StringWriter();
+        await using var writer = new StringWriter();
         await formatter.WriteAsync(features, fields, null!, writer);
         var json = writer.ToString();
         Assert.DoesNotContain("\n", json); // Should not have newlines when minified
@@ -345,7 +345,7 @@ public class GeoJsonFormatterTests
         var feature = new ShapefileFeature(1, point, null, 0, 20);
         var features = new[] { feature };
         var fields = Array.Empty<string>();
-        using var writer = new StringWriter();
+        await using var writer = new StringWriter();
         await formatter.WriteAsync(features, fields, null!, writer);
         var json = writer.ToString();
         using var document = JsonDocument.Parse(json);
@@ -376,7 +376,7 @@ public class GeoJsonFormatterTests
             new ShapefileFeature(3, new Point(3, 3), null, 0, 20), // Should be excluded
         };
         var fields = Array.Empty<string>();
-        using var writer = new StringWriter();
+        await using var writer = new StringWriter();
         await formatter.WriteAsync(features, fields, null!, writer);
         var json = writer.ToString();
         using var document = JsonDocument.Parse(json);
@@ -398,7 +398,7 @@ public class GeoJsonFormatterTests
         };
 
         var fields = Array.Empty<string>();
-        using var writer = new StringWriter();
+        await using var writer = new StringWriter();
         await formatter.WriteAsync(features, fields, null!, writer);
         var json = writer.ToString();
         using var document = JsonDocument.Parse(json);
@@ -424,7 +424,7 @@ public class GeoJsonFormatterTests
         var feature = new ShapefileFeature(1, point, null, 0, 20);
         var features = new[] { feature };
         var fields = Array.Empty<string>();
-        using var writer = new StringWriter();
+        await using var writer = new StringWriter();
         await formatter.WriteAsync(features, fields, null!, writer);
         var json = writer.ToString();
         using var document = JsonDocument.Parse(json);
@@ -460,7 +460,7 @@ public class GeoJsonFormatterTests
         var feature = new ShapefileFeature(1, multiPatch, null, 0, 20);
         var features = new[] { feature };
         var fields = Array.Empty<string>();
-        using var writer = new StringWriter();
+        await using var writer = new StringWriter();
         await formatter.WriteAsync(features, fields, null!, writer);
         var json = writer.ToString();
         using var document = JsonDocument.Parse(json);
@@ -491,7 +491,7 @@ public class GeoJsonFormatterTests
         var formatter = new GeoJsonFormatter(CreateTestConfiguration());
         var features = Array.Empty<ShapefileFeature>();
         var fields = Array.Empty<string>();
-        using var writer = new StringWriter();
+        await using var writer = new StringWriter();
         await formatter.WriteAsync(features, fields, null!, writer);
         var json = writer.ToString();
         using var document = JsonDocument.Parse(json);

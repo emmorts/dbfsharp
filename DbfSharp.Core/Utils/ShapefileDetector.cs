@@ -466,7 +466,7 @@ public static class ShapefileDetector
     /// </summary>
     private static string FormatFileSize(long bytes)
     {
-        string[] suffixes = { "B", "KB", "MB", "GB", "TB" };
+        string[] suffixes = ["B", "KB", "MB", "GB", "TB"];
         int suffixIndex = 0;
         double size = bytes;
 

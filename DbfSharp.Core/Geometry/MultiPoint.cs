@@ -140,7 +140,7 @@ public sealed class MultiPoint : Shape
     /// <returns>A new multipoint containing all existing points plus the new one</returns>
     public MultiPoint AddPoint(Coordinate coordinate)
     {
-        return new MultiPoint(_coordinates.Concat(new[] { coordinate }));
+        return new MultiPoint(_coordinates.Concat([coordinate]));
     }
 
     /// <summary>

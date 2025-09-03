@@ -134,7 +134,7 @@ public readonly struct ShapefileFeature
     /// Gets the attribute field names, or an empty collection if no attributes are available
     /// </summary>
     public IReadOnlyList<string> AttributeFieldNames =>
-        Attributes?.FieldNames ?? Array.Empty<string>();
+        Attributes?.FieldNames ?? [];
 
     /// <summary>
     /// Gets an attribute value by field name

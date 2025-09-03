@@ -524,12 +524,12 @@ public class WktElement
     /// <summary>
     /// The values contained in this element
     /// </summary>
-    public List<string> Values { get; set; } = new();
+    public List<string> Values { get; set; } = [];
 
     /// <summary>
     /// Child elements contained within this element
     /// </summary>
-    public List<WktElement> Children { get; set; } = new();
+    public List<WktElement> Children { get; set; } = [];
 }
 
 /// <summary>
@@ -646,5 +646,5 @@ public class WktParseResult
     /// <summary>
     /// Gets or sets child coordinate systems (for compound coordinate systems)
     /// </summary>
-    public List<WktParseResult> ChildSystems { get; set; } = new();
+    public List<WktParseResult> ChildSystems { get; set; } = [];
 }
