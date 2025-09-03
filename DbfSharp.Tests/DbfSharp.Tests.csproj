@@ -80,5 +80,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DbfSharp.Core\DbfSharp.Core.csproj" />
+    <ProjectReference Include="..\DbfSharp.ConsoleAot\DbfSharp.ConsoleAot.csproj" />
   </ItemGroup>
 </Project>

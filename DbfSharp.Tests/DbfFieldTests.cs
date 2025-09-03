@@ -22,10 +22,7 @@ public class DbfFieldTests
     [InlineData(FieldType.Varchar, typeof(string))]
     public void GetExpectedNetType_ShouldReturnCorrectType(FieldType dbfType, Type expectedType)
     {
-        // Act
         var actualType = dbfType.GetExpectedNetType();
-
-        // Assert
         Assert.Equal(expectedType, actualType);
     }
 
@@ -38,10 +35,7 @@ public class DbfFieldTests
     [InlineData(FieldType.Numeric, false)]
     public void UsesMemoFile_ShouldReturnCorrectValue(FieldType dbfType, bool expected)
     {
-        // Act
         var actual = dbfType.UsesMemoFile();
-
-        // Assert
         Assert.Equal(expected, actual);
     }
 
@@ -122,7 +116,7 @@ public class DbfFieldTests
         var fieldType = FieldTypeExtensions.FromChar(type[0]);
         var field = new DbfField(
             "TEST",
-            fieldType.Value,
+            fieldType!.Value,
             0,
             length,
             decimalCount,

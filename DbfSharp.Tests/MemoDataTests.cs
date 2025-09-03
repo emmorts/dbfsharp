@@ -1,4 +1,3 @@
-using System.Text;
 using DbfSharp.Core.Memo;
 
 namespace DbfSharp.Tests;
