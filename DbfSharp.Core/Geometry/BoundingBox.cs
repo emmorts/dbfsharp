@@ -298,6 +298,11 @@ public readonly struct BoundingBox : IEquatable<BoundingBox>
         return new BoundingBox(minX, minY, maxX, maxY, minZ, maxZ, minM, maxM);
     }
 
+    /// <summary>
+    /// Determines whether the specified BoundingBox is equal to the current BoundingBox
+    /// </summary>
+    /// <param name="other">The BoundingBox to compare with the current BoundingBox</param>
+    /// <returns>true if the specified BoundingBox is equal to the current BoundingBox; otherwise, false</returns>
     public bool Equals(BoundingBox other)
     {
         return MinX.Equals(other.MinX)
@@ -310,26 +315,51 @@ public readonly struct BoundingBox : IEquatable<BoundingBox>
             && Nullable.Equals(MaxM, other.MaxM);
     }
 
+    /// <summary>
+    /// Determines whether the specified object is equal to the current BoundingBox
+    /// </summary>
+    /// <param name="obj">The object to compare with the current BoundingBox</param>
+    /// <returns>true if the specified object is equal to the current BoundingBox; otherwise, false</returns>
     public override bool Equals(object? obj)
     {
         return obj is BoundingBox other && Equals(other);
     }
 
+    /// <summary>
+    /// Serves as the default hash function for BoundingBox objects
+    /// </summary>
+    /// <returns>A hash code for the current BoundingBox</returns>
     public override int GetHashCode()
     {
         return HashCode.Combine(MinX, MaxX, MinY, MaxY, MinZ, MaxZ, MinM, MaxM);
     }
 
+    /// <summary>
+    /// Determines whether two BoundingBox instances are equal
+    /// </summary>
+    /// <param name="left">The first BoundingBox to compare</param>
+    /// <param name="right">The second BoundingBox to compare</param>
+    /// <returns>true if the BoundingBox instances are equal; otherwise, false</returns>
     public static bool operator ==(BoundingBox left, BoundingBox right)
     {
         return left.Equals(right);
     }
 
+    /// <summary>
+    /// Determines whether two BoundingBox instances are not equal
+    /// </summary>
+    /// <param name="left">The first BoundingBox to compare</param>
+    /// <param name="right">The second BoundingBox to compare</param>
+    /// <returns>true if the BoundingBox instances are not equal; otherwise, false</returns>
     public static bool operator !=(BoundingBox left, BoundingBox right)
     {
         return !left.Equals(right);
     }
 
+    /// <summary>
+    /// Returns a string representation of the BoundingBox
+    /// </summary>
+    /// <returns>A string that represents the current BoundingBox</returns>
     public override string ToString()
     {
         var result =

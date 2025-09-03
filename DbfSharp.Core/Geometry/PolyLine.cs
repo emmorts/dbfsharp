@@ -382,11 +382,20 @@ public sealed class PolyLine : Shape
         }
     }
 
+    /// <summary>
+    /// Returns a string representation of the PolyLine
+    /// </summary>
+    /// <returns>A string that represents the current PolyLine</returns>
     public override string ToString()
     {
         return $"POLYLINE ({_parts.Length} parts, {CoordinateCount} coordinates)";
     }
 
+    /// <summary>
+    /// Determines whether the specified object is equal to the current PolyLine
+    /// </summary>
+    /// <param name="obj">The object to compare with the current PolyLine</param>
+    /// <returns>true if the specified object is equal to the current PolyLine; otherwise, false</returns>
     public override bool Equals(object? obj)
     {
         if (obj is not PolyLine other || _parts.Length != other._parts.Length)
@@ -416,6 +425,10 @@ public sealed class PolyLine : Shape
         return true;
     }
 
+    /// <summary>
+    /// Serves as the default hash function for PolyLine objects
+    /// </summary>
+    /// <returns>A hash code for the current PolyLine</returns>
     public override int GetHashCode()
     {
         var hash = new HashCode();

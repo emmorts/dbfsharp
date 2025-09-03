@@ -222,15 +222,19 @@ public class SpatialOperationsTests
     }
 
     [Theory]
-    [InlineData(1, 1, true)]   // Inside
-    [InlineData(0, 0, true)]   // On corner
-    [InlineData(5, 0, true)]   // On edge
-    [InlineData(0, 5, true)]   // On edge
+    [InlineData(1, 1, true)] // Inside
+    [InlineData(0, 0, true)] // On corner
+    [InlineData(5, 0, true)] // On edge
+    [InlineData(0, 5, true)] // On edge
     [InlineData(-1, 5, false)] // Outside left
     [InlineData(11, 5, false)] // Outside right
     [InlineData(5, -1, false)] // Outside bottom
     [InlineData(5, 11, false)] // Outside top
-    public void IsPointInPolygon_VariousLocations_ShouldReturnExpectedResults(double x, double y, bool expected)
+    public void IsPointInPolygon_VariousLocations_ShouldReturnExpectedResults(
+        double x,
+        double y,
+        bool expected
+    )
     {
         // Arrange
         var polygon = CreateSquarePolygon(0, 0, 10, 10);
@@ -247,11 +251,11 @@ public class SpatialOperationsTests
     {
         var coordinates = new[]
         {
-            new Coordinate(minX, minY),  // Bottom-left
-            new Coordinate(maxX, minY),  // Bottom-right
-            new Coordinate(maxX, maxY),  // Top-right
-            new Coordinate(minX, maxY),  // Top-left
-            new Coordinate(minX, minY)   // Close the ring
+            new Coordinate(minX, minY), // Bottom-left
+            new Coordinate(maxX, minY), // Bottom-right
+            new Coordinate(maxX, maxY), // Top-right
+            new Coordinate(minX, maxY), // Top-left
+            new Coordinate(minX, minY), // Close the ring
         };
 
         return new Polygon(coordinates);

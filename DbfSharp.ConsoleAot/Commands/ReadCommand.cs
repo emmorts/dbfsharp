@@ -421,7 +421,7 @@ public static class ReadCommand
     )
     {
         var hasSpatialFilters = HasSpatialFilters(settings);
-        
+
         // Build spatial index if requested or if we have spatial filters
         if (settings.BuildSpatialIndex || hasSpatialFilters)
         {
@@ -431,12 +431,14 @@ public static class ReadCommand
                 {
                     Console.WriteLine("Building spatial index...");
                 }
-                
+
                 var spatialStats = shapefileReader.BuildSpatialIndex();
-                
+
                 if (!settings.Quiet)
                 {
-                    Console.WriteLine($"Spatial index built: {spatialStats.TotalEntries} geometries in {spatialStats.LeafCount} leaf nodes");
+                    Console.WriteLine(
+                        $"Spatial index built: {spatialStats.TotalEntries} geometries in {spatialStats.LeafCount} leaf nodes"
+                    );
                 }
             }
             catch (Exception ex)
@@ -447,25 +449,31 @@ public static class ReadCommand
                 }
             }
         }
-        
+
         // Handle nearest neighbor queries first (different approach)
         if (!string.IsNullOrEmpty(settings.NearestPoint))
         {
-            foreach (var feature in GetNearestNeighborFeatures(shapefileReader, settings, cancellationToken))
+            foreach (
+                var feature in GetNearestNeighborFeatures(
+                    shapefileReader,
+                    settings,
+                    cancellationToken
+                )
+            )
             {
                 yield return feature;
             }
             yield break;
         }
-        
+
         // Apply spatial filters
         IEnumerable<ShapefileFeature> features = shapefileReader.Features;
-        
+
         if (hasSpatialFilters)
         {
             features = ApplySpatialFilters(features, shapefileReader, settings, cancellationToken);
         }
-        
+
         // Apply skip, limit
         var count = 0;
         var skipped = 0;
@@ -489,18 +497,18 @@ public static class ReadCommand
             count++;
         }
     }
-    
+
     /// <summary>
     /// Checks if any spatial filters are configured
     /// </summary>
     private static bool HasSpatialFilters(ReadConfiguration settings)
     {
-        return !string.IsNullOrEmpty(settings.BoundingBox) ||
-               !string.IsNullOrEmpty(settings.ContainsPoint) ||
-               !string.IsNullOrEmpty(settings.IntersectsWith) ||
-               !string.IsNullOrEmpty(settings.NearestPoint);
+        return !string.IsNullOrEmpty(settings.BoundingBox)
+            || !string.IsNullOrEmpty(settings.ContainsPoint)
+            || !string.IsNullOrEmpty(settings.IntersectsWith)
+            || !string.IsNullOrEmpty(settings.NearestPoint);
     }
-    
+
     /// <summary>
     /// Applies spatial filters to features
     /// </summary>
@@ -508,55 +516,66 @@ public static class ReadCommand
         IEnumerable<ShapefileFeature> features,
         ShapefileReader shapefileReader,
         ReadConfiguration settings,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         foreach (var feature in features)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            
+
             if (feature.Geometry == null || feature.Geometry.IsEmpty)
             {
                 continue;
             }
-            
+
             // Apply bounding box filter
-            if (!string.IsNullOrEmpty(settings.BoundingBox) && !PassesBoundingBoxFilter(feature.Geometry, settings.BoundingBox))
+            if (
+                !string.IsNullOrEmpty(settings.BoundingBox)
+                && !PassesBoundingBoxFilter(feature.Geometry, settings.BoundingBox)
+            )
             {
                 continue;
             }
-            
+
             // Apply contains point filter
-            if (!string.IsNullOrEmpty(settings.ContainsPoint) && !PassesContainsPointFilter(feature.Geometry, settings.ContainsPoint))
+            if (
+                !string.IsNullOrEmpty(settings.ContainsPoint)
+                && !PassesContainsPointFilter(feature.Geometry, settings.ContainsPoint)
+            )
             {
                 continue;
             }
-            
+
             // Apply intersects with filter
-            if (!string.IsNullOrEmpty(settings.IntersectsWith) && !PassesIntersectsFilter(feature.Geometry, settings.IntersectsWith))
+            if (
+                !string.IsNullOrEmpty(settings.IntersectsWith)
+                && !PassesIntersectsFilter(feature.Geometry, settings.IntersectsWith)
+            )
             {
                 continue;
             }
-            
+
             yield return feature;
         }
     }
-    
+
     /// <summary>
     /// Gets features based on nearest neighbor search
     /// </summary>
     private static IEnumerable<ShapefileFeature> GetNearestNeighborFeatures(
         ShapefileReader shapefileReader,
         ReadConfiguration settings,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         if (!TryParsePoint(settings.NearestPoint, out var queryPoint))
         {
             return [];
         }
-        
+
         var maxCount = settings.NearestCount ?? 1;
         var maxDistance = settings.NearestDistance;
-        
+
         try
         {
             return GetNearestResultsInternal();
@@ -569,7 +588,7 @@ public static class ReadCommand
             }
             return [];
         }
-        
+
         IEnumerable<ShapefileFeature> GetNearestResultsInternal()
         {
             if (shapefileReader.HasSpatialIndex)
@@ -577,12 +596,16 @@ public static class ReadCommand
                 // Use spatial index for efficient nearest neighbor search
                 var coordinate = new Coordinate(queryPoint.X, queryPoint.Y);
                 var nearestFeatures = shapefileReader.FindNearestFeatures(coordinate, maxCount);
-                
+
                 foreach (var feature in nearestFeatures)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    
-                    if (maxDistance == null || SpatialOperations.Distance(queryPoint, feature.Geometry) <= maxDistance.Value)
+
+                    if (
+                        maxDistance == null
+                        || SpatialOperations.Distance(queryPoint, feature.Geometry)
+                            <= maxDistance.Value
+                    )
                     {
                         yield return feature;
                     }
@@ -592,28 +615,25 @@ public static class ReadCommand
             {
                 // Fallback to brute force search
                 var distances = new List<(ShapefileFeature feature, double distance)>();
-                
+
                 foreach (var feature in shapefileReader.Features)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    
+
                     if (feature.Geometry != null && !feature.Geometry.IsEmpty)
                     {
                         var distance = SpatialOperations.Distance(queryPoint, feature.Geometry);
-                        
+
                         if (maxDistance == null || distance <= maxDistance.Value)
                         {
                             distances.Add((feature, distance));
                         }
                     }
                 }
-                
+
                 // Sort by distance and take the requested count
-                var sortedResults = distances
-                    .OrderBy(x => x.distance)
-                    .Take(maxCount)
-                    .ToList();
-                    
+                var sortedResults = distances.OrderBy(x => x.distance).Take(maxCount).ToList();
+
                 foreach (var (feature, _) in sortedResults)
                 {
                     yield return feature;
@@ -621,7 +641,7 @@ public static class ReadCommand
             }
         }
     }
-    
+
     /// <summary>
     /// Tests if geometry passes bounding box filter
     /// </summary>
@@ -631,10 +651,10 @@ public static class ReadCommand
         {
             return true; // Invalid filter passes everything
         }
-        
+
         return geometry.BoundingBox.Intersects(boundingBox);
     }
-    
+
     /// <summary>
     /// Tests if geometry contains the specified point
     /// </summary>
@@ -644,10 +664,10 @@ public static class ReadCommand
         {
             return true; // Invalid filter passes everything
         }
-        
+
         return SpatialOperations.Contains(geometry, point);
     }
-    
+
     /// <summary>
     /// Tests if geometry intersects with the specified bounding box
     /// </summary>
@@ -657,56 +677,57 @@ public static class ReadCommand
         {
             return true; // Invalid filter passes everything
         }
-        
+
         return geometry.BoundingBox.Intersects(boundingBox);
     }
-    
+
     /// <summary>
     /// Tries to parse a bounding box string "minX,minY,maxX,maxY"
     /// </summary>
     private static bool TryParseBoundingBox(string? boundingBoxString, out BoundingBox boundingBox)
     {
         boundingBox = new BoundingBox();
-        
+
         if (string.IsNullOrEmpty(boundingBoxString))
             return false;
-            
+
         var parts = boundingBoxString.Split(',');
         if (parts.Length != 4)
             return false;
-            
-        if (!double.TryParse(parts[0], out var minX) ||
-            !double.TryParse(parts[1], out var minY) ||
-            !double.TryParse(parts[2], out var maxX) ||
-            !double.TryParse(parts[3], out var maxY))
+
+        if (
+            !double.TryParse(parts[0], out var minX)
+            || !double.TryParse(parts[1], out var minY)
+            || !double.TryParse(parts[2], out var maxX)
+            || !double.TryParse(parts[3], out var maxY)
+        )
         {
             return false;
         }
-        
+
         boundingBox = new BoundingBox(minX, minY, maxX, maxY);
         return true;
     }
-    
+
     /// <summary>
     /// Tries to parse a point string "x,y"
     /// </summary>
     private static bool TryParsePoint(string? pointString, out Point point)
     {
         point = new Point(0, 0);
-        
+
         if (string.IsNullOrEmpty(pointString))
             return false;
-            
+
         var parts = pointString.Split(',');
         if (parts.Length != 2)
             return false;
-            
-        if (!double.TryParse(parts[0], out var x) ||
-            !double.TryParse(parts[1], out var y))
+
+        if (!double.TryParse(parts[0], out var x) || !double.TryParse(parts[1], out var y))
         {
             return false;
         }
-        
+
         point = new Point(x, y);
         return true;
     }

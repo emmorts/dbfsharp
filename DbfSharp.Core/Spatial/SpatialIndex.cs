@@ -33,7 +33,8 @@ public class SpatialIndex
     /// <summary>
     /// Initializes a new spatial index with default parameters
     /// </summary>
-    public SpatialIndex() : this(DefaultMaxEntries, DefaultMinEntries) { }
+    public SpatialIndex()
+        : this(DefaultMaxEntries, DefaultMinEntries) { }
 
     /// <summary>
     /// Initializes a new spatial index with custom parameters
@@ -47,7 +48,10 @@ public class SpatialIndex
         if (minEntries < 1)
             throw new ArgumentException("Min entries must be at least 1", nameof(minEntries));
         if (minEntries > maxEntries / 2)
-            throw new ArgumentException("Min entries cannot exceed half of max entries", nameof(minEntries));
+            throw new ArgumentException(
+                "Min entries cannot exceed half of max entries",
+                nameof(minEntries)
+            );
 
         _maxEntries = maxEntries;
         _minEntries = minEntries;
@@ -121,11 +125,7 @@ public class SpatialIndex
         var candidates = new List<(RTreeEntry Entry, double Distance)>();
         CollectNearestCandidates(_root, coordinate, candidates);
 
-        return candidates
-            .OrderBy(c => c.Distance)
-            .Take(maxResults)
-            .Select(c => c.Entry)
-            .ToList();
+        return candidates.OrderBy(c => c.Distance).Take(maxResults).Select(c => c.Entry).ToList();
     }
 
     /// <summary>
@@ -177,7 +177,9 @@ public class SpatialIndex
         else
         {
             // Find the child node that requires least enlargement
-            var bestChild = node.Children.MinBy(child => child.CalculateAreaIncrease(entry.BoundingBox));
+            var bestChild = node.Children.MinBy(child =>
+                child.CalculateAreaIncrease(entry.BoundingBox)
+            );
             InsertEntry(bestChild!, entry);
         }
     }
@@ -210,8 +212,9 @@ public class SpatialIndex
         {
             // Split child nodes
             var children = node.Children.ToList();
-            var childEntries = children.Select(child => 
-                new RTreeEntry(child.BoundingBox, -1, null, child)).ToList();
+            var childEntries = children
+                .Select(child => new RTreeEntry(child.BoundingBox, -1, null, child))
+                .ToList();
             var (group1, group2) = SplitEntries(childEntries);
 
             // Clear original node and add first group
@@ -248,7 +251,9 @@ public class SpatialIndex
         }
     }
 
-    private static (List<RTreeEntry> group1, List<RTreeEntry> group2) SplitEntries(List<RTreeEntry> entries)
+    private static (List<RTreeEntry> group1, List<RTreeEntry> group2) SplitEntries(
+        List<RTreeEntry> entries
+    )
     {
         // Quadratic split algorithm
         var bestPair = FindWorstPair(entries);
@@ -337,7 +342,11 @@ public class SpatialIndex
         return new BoundingBox(minX, minY, maxX, maxY);
     }
 
-    private void CollectNearestCandidates(RTreeNode node, Coordinate coordinate, List<(RTreeEntry Entry, double Distance)> candidates)
+    private void CollectNearestCandidates(
+        RTreeNode node,
+        Coordinate coordinate,
+        List<(RTreeEntry Entry, double Distance)> candidates
+    )
     {
         if (node.IsLeaf)
         {
@@ -363,7 +372,14 @@ public class SpatialIndex
         return Math.Sqrt(dx * dx + dy * dy);
     }
 
-    private static void CountNodes(RTreeNode node, int depth, ref int leafCount, ref int internalCount, ref int maxDepth, ref int totalEntries)
+    private static void CountNodes(
+        RTreeNode node,
+        int depth,
+        ref int leafCount,
+        ref int internalCount,
+        ref int maxDepth,
+        ref int totalEntries
+    )
     {
         maxDepth = Math.Max(maxDepth, depth);
 
@@ -377,11 +393,22 @@ public class SpatialIndex
             internalCount++;
             foreach (var child in node.Children)
             {
-                CountNodes(child, depth + 1, ref leafCount, ref internalCount, ref maxDepth, ref totalEntries);
+                CountNodes(
+                    child,
+                    depth + 1,
+                    ref leafCount,
+                    ref internalCount,
+                    ref maxDepth,
+                    ref totalEntries
+                );
             }
         }
     }
 
+    /// <summary>
+    /// Returns a string representation of the SpatialIndex
+    /// </summary>
+    /// <returns>A string that represents the current SpatialIndex</returns>
     public override string ToString()
     {
         var stats = GetStatistics();
@@ -394,13 +421,46 @@ public class SpatialIndex
 /// </summary>
 public readonly struct SpatialIndexStatistics
 {
+    /// <summary>
+    /// Gets the number of leaf nodes in the spatial index
+    /// </summary>
     public int LeafCount { get; }
+
+    /// <summary>
+    /// Gets the number of internal (non-leaf) nodes in the spatial index
+    /// </summary>
     public int InternalCount { get; }
+
+    /// <summary>
+    /// Gets the maximum depth of the spatial index tree
+    /// </summary>
     public int MaxDepth { get; }
+
+    /// <summary>
+    /// Gets the total number of entries in the spatial index
+    /// </summary>
     public int TotalEntries { get; }
+
+    /// <summary>
+    /// Gets the average number of entries per leaf node
+    /// </summary>
     public double AverageEntriesPerLeaf { get; }
 
-    public SpatialIndexStatistics(int leafCount, int internalCount, int maxDepth, int totalEntries, double averageEntriesPerLeaf)
+    /// <summary>
+    /// Initializes a new SpatialIndexStatistics structure
+    /// </summary>
+    /// <param name="leafCount">The number of leaf nodes</param>
+    /// <param name="internalCount">The number of internal nodes</param>
+    /// <param name="maxDepth">The maximum depth of the tree</param>
+    /// <param name="totalEntries">The total number of entries</param>
+    /// <param name="averageEntriesPerLeaf">The average number of entries per leaf node</param>
+    public SpatialIndexStatistics(
+        int leafCount,
+        int internalCount,
+        int maxDepth,
+        int totalEntries,
+        double averageEntriesPerLeaf
+    )
     {
         LeafCount = leafCount;
         InternalCount = internalCount;
@@ -409,9 +469,13 @@ public readonly struct SpatialIndexStatistics
         AverageEntriesPerLeaf = averageEntriesPerLeaf;
     }
 
+    /// <summary>
+    /// Returns a string representation of the SpatialIndexStatistics
+    /// </summary>
+    /// <returns>A string that represents the current SpatialIndexStatistics</returns>
     public override string ToString()
     {
-        return $"Leaves: {LeafCount}, Internal: {InternalCount}, Depth: {MaxDepth}, " +
-               $"Entries: {TotalEntries}, Avg/Leaf: {AverageEntriesPerLeaf:F1}";
+        return $"Leaves: {LeafCount}, Internal: {InternalCount}, Depth: {MaxDepth}, "
+            + $"Entries: {TotalEntries}, Avg/Leaf: {AverageEntriesPerLeaf:F1}";
     }
 }

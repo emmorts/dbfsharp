@@ -56,6 +56,10 @@ public sealed class ShapefileIndex : IDisposable
         /// </summary>
         public bool HasContent => ContentLength > 0;
 
+        /// <summary>
+        /// Returns a string representation of the RecordInfo
+        /// </summary>
+        /// <returns>A string that represents the current RecordInfo</returns>
         public override string ToString()
         {
             return $"Record at offset {ByteOffset:N0}, content length {ContentLengthInBytes:N0} bytes";
@@ -175,12 +179,39 @@ public sealed class ShapefileIndex : IDisposable
     /// </summary>
     public readonly struct RecordSizeStatistics
     {
+        /// <summary>
+        /// Gets the minimum record size in bytes
+        /// </summary>
         public int MinSize { get; }
+
+        /// <summary>
+        /// Gets the maximum record size in bytes
+        /// </summary>
         public int MaxSize { get; }
+
+        /// <summary>
+        /// Gets the average record size in bytes
+        /// </summary>
         public double AverageSize { get; }
+
+        /// <summary>
+        /// Gets the median record size in bytes
+        /// </summary>
         public double MedianSize { get; }
+
+        /// <summary>
+        /// Gets the total size of all records in bytes
+        /// </summary>
         public long TotalSize { get; }
 
+        /// <summary>
+        /// Initializes a new RecordSizeStatistics structure
+        /// </summary>
+        /// <param name="minSize">The minimum record size in bytes</param>
+        /// <param name="maxSize">The maximum record size in bytes</param>
+        /// <param name="averageSize">The average record size in bytes</param>
+        /// <param name="medianSize">The median record size in bytes</param>
+        /// <param name="totalSize">The total size of all records in bytes</param>
         public RecordSizeStatistics(
             int minSize,
             int maxSize,
@@ -196,6 +227,10 @@ public sealed class ShapefileIndex : IDisposable
             TotalSize = totalSize;
         }
 
+        /// <summary>
+        /// Returns a string representation of the RecordSizeStatistics
+        /// </summary>
+        /// <returns>A string that represents the current RecordSizeStatistics</returns>
         public override string ToString()
         {
             return $"Record sizes: Min={MinSize:N0}, Max={MaxSize:N0}, Avg={AverageSize:F1}, Median={MedianSize:F1}, Total={TotalSize:N0} bytes";
@@ -509,11 +544,18 @@ public sealed class ShapefileIndex : IDisposable
         }
     }
 
+    /// <summary>
+    /// Releases all resources used by the ShapefileIndex
+    /// </summary>
     public void Dispose()
     {
         _disposed = true;
     }
 
+    /// <summary>
+    /// Returns a string representation of the ShapefileIndex
+    /// </summary>
+    /// <returns>A string that represents the current ShapefileIndex</returns>
     public override string ToString()
     {
         var sizeStats = RecordCount > 0 ? GetRecordSizeStatistics() : (RecordSizeStatistics?)null;

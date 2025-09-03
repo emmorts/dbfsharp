@@ -116,9 +116,7 @@ public class PolygonTests
         Assert.Throws<ArgumentNullException>(() =>
             new Polygon((IEnumerable<IEnumerable<Coordinate>>)null!)
         );
-        Assert.Throws<ArgumentNullException>(() =>
-            new Polygon([null!])
-        );
+        Assert.Throws<ArgumentNullException>(() => new Polygon([null!]));
         Assert.Throws<ArgumentException>(() =>
             new Polygon(new[] { new Coordinate(0, 0), new Coordinate(1, 0) })
         ); // Too few coordinates

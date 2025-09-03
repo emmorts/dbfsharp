@@ -120,6 +120,11 @@ public readonly struct Coordinate : IEquatable<Coordinate>
         return Math.Sqrt(dx * dx + dy * dy + dz * dz);
     }
 
+    /// <summary>
+    /// Determines whether the specified Coordinate is equal to the current Coordinate
+    /// </summary>
+    /// <param name="other">The Coordinate to compare with the current Coordinate</param>
+    /// <returns>true if the specified Coordinate is equal to the current Coordinate; otherwise, false</returns>
     public bool Equals(Coordinate other)
     {
         return X.Equals(other.X)
@@ -128,26 +133,51 @@ public readonly struct Coordinate : IEquatable<Coordinate>
             && Nullable.Equals(M, other.M);
     }
 
+    /// <summary>
+    /// Determines whether the specified object is equal to the current Coordinate
+    /// </summary>
+    /// <param name="obj">The object to compare with the current Coordinate</param>
+    /// <returns>true if the specified object is equal to the current Coordinate; otherwise, false</returns>
     public override bool Equals(object? obj)
     {
         return obj is Coordinate other && Equals(other);
     }
 
+    /// <summary>
+    /// Serves as the default hash function for Coordinate objects
+    /// </summary>
+    /// <returns>A hash code for the current Coordinate</returns>
     public override int GetHashCode()
     {
         return HashCode.Combine(X, Y, Z, M);
     }
 
+    /// <summary>
+    /// Determines whether two Coordinate instances are equal
+    /// </summary>
+    /// <param name="left">The first Coordinate to compare</param>
+    /// <param name="right">The second Coordinate to compare</param>
+    /// <returns>true if the Coordinate instances are equal; otherwise, false</returns>
     public static bool operator ==(Coordinate left, Coordinate right)
     {
         return left.Equals(right);
     }
 
+    /// <summary>
+    /// Determines whether two Coordinate instances are not equal
+    /// </summary>
+    /// <param name="left">The first Coordinate to compare</param>
+    /// <param name="right">The second Coordinate to compare</param>
+    /// <returns>true if the Coordinate instances are not equal; otherwise, false</returns>
     public static bool operator !=(Coordinate left, Coordinate right)
     {
         return !left.Equals(right);
     }
 
+    /// <summary>
+    /// Returns a string representation of the Coordinate
+    /// </summary>
+    /// <returns>A string that represents the current Coordinate</returns>
     public override string ToString()
     {
         var parts = new List<string>

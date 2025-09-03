@@ -133,8 +133,7 @@ public readonly struct ShapefileFeature
     /// <summary>
     /// Gets the attribute field names, or an empty collection if no attributes are available
     /// </summary>
-    public IReadOnlyList<string> AttributeFieldNames =>
-        Attributes?.FieldNames ?? [];
+    public IReadOnlyList<string> AttributeFieldNames => Attributes?.FieldNames ?? [];
 
     /// <summary>
     /// Gets an attribute value by field name
@@ -313,6 +312,10 @@ public readonly struct ShapefileFeature
         // and validation rules may vary by application
     }
 
+    /// <summary>
+    /// Returns a string representation of the ShapefileFeature
+    /// </summary>
+    /// <returns>A string that represents the current ShapefileFeature</returns>
     public override string ToString()
     {
         var attributeInfo = HasAttributes
@@ -321,6 +324,11 @@ public readonly struct ShapefileFeature
         return $"Feature {RecordNumber}: {Geometry}{attributeInfo}";
     }
 
+    /// <summary>
+    /// Determines whether the specified object is equal to the current ShapefileFeature
+    /// </summary>
+    /// <param name="obj">The object to compare with the current ShapefileFeature</param>
+    /// <returns>true if the specified object is equal to the current ShapefileFeature; otherwise, false</returns>
     public override bool Equals(object? obj)
     {
         return obj is ShapefileFeature other
@@ -331,6 +339,10 @@ public readonly struct ShapefileFeature
             && GeometryLengthInBytes == other.GeometryLengthInBytes;
     }
 
+    /// <summary>
+    /// Serves as the default hash function for ShapefileFeature objects
+    /// </summary>
+    /// <returns>A hash code for the current ShapefileFeature</returns>
     public override int GetHashCode()
     {
         return HashCode.Combine(
@@ -342,11 +354,23 @@ public readonly struct ShapefileFeature
         );
     }
 
+    /// <summary>
+    /// Determines whether two ShapefileFeature instances are equal
+    /// </summary>
+    /// <param name="left">The first ShapefileFeature to compare</param>
+    /// <param name="right">The second ShapefileFeature to compare</param>
+    /// <returns>true if the ShapefileFeature instances are equal; otherwise, false</returns>
     public static bool operator ==(ShapefileFeature left, ShapefileFeature right)
     {
         return left.Equals(right);
     }
 
+    /// <summary>
+    /// Determines whether two ShapefileFeature instances are not equal
+    /// </summary>
+    /// <param name="left">The first ShapefileFeature to compare</param>
+    /// <param name="right">The second ShapefileFeature to compare</param>
+    /// <returns>true if the ShapefileFeature instances are not equal; otherwise, false</returns>
     public static bool operator !=(ShapefileFeature left, ShapefileFeature right)
     {
         return !left.Equals(right);

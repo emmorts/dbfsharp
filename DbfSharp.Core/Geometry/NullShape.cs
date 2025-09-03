@@ -45,5 +45,9 @@ public sealed class NullShape : Shape
         return []; // No validation errors for null shapes
     }
 
+    /// <summary>
+    /// Returns a string representation of the NullShape
+    /// </summary>
+    /// <returns>A string that represents the current NullShape</returns>
     public override string ToString() => "NULL";
 }

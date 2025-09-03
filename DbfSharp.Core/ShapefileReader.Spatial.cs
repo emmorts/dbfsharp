@@ -29,7 +29,11 @@ public partial class ShapefileReader
     /// <param name="loadGeometry">Whether to load full geometry into index entries</param>
     /// <returns>Statistics about the built index</returns>
     /// <exception cref="ObjectDisposedException">Thrown when the reader has been disposed</exception>
-    public SpatialIndexStatistics BuildSpatialIndex(int maxEntries = 16, int minEntries = 4, bool loadGeometry = false)
+    public SpatialIndexStatistics BuildSpatialIndex(
+        int maxEntries = 16,
+        int minEntries = 4,
+        bool loadGeometry = false
+    )
     {
         ObjectDisposedException.ThrowIf(_disposed, nameof(ShapefileReader));
 
@@ -47,7 +51,7 @@ public partial class ShapefileReader
                     record.RecordNumber,
                     loadGeometry ? record.Geometry : null
                 );
-                
+
                 _spatialIndex.Insert(entry);
                 recordCount++;
             }
@@ -67,12 +71,16 @@ public partial class ShapefileReader
     /// <returns>Task with statistics about the built index</returns>
     /// <exception cref="ObjectDisposedException">Thrown when the reader has been disposed</exception>
     public async Task<SpatialIndexStatistics> BuildSpatialIndexAsync(
-        int maxEntries = 16, 
-        int minEntries = 4, 
+        int maxEntries = 16,
+        int minEntries = 4,
         bool loadGeometry = false,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
-        return await Task.Run(() => BuildSpatialIndex(maxEntries, minEntries, loadGeometry), cancellationToken);
+        return await Task.Run(
+            () => BuildSpatialIndex(maxEntries, minEntries, loadGeometry),
+            cancellationToken
+        );
     }
 
     /// <summary>
@@ -83,17 +91,22 @@ public partial class ShapefileReader
     /// <returns>Records that intersect with the bounding box</returns>
     /// <exception cref="ObjectDisposedException">Thrown when the reader has been disposed</exception>
     /// <exception cref="InvalidOperationException">Thrown when spatial index is not built</exception>
-    public IEnumerable<ShapefileRecord> SearchRecords(BoundingBox boundingBox, bool loadGeometry = true)
+    public IEnumerable<ShapefileRecord> SearchRecords(
+        BoundingBox boundingBox,
+        bool loadGeometry = true
+    )
     {
         ObjectDisposedException.ThrowIf(_disposed, nameof(ShapefileReader));
-        
+
         if (!HasSpatialIndex)
         {
-            throw new InvalidOperationException("Spatial index must be built before performing spatial queries. Call BuildSpatialIndex() first.");
+            throw new InvalidOperationException(
+                "Spatial index must be built before performing spatial queries. Call BuildSpatialIndex() first."
+            );
         }
 
         var entries = _spatialIndex!.Search(boundingBox);
-        
+
         foreach (var entry in entries)
         {
             if (loadGeometry || entry.Shape == null)
@@ -117,17 +130,22 @@ public partial class ShapefileReader
     /// <returns>Features that intersect with the bounding box</returns>
     /// <exception cref="ObjectDisposedException">Thrown when the reader has been disposed</exception>
     /// <exception cref="InvalidOperationException">Thrown when spatial index is not built</exception>
-    public IEnumerable<ShapefileFeature> SearchFeatures(BoundingBox boundingBox, bool loadGeometry = true)
+    public IEnumerable<ShapefileFeature> SearchFeatures(
+        BoundingBox boundingBox,
+        bool loadGeometry = true
+    )
     {
         ObjectDisposedException.ThrowIf(_disposed, nameof(ShapefileReader));
-        
+
         if (!HasSpatialIndex)
         {
-            throw new InvalidOperationException("Spatial index must be built before performing spatial queries. Call BuildSpatialIndex() first.");
+            throw new InvalidOperationException(
+                "Spatial index must be built before performing spatial queries. Call BuildSpatialIndex() first."
+            );
         }
 
         var entries = _spatialIndex!.Search(boundingBox);
-        
+
         foreach (var entry in entries)
         {
             yield return GetFeature(entry.RecordNumber);
@@ -168,17 +186,22 @@ public partial class ShapefileReader
     /// <returns>The nearest records sorted by distance</returns>
     /// <exception cref="ObjectDisposedException">Thrown when the reader has been disposed</exception>
     /// <exception cref="InvalidOperationException">Thrown when spatial index is not built</exception>
-    public IEnumerable<ShapefileRecord> FindNearestRecords(Coordinate coordinate, int maxResults = 10)
+    public IEnumerable<ShapefileRecord> FindNearestRecords(
+        Coordinate coordinate,
+        int maxResults = 10
+    )
     {
         ObjectDisposedException.ThrowIf(_disposed, nameof(ShapefileReader));
-        
+
         if (!HasSpatialIndex)
         {
-            throw new InvalidOperationException("Spatial index must be built before performing spatial queries. Call BuildSpatialIndex() first.");
+            throw new InvalidOperationException(
+                "Spatial index must be built before performing spatial queries. Call BuildSpatialIndex() first."
+            );
         }
 
         var nearestEntries = _spatialIndex!.FindNearest(coordinate, maxResults);
-        
+
         foreach (var entry in nearestEntries)
         {
             yield return GetRecord(entry.RecordNumber);
@@ -193,17 +216,22 @@ public partial class ShapefileReader
     /// <returns>The nearest features sorted by distance</returns>
     /// <exception cref="ObjectDisposedException">Thrown when the reader has been disposed</exception>
     /// <exception cref="InvalidOperationException">Thrown when spatial index is not built</exception>
-    public IEnumerable<ShapefileFeature> FindNearestFeatures(Coordinate coordinate, int maxResults = 10)
+    public IEnumerable<ShapefileFeature> FindNearestFeatures(
+        Coordinate coordinate,
+        int maxResults = 10
+    )
     {
         ObjectDisposedException.ThrowIf(_disposed, nameof(ShapefileReader));
-        
+
         if (!HasSpatialIndex)
         {
-            throw new InvalidOperationException("Spatial index must be built before performing spatial queries. Call BuildSpatialIndex() first.");
+            throw new InvalidOperationException(
+                "Spatial index must be built before performing spatial queries. Call BuildSpatialIndex() first."
+            );
         }
 
         var nearestEntries = _spatialIndex!.FindNearest(coordinate, maxResults);
-        
+
         foreach (var entry in nearestEntries)
         {
             yield return GetFeature(entry.RecordNumber);
@@ -218,7 +246,10 @@ public partial class ShapefileReader
     /// <returns>Records that match the predicate</returns>
     /// <exception cref="ObjectDisposedException">Thrown when the reader has been disposed</exception>
     /// <exception cref="InvalidOperationException">Thrown when spatial index is not built</exception>
-    public IEnumerable<ShapefileRecord> SearchRecords(BoundingBox searchArea, Func<ShapefileRecord, bool> predicate)
+    public IEnumerable<ShapefileRecord> SearchRecords(
+        BoundingBox searchArea,
+        Func<ShapefileRecord, bool> predicate
+    )
     {
         return SearchRecords(searchArea).Where(predicate);
     }
@@ -231,7 +262,10 @@ public partial class ShapefileReader
     /// <returns>Features that match the predicate</returns>
     /// <exception cref="ObjectDisposedException">Thrown when the reader has been disposed</exception>
     /// <exception cref="InvalidOperationException">Thrown when spatial index is not built</exception>
-    public IEnumerable<ShapefileFeature> SearchFeatures(BoundingBox searchArea, Func<ShapefileFeature, bool> predicate)
+    public IEnumerable<ShapefileFeature> SearchFeatures(
+        BoundingBox searchArea,
+        Func<ShapefileFeature, bool> predicate
+    )
     {
         return SearchFeatures(searchArea).Where(predicate);
     }
@@ -244,18 +278,23 @@ public partial class ShapefileReader
     /// <returns>Records that match the spatial relationship</returns>
     /// <exception cref="ObjectDisposedException">Thrown when the reader has been disposed</exception>
     /// <exception cref="InvalidOperationException">Thrown when spatial index is not built</exception>
-    public IEnumerable<ShapefileRecord> FindRecordsByRelationship(Shape queryShape, SpatialRelationship relationship)
+    public IEnumerable<ShapefileRecord> FindRecordsByRelationship(
+        Shape queryShape,
+        SpatialRelationship relationship
+    )
     {
         ObjectDisposedException.ThrowIf(_disposed, nameof(ShapefileReader));
-        
+
         if (!HasSpatialIndex)
         {
-            throw new InvalidOperationException("Spatial index must be built before performing spatial queries. Call BuildSpatialIndex() first.");
+            throw new InvalidOperationException(
+                "Spatial index must be built before performing spatial queries. Call BuildSpatialIndex() first."
+            );
         }
 
         // First get candidates that intersect with bounding box
         var candidates = SearchRecords(queryShape.BoundingBox);
-        
+
         // Then filter by actual spatial relationship
         foreach (var record in candidates)
         {
@@ -275,22 +314,30 @@ public partial class ShapefileReader
     /// <returns>Features that match the spatial relationship</returns>
     /// <exception cref="ObjectDisposedException">Thrown when the reader has been disposed</exception>
     /// <exception cref="InvalidOperationException">Thrown when spatial index is not built</exception>
-    public IEnumerable<ShapefileFeature> FindFeaturesByRelationship(Shape queryShape, SpatialRelationship relationship)
+    public IEnumerable<ShapefileFeature> FindFeaturesByRelationship(
+        Shape queryShape,
+        SpatialRelationship relationship
+    )
     {
         ObjectDisposedException.ThrowIf(_disposed, nameof(ShapefileReader));
-        
+
         if (!HasSpatialIndex)
         {
-            throw new InvalidOperationException("Spatial index must be built before performing spatial queries. Call BuildSpatialIndex() first.");
+            throw new InvalidOperationException(
+                "Spatial index must be built before performing spatial queries. Call BuildSpatialIndex() first."
+            );
         }
 
         // First get candidates that intersect with bounding box
         var candidates = SearchFeatures(queryShape.BoundingBox);
-        
+
         // Then filter by actual spatial relationship
         foreach (var feature in candidates)
         {
-            var actualRelationship = SpatialOperations.GetRelationship(queryShape, feature.Geometry);
+            var actualRelationship = SpatialOperations.GetRelationship(
+                queryShape,
+                feature.Geometry
+            );
             if (actualRelationship == relationship)
             {
                 yield return feature;
@@ -331,7 +378,11 @@ public partial class ShapefileReader
     /// <param name="loadGeometry">Whether to load full geometry into index entries</param>
     /// <returns>Statistics about the rebuilt index</returns>
     /// <exception cref="ObjectDisposedException">Thrown when the reader has been disposed</exception>
-    public SpatialIndexStatistics RebuildSpatialIndex(int maxEntries = 16, int minEntries = 4, bool loadGeometry = false)
+    public SpatialIndexStatistics RebuildSpatialIndex(
+        int maxEntries = 16,
+        int minEntries = 4,
+        bool loadGeometry = false
+    )
     {
         ClearSpatialIndex();
         return BuildSpatialIndex(maxEntries, minEntries, loadGeometry);

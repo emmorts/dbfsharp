@@ -238,11 +238,20 @@ public sealed class MultiPoint : Shape
         }
     }
 
+    /// <summary>
+    /// Returns a string representation of the MultiPoint
+    /// </summary>
+    /// <returns>A string that represents the current MultiPoint</returns>
     public override string ToString()
     {
         return $"MULTIPOINT ({_coordinates.Length} points)";
     }
 
+    /// <summary>
+    /// Determines whether the specified object is equal to the current MultiPoint
+    /// </summary>
+    /// <param name="obj">The object to compare with the current MultiPoint</param>
+    /// <returns>true if the specified object is equal to the current MultiPoint; otherwise, false</returns>
     public override bool Equals(object? obj)
     {
         if (obj is not MultiPoint other || _coordinates.Length != other._coordinates.Length)
@@ -261,6 +270,10 @@ public sealed class MultiPoint : Shape
         return true;
     }
 
+    /// <summary>
+    /// Serves as the default hash function for MultiPoint objects
+    /// </summary>
+    /// <returns>A hash code for the current MultiPoint</returns>
     public override int GetHashCode()
     {
         var hash = new HashCode();

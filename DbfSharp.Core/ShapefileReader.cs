@@ -597,6 +597,9 @@ public sealed partial class ShapefileReader : IDisposable
         // Note: DBF validation is handled by the DbfReader itself
     }
 
+    /// <summary>
+    /// Releases all resources used by the ShapefileReader
+    /// </summary>
     public void Dispose()
     {
         if (_disposed)
@@ -615,6 +618,10 @@ public sealed partial class ShapefileReader : IDisposable
         _disposed = true;
     }
 
+    /// <summary>
+    /// Returns a string representation of the ShapefileReader
+    /// </summary>
+    /// <returns>A string that represents the current ShapefileReader</returns>
     public override string ToString()
     {
         var indexInfo = HasIndex ? $", indexed" : ", sequential";

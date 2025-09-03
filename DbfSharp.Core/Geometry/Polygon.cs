@@ -450,12 +450,21 @@ public sealed class Polygon : Shape
         }
     }
 
+    /// <summary>
+    /// Returns a string representation of the Polygon
+    /// </summary>
+    /// <returns>A string that represents the current Polygon</returns>
     public override string ToString()
     {
         var holes = InteriorRingCount > 0 ? $", {InteriorRingCount} holes" : "";
         return $"POLYGON ({_rings.Length} rings, {CoordinateCount} coordinates{holes})";
     }
 
+    /// <summary>
+    /// Determines whether the specified object is equal to the current Polygon
+    /// </summary>
+    /// <param name="obj">The object to compare with the current Polygon</param>
+    /// <returns>true if the specified object is equal to the current Polygon; otherwise, false</returns>
     public override bool Equals(object? obj)
     {
         if (obj is not Polygon other || _rings.Length != other._rings.Length)
@@ -485,6 +494,10 @@ public sealed class Polygon : Shape
         return true;
     }
 
+    /// <summary>
+    /// Serves as the default hash function for Polygon objects
+    /// </summary>
+    /// <returns>A hash code for the current Polygon</returns>
     public override int GetHashCode()
     {
         var hash = new HashCode();

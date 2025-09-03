@@ -45,7 +45,7 @@ public enum SpatialRelationship
     /// <summary>
     /// Geometries are topologically equal
     /// </summary>
-    Equal
+    Equal,
 }
 
 /// <summary>
@@ -250,10 +250,10 @@ public static class SpatialOperations
 
     private static bool ContainsBoundingBox(BoundingBox container, BoundingBox contained)
     {
-        return container.MinX <= contained.MinX &&
-               container.MinY <= contained.MinY &&
-               container.MaxX >= contained.MaxX &&
-               container.MaxY >= contained.MaxY;
+        return container.MinX <= contained.MinX
+            && container.MinY <= contained.MinY
+            && container.MaxX >= contained.MaxX
+            && container.MaxY >= contained.MaxY;
     }
 
     private static bool ContainsPoint(Shape container, Point point)
@@ -266,8 +266,10 @@ public static class SpatialOperations
             Point containerPoint => containerPoint.Coordinate.Equals(point.Coordinate),
             Polygon polygon => IsPointInPolygon(point.Coordinate, polygon),
             PolyLine polyLine => IsPointOnPolyLine(point.Coordinate, polyLine),
-            MultiPoint multiPoint => multiPoint.GetCoordinates().Any(p => p.Equals(point.Coordinate)),
-            _ => false
+            MultiPoint multiPoint => multiPoint
+                .GetCoordinates()
+                .Any(p => p.Equals(point.Coordinate)),
+            _ => false,
         };
     }
 
@@ -281,7 +283,7 @@ public static class SpatialOperations
 
         // For complex geometries, check if all coordinates are contained
         var containedCoords = contained.GetCoordinates();
-        return containedCoords.All(coord => 
+        return containedCoords.All(coord =>
         {
             var testPoint = new Point(coord);
             return ContainsPoint(container, testPoint);
@@ -346,8 +348,10 @@ public static class SpatialOperations
             var xj = coords[j].X;
             var yj = coords[j].Y;
 
-            if (((yi > point.Y) != (yj > point.Y)) &&
-                (point.X < (xj - xi) * (point.Y - yi) / (yj - yi) + xi))
+            if (
+                ((yi > point.Y) != (yj > point.Y))
+                && (point.X < (xj - xi) * (point.Y - yi) / (yj - yi) + xi)
+            )
             {
                 inside = !inside;
             }
@@ -370,7 +374,12 @@ public static class SpatialOperations
         return false;
     }
 
-    private static bool IsPointOnLineSegment(Coordinate point, Coordinate lineStart, Coordinate lineEnd, double tolerance)
+    private static bool IsPointOnLineSegment(
+        Coordinate point,
+        Coordinate lineStart,
+        Coordinate lineEnd,
+        double tolerance
+    )
     {
         // Calculate distance from point to line segment
         var A = point.X - lineStart.X;
@@ -380,13 +389,14 @@ public static class SpatialOperations
 
         var dot = A * C + B * D;
         var lenSq = C * C + D * D;
-        
+
         if (lenSq == 0) // Line segment is a point
             return Math.Abs(A) < tolerance && Math.Abs(B) < tolerance;
 
         var param = dot / lenSq;
 
-        double xx, yy;
+        double xx,
+            yy;
         if (param < 0)
         {
             xx = lineStart.X;

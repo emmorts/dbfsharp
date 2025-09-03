@@ -189,16 +189,29 @@ public sealed class Point : Shape
         }
     }
 
+    /// <summary>
+    /// Returns a string representation of the Point
+    /// </summary>
+    /// <returns>A string that represents the current Point</returns>
     public override string ToString()
     {
         return $"POINT {Coordinate}";
     }
 
+    /// <summary>
+    /// Determines whether the specified object is equal to the current Point
+    /// </summary>
+    /// <param name="obj">The object to compare with the current Point</param>
+    /// <returns>true if the specified object is equal to the current Point; otherwise, false</returns>
     public override bool Equals(object? obj)
     {
         return obj is Point other && Coordinate.Equals(other.Coordinate);
     }
 
+    /// <summary>
+    /// Serves as the default hash function for Point objects
+    /// </summary>
+    /// <returns>A hash code for the current Point</returns>
     public override int GetHashCode()
     {
         return Coordinate.GetHashCode();

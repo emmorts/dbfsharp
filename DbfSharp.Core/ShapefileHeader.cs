@@ -449,6 +449,10 @@ public sealed class ShapefileHeader
         }
     }
 
+    /// <summary>
+    /// Returns a string representation of the ShapefileHeader
+    /// </summary>
+    /// <returns>A string that represents the current ShapefileHeader</returns>
     public override string ToString()
     {
         var bounds = $"[{XMin:F6}, {YMin:F6}, {XMax:F6}, {YMax:F6}]";

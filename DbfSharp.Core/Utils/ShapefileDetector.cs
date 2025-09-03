@@ -207,6 +207,10 @@ public static class ShapefileDetector
             }
         }
 
+        /// <summary>
+        /// Returns a string representation of the ShapefileComponents
+        /// </summary>
+        /// <returns>A string that represents the current ShapefileComponents</returns>
         public override string ToString()
         {
             if (IsEmpty)

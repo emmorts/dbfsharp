@@ -30,11 +30,11 @@ public class SpatialIndexTests
     }
 
     [Theory]
-    [InlineData(-1, 4)]  // maxEntries < 2
-    [InlineData(1, 4)]   // maxEntries < 2
-    [InlineData(4, 0)]   // minEntries < 1
-    [InlineData(4, -1)]  // minEntries < 1
-    [InlineData(4, 3)]   // minEntries > maxEntries / 2
+    [InlineData(-1, 4)] // maxEntries < 2
+    [InlineData(1, 4)] // maxEntries < 2
+    [InlineData(4, 0)] // minEntries < 1
+    [InlineData(4, -1)] // minEntries < 1
+    [InlineData(4, 3)] // minEntries > maxEntries / 2
     public void Constructor_InvalidParameters_ShouldThrowException(int maxEntries, int minEntries)
     {
         // Act & Assert
@@ -77,7 +77,7 @@ public class SpatialIndexTests
         {
             new Point(new Coordinate(0, 0)),
             new Point(new Coordinate(10, 10)),
-            new Point(new Coordinate(20, 20))
+            new Point(new Coordinate(20, 20)),
         };
 
         // Act
@@ -89,7 +89,7 @@ public class SpatialIndexTests
         // Assert
         Assert.Equal(3, index.Count);
         Assert.False(index.IsEmpty);
-        
+
         var bbox = index.BoundingBox!.Value;
         Assert.Equal(0, bbox.MinX);
         Assert.Equal(0, bbox.MinY);
@@ -116,14 +116,14 @@ public class SpatialIndexTests
     {
         // Arrange
         var index = new SpatialIndex();
-        
+
         // Add points at different locations
         var points = new[]
         {
-            new Point(new Coordinate(5, 5)),   // Inside search box
+            new Point(new Coordinate(5, 5)), // Inside search box
             new Point(new Coordinate(15, 15)), // Outside search box
-            new Point(new Coordinate(0, 0)),   // On search box boundary
-            new Point(new Coordinate(10, 10))  // On search box boundary
+            new Point(new Coordinate(0, 0)), // On search box boundary
+            new Point(new Coordinate(10, 10)), // On search box boundary
         };
 
         for (int i = 0; i < points.Length; i++)
@@ -151,11 +151,11 @@ public class SpatialIndexTests
         // Arrange
         var index = new SpatialIndex();
         var coordinate = new Coordinate(5, 5);
-        
+
         // Add a polygon that contains the coordinate and one that doesn't
         var polygon1 = CreateSquarePolygon(0, 0, 10, 10); // Contains (5,5)
         var polygon2 = CreateSquarePolygon(20, 20, 30, 30); // Doesn't contain (5,5)
-        
+
         index.Insert(polygon1, 1);
         index.Insert(polygon2, 2);
 
@@ -174,7 +174,7 @@ public class SpatialIndexTests
         var index = new SpatialIndex();
         var point = new Point(new Coordinate(10, 20));
         index.Insert(point, 1);
-        
+
         var queryCoordinate = new Coordinate(12, 22);
 
         // Act
@@ -192,10 +192,10 @@ public class SpatialIndexTests
         var index = new SpatialIndex();
         var points = new[]
         {
-            new Point(new Coordinate(0, 0)),   // Distance: ~14.14
-            new Point(new Coordinate(5, 5)),   // Distance: ~7.07
+            new Point(new Coordinate(0, 0)), // Distance: ~14.14
+            new Point(new Coordinate(5, 5)), // Distance: ~7.07
             new Point(new Coordinate(15, 15)), // Distance: ~7.07
-            new Point(new Coordinate(20, 20))  // Distance: ~14.14
+            new Point(new Coordinate(20, 20)), // Distance: ~14.14
         };
 
         for (int i = 0; i < points.Length; i++)
@@ -210,10 +210,10 @@ public class SpatialIndexTests
 
         // Assert
         Assert.Equal(2, nearest.Count);
-        
+
         // Results should be sorted by distance
         var recordNumbers = nearest.Select(e => e.RecordNumber).ToArray();
-        
+
         // Points at (5,5) and (15,15) should be returned as they are closest
         Assert.Contains(2, recordNumbers); // Point at (5,5)
         Assert.Contains(3, recordNumbers); // Point at (15,15)
@@ -226,7 +226,7 @@ public class SpatialIndexTests
         var index = new SpatialIndex();
         var point = new Point(new Coordinate(10, 20));
         index.Insert(point, 1);
-        
+
         Assert.Equal(1, index.Count);
 
         // Act
@@ -260,7 +260,7 @@ public class SpatialIndexTests
     {
         // Arrange
         var index = new SpatialIndex();
-        
+
         // Add several entries to force tree structure
         for (int i = 0; i < 5; i++)
         {
@@ -296,11 +296,11 @@ public class SpatialIndexTests
 
         // Assert
         Assert.Equal(pointCount, index.Count);
-        
+
         var stats = index.GetStatistics();
         Assert.True(stats.LeafCount > 1, "Should have multiple leaves due to splitting");
         Assert.True(stats.MaxDepth >= 1, "Should have some depth due to splitting");
-        
+
         // Test search functionality
         var searchBox = new BoundingBox(0, 0, 100, 100);
         var results = index.Search(searchBox);
@@ -328,11 +328,11 @@ public class SpatialIndexTests
     {
         var coordinates = new[]
         {
-            new Coordinate(minX, minY),  // Bottom-left
-            new Coordinate(maxX, minY),  // Bottom-right
-            new Coordinate(maxX, maxY),  // Top-right
-            new Coordinate(minX, maxY),  // Top-left
-            new Coordinate(minX, minY)   // Close the ring
+            new Coordinate(minX, minY), // Bottom-left
+            new Coordinate(maxX, minY), // Bottom-right
+            new Coordinate(maxX, maxY), // Top-right
+            new Coordinate(minX, maxY), // Top-left
+            new Coordinate(minX, minY), // Close the ring
         };
 
         return new Polygon(coordinates);

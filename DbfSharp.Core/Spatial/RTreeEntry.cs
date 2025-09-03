@@ -34,7 +34,12 @@ public class RTreeEntry
     /// <param name="recordNumber">The record number in the shapefile</param>
     /// <param name="shape">Optional reference to the actual shape geometry</param>
     /// <param name="userData">Optional user data</param>
-    public RTreeEntry(BoundingBox boundingBox, int recordNumber, Shape? shape = null, object? userData = null)
+    public RTreeEntry(
+        BoundingBox boundingBox,
+        int recordNumber,
+        Shape? shape = null,
+        object? userData = null
+    )
     {
         BoundingBox = boundingBox;
         RecordNumber = recordNumber;
@@ -62,19 +67,32 @@ public class RTreeEntry
     /// </summary>
     public bool HasShape => Shape != null;
 
+    /// <summary>
+    /// Returns a string representation of the RTreeEntry
+    /// </summary>
+    /// <returns>A string that represents the current RTreeEntry</returns>
     public override string ToString()
     {
-        return $"RTreeEntry: Record {RecordNumber}, BBox: {BoundingBox}" + 
-               (HasShape ? $", ShapeType: {Shape!.ShapeType}" : "");
+        return $"RTreeEntry: Record {RecordNumber}, BBox: {BoundingBox}"
+            + (HasShape ? $", ShapeType: {Shape!.ShapeType}" : "");
     }
 
+    /// <summary>
+    /// Determines whether the specified object is equal to the current RTreeEntry
+    /// </summary>
+    /// <param name="obj">The object to compare with the current RTreeEntry</param>
+    /// <returns>true if the specified object is equal to the current RTreeEntry; otherwise, false</returns>
     public override bool Equals(object? obj)
     {
-        return obj is RTreeEntry other && 
-               RecordNumber == other.RecordNumber &&
-               BoundingBox.Equals(other.BoundingBox);
+        return obj is RTreeEntry other
+            && RecordNumber == other.RecordNumber
+            && BoundingBox.Equals(other.BoundingBox);
     }
 
+    /// <summary>
+    /// Serves as the default hash function for RTreeEntry objects
+    /// </summary>
+    /// <returns>A hash code for the current RTreeEntry</returns>
     public override int GetHashCode()
     {
         return HashCode.Combine(RecordNumber, BoundingBox);

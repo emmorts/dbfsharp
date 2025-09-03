@@ -44,7 +44,12 @@ internal class RTreeNode
     {
         Children = [];
         Entries = [];
-        BoundingBox = new BoundingBox(double.MaxValue, double.MaxValue, double.MinValue, double.MinValue);
+        BoundingBox = new BoundingBox(
+            double.MaxValue,
+            double.MaxValue,
+            double.MinValue,
+            double.MinValue
+        );
     }
 
     /// <summary>
@@ -112,7 +117,12 @@ internal class RTreeNode
         {
             if (Entries.Count == 0)
             {
-                BoundingBox = new BoundingBox(double.MaxValue, double.MaxValue, double.MinValue, double.MinValue);
+                BoundingBox = new BoundingBox(
+                    double.MaxValue,
+                    double.MaxValue,
+                    double.MinValue,
+                    double.MinValue
+                );
                 return;
             }
 
@@ -137,7 +147,12 @@ internal class RTreeNode
         {
             if (Children.Count == 0)
             {
-                BoundingBox = new BoundingBox(double.MaxValue, double.MaxValue, double.MinValue, double.MinValue);
+                BoundingBox = new BoundingBox(
+                    double.MaxValue,
+                    double.MaxValue,
+                    double.MinValue,
+                    double.MinValue
+                );
                 return;
             }
 
@@ -207,7 +222,7 @@ internal class RTreeNode
     {
         if (IsLeaf)
             return 0;
-        
+
         return Children.Max(child => child.GetDepth()) + 1;
     }
 

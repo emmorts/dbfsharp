@@ -21,7 +21,7 @@ public record ReadConfiguration
     public bool IgnoreCase { get; init; }
     public bool TrimStrings { get; init; }
     public bool IgnoreMissingMemo { get; init; }
-    
+
     // Spatial query options
     public string? BoundingBox { get; init; }
     public string? ContainsPoint { get; init; }

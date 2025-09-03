@@ -134,11 +134,20 @@ public readonly struct ShapefileRecord
         );
     }
 
+    /// <summary>
+    /// Returns a string representation of the ShapefileRecord
+    /// </summary>
+    /// <returns>A string that represents the current ShapefileRecord</returns>
     public override string ToString()
     {
         return $"Record {RecordNumber}: {Geometry} at offset {ByteOffset:N0}";
     }
 
+    /// <summary>
+    /// Determines whether the specified object is equal to the current ShapefileRecord
+    /// </summary>
+    /// <param name="obj">The object to compare with the current ShapefileRecord</param>
+    /// <returns>true if the specified object is equal to the current ShapefileRecord; otherwise, false</returns>
     public override bool Equals(object? obj)
     {
         return obj is ShapefileRecord other
@@ -148,16 +157,32 @@ public readonly struct ShapefileRecord
             && TotalLengthInBytes == other.TotalLengthInBytes;
     }
 
+    /// <summary>
+    /// Serves as the default hash function for ShapefileRecord objects
+    /// </summary>
+    /// <returns>A hash code for the current ShapefileRecord</returns>
     public override int GetHashCode()
     {
         return HashCode.Combine(RecordNumber, Geometry, ByteOffset, TotalLengthInBytes);
     }
 
+    /// <summary>
+    /// Determines whether two ShapefileRecord instances are equal
+    /// </summary>
+    /// <param name="left">The first ShapefileRecord to compare</param>
+    /// <param name="right">The second ShapefileRecord to compare</param>
+    /// <returns>true if the ShapefileRecord instances are equal; otherwise, false</returns>
     public static bool operator ==(ShapefileRecord left, ShapefileRecord right)
     {
         return left.Equals(right);
     }
 
+    /// <summary>
+    /// Determines whether two ShapefileRecord instances are not equal
+    /// </summary>
+    /// <param name="left">The first ShapefileRecord to compare</param>
+    /// <param name="right">The second ShapefileRecord to compare</param>
+    /// <returns>true if the ShapefileRecord instances are not equal; otherwise, false</returns>
     public static bool operator !=(ShapefileRecord left, ShapefileRecord right)
     {
         return !left.Equals(right);
