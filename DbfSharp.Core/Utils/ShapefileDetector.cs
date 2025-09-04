@@ -269,7 +269,14 @@ public static class ShapefileDetector
 
         // Get the base path without extension
         var basePath = Path.ChangeExtension(primaryFile, null);
-        var directory = Path.GetDirectoryName(primaryFile) ?? string.Empty;
+        var directory = Path.GetDirectoryName(primaryFile);
+        
+        // Handle relative paths - if directory is null or empty, use current directory
+        if (string.IsNullOrEmpty(directory))
+        {
+            directory = Directory.GetCurrentDirectory();
+        }
+        
         var fileName = Path.GetFileNameWithoutExtension(primaryFile);
 
         // Check for each component with case-insensitive matching
