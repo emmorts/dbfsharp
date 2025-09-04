@@ -127,7 +127,7 @@ public sealed class Polygon : Shape
     {
         get
         {
-            for (int i = 1; i < _rings.Length; i++)
+            for (var i = 1; i < _rings.Length; i++)
             {
                 yield return _rings[i];
             }
@@ -180,7 +180,7 @@ public sealed class Polygon : Shape
             var area = CalculateRingArea(_rings[0]);
 
             // Subtract interior ring areas
-            for (int i = 1; i < _rings.Length; i++)
+            for (var i = 1; i < _rings.Length; i++)
             {
                 area -= Math.Abs(CalculateRingArea(_rings[i]));
             }
@@ -201,7 +201,7 @@ public sealed class Polygon : Shape
 
             foreach (var ring in _rings)
             {
-                for (int i = 1; i < ring.Length; i++)
+                for (var i = 1; i < ring.Length; i++)
                 {
                     totalPerimeter += ring[i - 1].DistanceTo(ring[i]);
                 }
@@ -231,7 +231,7 @@ public sealed class Polygon : Shape
         }
 
         // Check if point is inside any interior ring (hole)
-        for (int i = 1; i < _rings.Length; i++)
+        for (var i = 1; i < _rings.Length; i++)
         {
             if (IsPointInRing(point, _rings[i]))
             {
@@ -244,10 +244,10 @@ public sealed class Polygon : Shape
 
     private static bool IsPointInRing(Coordinate point, Coordinate[] ring)
     {
-        bool inside = false;
-        int j = ring.Length - 1;
+        var inside = false;
+        var j = ring.Length - 1;
 
-        for (int i = 0; i < ring.Length; j = i++)
+        for (var i = 0; i < ring.Length; j = i++)
         {
             if (
                 ((ring[i].Y > point.Y) != (ring[j].Y > point.Y))
@@ -273,9 +273,9 @@ public sealed class Polygon : Shape
         }
 
         double area = 0;
-        int j = ring.Length - 1;
+        var j = ring.Length - 1;
 
-        for (int i = 0; i < ring.Length; j = i++)
+        for (var i = 0; i < ring.Length; j = i++)
         {
             area += (ring[j].X + ring[i].X) * (ring[j].Y - ring[i].Y);
         }
@@ -401,7 +401,7 @@ public sealed class Polygon : Shape
     /// <inheritdoc />
     public override IEnumerable<string> GetValidationErrors()
     {
-        for (int ringIndex = 0; ringIndex < _rings.Length; ringIndex++)
+        for (var ringIndex = 0; ringIndex < _rings.Length; ringIndex++)
         {
             var ring = _rings[ringIndex];
             var ringType = ringIndex == 0 ? "Exterior" : "Interior";
@@ -417,7 +417,7 @@ public sealed class Polygon : Shape
                 yield return $"{ringType} ring {ringIndex}: Ring is not closed (first and last coordinates must be the same)";
             }
 
-            for (int coordIndex = 0; coordIndex < ring.Length; coordIndex++)
+            for (var coordIndex = 0; coordIndex < ring.Length; coordIndex++)
             {
                 var coord = ring[coordIndex];
 
@@ -472,7 +472,7 @@ public sealed class Polygon : Shape
             return false;
         }
 
-        for (int i = 0; i < _rings.Length; i++)
+        for (var i = 0; i < _rings.Length; i++)
         {
             var thisRing = _rings[i];
             var otherRing = other._rings[i];
@@ -482,7 +482,7 @@ public sealed class Polygon : Shape
                 return false;
             }
 
-            for (int j = 0; j < thisRing.Length; j++)
+            for (var j = 0; j < thisRing.Length; j++)
             {
                 if (!thisRing[j].Equals(otherRing[j]))
                 {

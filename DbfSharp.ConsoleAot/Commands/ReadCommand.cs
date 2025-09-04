@@ -467,7 +467,7 @@ public static class ReadCommand
         }
 
         // Apply spatial filters
-        IEnumerable<ShapefileFeature> features = shapefileReader.Features;
+        var features = shapefileReader.Features;
 
         if (hasSpatialFilters)
         {

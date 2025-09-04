@@ -212,7 +212,7 @@ public sealed class MultiPoint : Shape
     /// <inheritdoc />
     public override IEnumerable<string> GetValidationErrors()
     {
-        for (int i = 0; i < _coordinates.Length; i++)
+        for (var i = 0; i < _coordinates.Length; i++)
         {
             var coord = _coordinates[i];
 
@@ -259,7 +259,7 @@ public sealed class MultiPoint : Shape
             return false;
         }
 
-        for (int i = 0; i < _coordinates.Length; i++)
+        for (var i = 0; i < _coordinates.Length; i++)
         {
             if (!_coordinates[i].Equals(other._coordinates[i]))
             {

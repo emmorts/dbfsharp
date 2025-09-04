@@ -102,7 +102,7 @@ public abstract class Shape
 
         // Check for duplicate consecutive coordinates
         var coordinates = GetCoordinates().ToList();
-        for (int i = 1; i < coordinates.Count; i++)
+        for (var i = 1; i < coordinates.Count; i++)
         {
             if (coordinates[i].Equals(coordinates[i - 1]))
             {
@@ -111,7 +111,7 @@ public abstract class Shape
         }
 
         // Check for invalid coordinate values
-        for (int i = 0; i < coordinates.Count; i++)
+        for (var i = 0; i < coordinates.Count; i++)
         {
             var coord = coordinates[i];
             if (double.IsNaN(coord.X) || double.IsInfinity(coord.X))

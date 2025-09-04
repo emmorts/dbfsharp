@@ -150,7 +150,7 @@ public static class ShapeParser
         }
 
         var coordinates = new Coordinate[numPoints];
-        for (int i = 0; i < numPoints; i++)
+        for (var i = 0; i < numPoints; i++)
         {
             var x = BinaryPrimitives.ReadDoubleLittleEndian(data[offset..(offset + 8)]);
             var y = BinaryPrimitives.ReadDoubleLittleEndian(data[(offset + 8)..(offset + 16)]);
@@ -193,7 +193,7 @@ public static class ShapeParser
 
         // Read XY coordinates
         var coordinates = new List<Coordinate>(numPoints);
-        for (int i = 0; i < numPoints; i++)
+        for (var i = 0; i < numPoints; i++)
         {
             var x = BinaryPrimitives.ReadDoubleLittleEndian(data[offset..(offset + 8)]);
             var y = BinaryPrimitives.ReadDoubleLittleEndian(data[(offset + 8)..(offset + 16)]);
@@ -205,7 +205,7 @@ public static class ShapeParser
         offset += 16;
 
         // Read Z coordinates
-        for (int i = 0; i < numPoints; i++)
+        for (var i = 0; i < numPoints; i++)
         {
             var z = BinaryPrimitives.ReadDoubleLittleEndian(data[offset..(offset + 8)]);
             var coord = coordinates[i];
@@ -220,7 +220,7 @@ public static class ShapeParser
             offset += 16;
 
             // Read M coordinates
-            for (int i = 0; i < numPoints; i++)
+            for (var i = 0; i < numPoints; i++)
             {
                 var m = BinaryPrimitives.ReadDoubleLittleEndian(data[offset..(offset + 8)]);
                 var coord = coordinates[i];
@@ -269,7 +269,7 @@ public static class ShapeParser
 
         // Read XY coordinates
         var coordinates = new List<Coordinate>(numPoints);
-        for (int i = 0; i < numPoints; i++)
+        for (var i = 0; i < numPoints; i++)
         {
             var x = BinaryPrimitives.ReadDoubleLittleEndian(data[offset..(offset + 8)]);
             var y = BinaryPrimitives.ReadDoubleLittleEndian(data[(offset + 8)..(offset + 16)]);
@@ -281,7 +281,7 @@ public static class ShapeParser
         offset += 16;
 
         // Read M coordinates
-        for (int i = 0; i < numPoints; i++)
+        for (var i = 0; i < numPoints; i++)
         {
             var m = BinaryPrimitives.ReadDoubleLittleEndian(data[offset..(offset + 8)]);
             var coord = coordinates[i];
@@ -329,7 +329,7 @@ public static class ShapeParser
 
         // Read part start indices
         var partStarts = new int[numParts];
-        for (int i = 0; i < numParts; i++)
+        for (var i = 0; i < numParts; i++)
         {
             partStarts[i] = BinaryPrimitives.ReadInt32LittleEndian(data[offset..(offset + 4)]);
             offset += 4;
@@ -337,7 +337,7 @@ public static class ShapeParser
 
         // Read all points
         var allPoints = new Coordinate[numPoints];
-        for (int i = 0; i < numPoints; i++)
+        for (var i = 0; i < numPoints; i++)
         {
             var x = BinaryPrimitives.ReadDoubleLittleEndian(data[offset..(offset + 8)]);
             var y = BinaryPrimitives.ReadDoubleLittleEndian(data[(offset + 8)..(offset + 16)]);
@@ -404,7 +404,7 @@ public static class ShapeParser
 
         // Read part start indices
         var partStarts = new int[numParts];
-        for (int i = 0; i < numParts; i++)
+        for (var i = 0; i < numParts; i++)
         {
             partStarts[i] = BinaryPrimitives.ReadInt32LittleEndian(data[offset..(offset + 4)]);
             offset += 4;
@@ -412,7 +412,7 @@ public static class ShapeParser
 
         // Read all points
         var allPoints = new Coordinate[numPoints];
-        for (int i = 0; i < numPoints; i++)
+        for (var i = 0; i < numPoints; i++)
         {
             var x = BinaryPrimitives.ReadDoubleLittleEndian(data[offset..(offset + 8)]);
             var y = BinaryPrimitives.ReadDoubleLittleEndian(data[(offset + 8)..(offset + 16)]);
@@ -490,7 +490,7 @@ public static class ShapeParser
 
         // Read part start indices
         var partStarts = new int[numParts];
-        for (int i = 0; i < numParts; i++)
+        for (var i = 0; i < numParts; i++)
         {
             partStarts[i] = BinaryPrimitives.ReadInt32LittleEndian(data[offset..(offset + 4)]);
             offset += 4;
@@ -498,7 +498,7 @@ public static class ShapeParser
 
         // Read XY coordinates
         var coordinates = new List<Coordinate>(numPoints);
-        for (int i = 0; i < numPoints; i++)
+        for (var i = 0; i < numPoints; i++)
         {
             var x = BinaryPrimitives.ReadDoubleLittleEndian(data[offset..(offset + 8)]);
             var y = BinaryPrimitives.ReadDoubleLittleEndian(data[(offset + 8)..(offset + 16)]);
@@ -512,7 +512,7 @@ public static class ShapeParser
             // Skip Z range
             offset += 16;
 
-            for (int i = 0; i < numPoints; i++)
+            for (var i = 0; i < numPoints; i++)
             {
                 var z = BinaryPrimitives.ReadDoubleLittleEndian(data[offset..(offset + 8)]);
                 var coord = coordinates[i];
@@ -527,7 +527,7 @@ public static class ShapeParser
             // Skip M range
             offset += 16;
 
-            for (int i = 0; i < numPoints; i++)
+            for (var i = 0; i < numPoints; i++)
             {
                 var m = BinaryPrimitives.ReadDoubleLittleEndian(data[offset..(offset + 8)]);
                 var coord = coordinates[i];
@@ -595,7 +595,7 @@ public static class ShapeParser
 
         // Read part start indices
         var partStarts = new int[numParts];
-        for (int i = 0; i < numParts; i++)
+        for (var i = 0; i < numParts; i++)
         {
             partStarts[i] = BinaryPrimitives.ReadInt32LittleEndian(data[offset..(offset + 4)]);
             offset += 4;
@@ -603,7 +603,7 @@ public static class ShapeParser
 
         // Read XY coordinates
         var coordinates = new List<Coordinate>(numPoints);
-        for (int i = 0; i < numPoints; i++)
+        for (var i = 0; i < numPoints; i++)
         {
             var x = BinaryPrimitives.ReadDoubleLittleEndian(data[offset..(offset + 8)]);
             var y = BinaryPrimitives.ReadDoubleLittleEndian(data[(offset + 8)..(offset + 16)]);
@@ -617,7 +617,7 @@ public static class ShapeParser
             // Skip Z range
             offset += 16;
 
-            for (int i = 0; i < numPoints; i++)
+            for (var i = 0; i < numPoints; i++)
             {
                 var z = BinaryPrimitives.ReadDoubleLittleEndian(data[offset..(offset + 8)]);
                 var coord = coordinates[i];
@@ -632,7 +632,7 @@ public static class ShapeParser
             // Skip M range
             offset += 16;
 
-            for (int i = 0; i < numPoints; i++)
+            for (var i = 0; i < numPoints; i++)
             {
                 var m = BinaryPrimitives.ReadDoubleLittleEndian(data[offset..(offset + 8)]);
                 var coord = coordinates[i];
@@ -692,7 +692,7 @@ public static class ShapeParser
 
         // Read part start indices
         var partStarts = new int[numParts];
-        for (int i = 0; i < numParts; i++)
+        for (var i = 0; i < numParts; i++)
         {
             partStarts[i] = BinaryPrimitives.ReadInt32LittleEndian(data[offset..(offset + 4)]);
             offset += 4;
@@ -700,7 +700,7 @@ public static class ShapeParser
 
         // Read part types
         var partTypes = new PatchType[numParts];
-        for (int i = 0; i < numParts; i++)
+        for (var i = 0; i < numParts; i++)
         {
             var partTypeValue = BinaryPrimitives.ReadInt32LittleEndian(data[offset..(offset + 4)]);
             if (!Enum.IsDefined(typeof(PatchType), partTypeValue))
@@ -713,7 +713,7 @@ public static class ShapeParser
 
         // Read XY coordinates
         var coordinates = new List<Coordinate>(numPoints);
-        for (int i = 0; i < numPoints; i++)
+        for (var i = 0; i < numPoints; i++)
         {
             var x = BinaryPrimitives.ReadDoubleLittleEndian(data[offset..(offset + 8)]);
             var y = BinaryPrimitives.ReadDoubleLittleEndian(data[(offset + 8)..(offset + 16)]);
@@ -725,7 +725,7 @@ public static class ShapeParser
         offset += 16;
 
         // Read Z coordinates (required for MultiPatch)
-        for (int i = 0; i < numPoints; i++)
+        for (var i = 0; i < numPoints; i++)
         {
             var z = BinaryPrimitives.ReadDoubleLittleEndian(data[offset..(offset + 8)]);
             var coord = coordinates[i];
@@ -740,7 +740,7 @@ public static class ShapeParser
             offset += 16;
 
             // Read M coordinates
-            for (int i = 0; i < numPoints; i++)
+            for (var i = 0; i < numPoints; i++)
             {
                 var m = BinaryPrimitives.ReadDoubleLittleEndian(data[offset..(offset + 8)]);
                 var coord = coordinates[i];
@@ -756,7 +756,7 @@ public static class ShapeParser
 
         // Split coordinates into patch parts
         var parts = new List<PatchPart>();
-        for (int partIndex = 0; partIndex < partStarts.Length; partIndex++)
+        for (var partIndex = 0; partIndex < partStarts.Length; partIndex++)
         {
             var startIndex = partStarts[partIndex];
             var endIndex =
@@ -775,7 +775,7 @@ public static class ShapeParser
             }
 
             var partCoordinates = new List<Coordinate>();
-            for (int i = startIndex; i < endIndex; i++)
+            for (var i = startIndex; i < endIndex; i++)
             {
                 partCoordinates.Add(coordinates[i]);
             }
@@ -796,7 +796,7 @@ public static class ShapeParser
     {
         var parts = new List<List<Coordinate>>();
 
-        for (int partIndex = 0; partIndex < partStarts.Length; partIndex++)
+        for (var partIndex = 0; partIndex < partStarts.Length; partIndex++)
         {
             var startIndex = partStarts[partIndex];
             var endIndex =
@@ -817,7 +817,7 @@ public static class ShapeParser
             }
 
             var partCoordinates = new List<Coordinate>();
-            for (int i = startIndex; i < endIndex; i++)
+            for (var i = startIndex; i < endIndex; i++)
             {
                 partCoordinates.Add(allCoordinates[i]);
             }

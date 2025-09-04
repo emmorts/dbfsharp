@@ -397,7 +397,7 @@ public sealed partial class ShapefileReader : IDisposable
         // Convert ReadOnlySpan to array to avoid yield boundary issues
         var recordInfoArray = _index!.GetAllRecordInfo().ToArray();
 
-        for (int i = 0; i < recordInfoArray.Length; i++)
+        for (var i = 0; i < recordInfoArray.Length; i++)
         {
             var recordInfo = recordInfoArray[i];
             var recordNumber = i + 1;
@@ -513,7 +513,7 @@ public sealed partial class ShapefileReader : IDisposable
             // Combine geometry with attributes
             var attributeRecords = _dbfReader!.Records.ToList();
 
-            for (int i = 0; i < geometryRecords.Count; i++)
+            for (var i = 0; i < geometryRecords.Count; i++)
             {
                 var geometryRecord = geometryRecords[i];
                 var attributes =

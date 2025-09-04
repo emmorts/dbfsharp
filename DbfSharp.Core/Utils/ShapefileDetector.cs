@@ -412,7 +412,7 @@ public static class ShapefileDetector
     }
 
     /// <summary>
-    /// Finds a file with the specified extension, trying different case variations
+    /// Finds a file with the specified extension using directory enumeration for cross-platform compatibility
     /// </summary>
     private static string? FindFileWithExtension(
         string directory,
@@ -425,24 +425,31 @@ public static class ShapefileDetector
             return null;
         }
 
-        // Try different case variations of the extension
-        var extensions = new[]
+        try
         {
-            extension.ToLowerInvariant(),
-            extension.ToUpperInvariant(),
-            char.ToUpperInvariant(extension[0]) + extension[1..].ToLowerInvariant(),
-        };
-
-        foreach (var ext in extensions)
-        {
-            var fullPath = Path.Combine(directory, fileName + ext);
-            if (File.Exists(fullPath))
+            if (!Directory.Exists(directory))
             {
-                return fullPath;
+                return null;
             }
-        }
 
-        return null;
+            var targetFileName = fileName + extension;
+
+            return Directory
+                .EnumerateFiles(directory)
+                .FirstOrDefault(file =>
+                {
+                    var currentFileName = Path.GetFileName(file);
+                    return string.Equals(
+                        currentFileName,
+                        targetFileName,
+                        StringComparison.OrdinalIgnoreCase
+                    );
+                });
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     /// <summary>
@@ -471,7 +478,7 @@ public static class ShapefileDetector
     private static string FormatFileSize(long bytes)
     {
         string[] suffixes = ["B", "KB", "MB", "GB", "TB"];
-        int suffixIndex = 0;
+        var suffixIndex = 0;
         double size = bytes;
 
         while (size >= 1024 && suffixIndex < suffixes.Length - 1)
@@ -642,9 +649,7 @@ public class ShapefileMetadata
     /// <returns>A summary string</returns>
     public string GetSummary()
     {
-        var parts = new List<string>();
-
-        parts.Add($"Components: {Components.ComponentCount}/5");
+        var parts = new List<string> { $"Components: {Components.ComponentCount}/5" };
 
         if (HasValidProjection)
         {

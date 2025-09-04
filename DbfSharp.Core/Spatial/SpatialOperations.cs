@@ -365,7 +365,7 @@ public static class SpatialOperations
         const double tolerance = 1e-10;
         var coords = polyLine.GetCoordinates().ToArray();
 
-        for (int i = 0; i < coords.Length - 1; i++)
+        for (var i = 0; i < coords.Length - 1; i++)
         {
             if (IsPointOnLineSegment(point, coords[i], coords[i + 1], tolerance))
                 return true;

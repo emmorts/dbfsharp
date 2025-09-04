@@ -72,11 +72,11 @@ public static class WktParser
     {
         var tokens = new List<string>();
         var currentToken = new StringBuilder();
-        bool inQuotes = false;
+        var inQuotes = false;
 
-        for (int i = 0; i < wkt.Length; i++)
+        for (var i = 0; i < wkt.Length; i++)
         {
-            char c = wkt[i];
+            var c = wkt[i];
 
             if (c == '"')
             {
@@ -244,7 +244,7 @@ public static class WktParser
             // If it's EPSG, parse the code
             if (string.Equals(result.Authority, "EPSG", StringComparison.OrdinalIgnoreCase))
             {
-                if (int.TryParse(result.AuthorityCode, out int epsgCode))
+                if (int.TryParse(result.AuthorityCode, out var epsgCode))
                 {
                     result.EpsgCode = epsgCode;
                 }
@@ -285,7 +285,7 @@ public static class WktParser
                         paramElement.Values[1],
                         NumberStyles.Float,
                         CultureInfo.InvariantCulture,
-                        out double paramValue
+                        out var paramValue
                     )
                 )
                 {
@@ -306,7 +306,7 @@ public static class WktParser
                     unitElement.Values[1],
                     NumberStyles.Float,
                     CultureInfo.InvariantCulture,
-                    out double unitValue
+                    out var unitValue
                 )
             )
             {
@@ -336,7 +336,7 @@ public static class WktParser
                         spheroidElement.Values[1],
                         NumberStyles.Float,
                         CultureInfo.InvariantCulture,
-                        out double semiMajor
+                        out var semiMajor
                     )
                 )
                 {
@@ -347,7 +347,7 @@ public static class WktParser
                         spheroidElement.Values[2],
                         NumberStyles.Float,
                         CultureInfo.InvariantCulture,
-                        out double inverseFlattening
+                        out var inverseFlattening
                     )
                 )
                 {
@@ -366,7 +366,7 @@ public static class WktParser
                     primeMeridianElement.Values[1],
                     NumberStyles.Float,
                     CultureInfo.InvariantCulture,
-                    out double pmValue
+                    out var pmValue
                 )
             )
             {
@@ -384,7 +384,7 @@ public static class WktParser
                     unitElement.Values[1],
                     NumberStyles.Float,
                     CultureInfo.InvariantCulture,
-                    out double unitValue
+                    out var unitValue
                 )
             )
             {
@@ -412,7 +412,7 @@ public static class WktParser
                     unitElement.Values[1],
                     NumberStyles.Float,
                     CultureInfo.InvariantCulture,
-                    out double unitValue
+                    out var unitValue
                 )
             )
             {
@@ -479,7 +479,7 @@ public static class WktParser
                     unitElement.Values[1],
                     NumberStyles.Float,
                     CultureInfo.InvariantCulture,
-                    out double unitValue
+                    out var unitValue
                 )
             )
             {

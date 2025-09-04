@@ -254,10 +254,10 @@ public readonly struct BoundingBox : IEquatable<BoundingBox>
         var maxX = first.X;
         var minY = first.Y;
         var maxY = first.Y;
-        double? minZ = first.Z;
-        double? maxZ = first.Z;
-        double? minM = first.M;
-        double? maxM = first.M;
+        var minZ = first.Z;
+        var maxZ = first.Z;
+        var minM = first.M;
+        var maxM = first.M;
 
         var hasZ = first.HasZ;
         var hasM = first.HasM;

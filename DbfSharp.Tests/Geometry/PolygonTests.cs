@@ -129,7 +129,7 @@ public class PolygonTests
     public void Area_ShouldCalculateCorrectArea(double[] coords, double expectedArea)
     {
         var coordinates = new List<Coordinate>();
-        for (int i = 0; i < coords.Length; i += 2)
+        for (var i = 0; i < coords.Length; i += 2)
         {
             coordinates.Add(new Coordinate(coords[i], coords[i + 1]));
         }

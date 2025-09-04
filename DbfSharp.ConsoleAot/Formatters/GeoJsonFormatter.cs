@@ -249,7 +249,7 @@ public sealed class GeoJsonFormatter : IDbfFormatter, IShapefileFormatter
             writer.WriteString("type", "MultiLineString");
             writer.WriteStartArray("coordinates");
 
-            for (int i = 0; i < polyLine.PartCount; i++)
+            for (var i = 0; i < polyLine.PartCount; i++)
             {
                 WriteCoordinateArray(writer, polyLine.GetPart(i));
             }
@@ -269,7 +269,7 @@ public sealed class GeoJsonFormatter : IDbfFormatter, IShapefileFormatter
         writer.WriteStartArray("coordinates");
 
         // Write all rings (first is exterior, rest are holes)
-        for (int i = 0; i < polygon.RingCount; i++)
+        for (var i = 0; i < polygon.RingCount; i++)
         {
             WriteCoordinateArray(writer, polygon.GetRing(i));
         }

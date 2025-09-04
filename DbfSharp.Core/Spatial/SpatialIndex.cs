@@ -299,9 +299,9 @@ public class SpatialIndex
         var maxWaste = double.MinValue;
         var worstPair = (entries[0], entries[1]);
 
-        for (int i = 0; i < entries.Count - 1; i++)
+        for (var i = 0; i < entries.Count - 1; i++)
         {
-            for (int j = i + 1; j < entries.Count; j++)
+            for (var j = i + 1; j < entries.Count; j++)
             {
                 var entry1 = entries[i];
                 var entry2 = entries[j];

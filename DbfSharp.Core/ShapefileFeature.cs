@@ -249,7 +249,7 @@ public readonly struct ShapefileFeature
         }
 
         var attributes = Attributes!.Value;
-        for (int i = 0; i < attributes.FieldCount; i++)
+        for (var i = 0; i < attributes.FieldCount; i++)
         {
             var fieldName = attributes.FieldNames[i];
             var value = attributes[i];

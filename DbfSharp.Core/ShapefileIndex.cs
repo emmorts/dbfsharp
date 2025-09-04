@@ -131,7 +131,7 @@ public sealed class ShapefileIndex : IDisposable
     {
         ObjectDisposedException.ThrowIf(_disposed, nameof(ShapefileIndex));
 
-        for (int i = 0; i < _recordInfos.Length; i++)
+        for (var i = 0; i < _recordInfos.Length; i++)
         {
             var recordInfo = _recordInfos[i];
             var recordStart = recordInfo.ByteOffset;
@@ -282,7 +282,7 @@ public sealed class ShapefileIndex : IDisposable
         var recordInfos = new RecordInfo[recordCount];
         var buffer = new byte[8];
 
-        for (int i = 0; i < recordCount; i++)
+        for (var i = 0; i < recordCount; i++)
         {
             var bytesRead = stream.Read(buffer, 0, 8);
             if (bytesRead != 8)
@@ -356,7 +356,7 @@ public sealed class ShapefileIndex : IDisposable
         // Read all record index entries
         var recordInfos = new RecordInfo[recordCount];
 
-        for (int i = 0; i < recordCount; i++)
+        for (var i = 0; i < recordCount; i++)
         {
             try
             {
@@ -509,7 +509,7 @@ public sealed class ShapefileIndex : IDisposable
             .OrderBy(r => r.Info.ByteOffset)
             .ToArray();
 
-        for (int i = 1; i < sortedRecords.Length; i++)
+        for (var i = 1; i < sortedRecords.Length; i++)
         {
             var prev = sortedRecords[i - 1];
             var current = sortedRecords[i];
@@ -523,7 +523,7 @@ public sealed class ShapefileIndex : IDisposable
         }
 
         // Check for invalid offsets or lengths
-        for (int i = 0; i < _recordInfos.Length; i++)
+        for (var i = 0; i < _recordInfos.Length; i++)
         {
             var info = _recordInfos[i];
 

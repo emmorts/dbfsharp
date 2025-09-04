@@ -184,7 +184,7 @@ public class PolyLineTests
     public void Length_ShouldCalculateCorrectDistance(double[] coords, double expectedLength)
     {
         var coordinates = new List<Coordinate>();
-        for (int i = 0; i < coords.Length; i += 2)
+        for (var i = 0; i < coords.Length; i += 2)
         {
             coordinates.Add(new Coordinate(coords[i], coords[i + 1]));
         }

@@ -236,7 +236,7 @@ public class EpsgDatabaseTests
         Assert.Contains(3857, codes);
 
         // Verify ordering
-        for (int i = 1; i < codes.Count; i++)
+        for (var i = 1; i < codes.Count; i++)
         {
             Assert.True(codes[i] > codes[i - 1], "Codes should be in ascending order");
         }

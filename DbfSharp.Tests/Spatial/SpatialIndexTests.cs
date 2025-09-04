@@ -81,7 +81,7 @@ public class SpatialIndexTests
         };
 
         // Act
-        for (int i = 0; i < shapes.Length; i++)
+        for (var i = 0; i < shapes.Length; i++)
         {
             index.Insert(shapes[i], i + 1);
         }
@@ -126,7 +126,7 @@ public class SpatialIndexTests
             new Point(new Coordinate(10, 10)), // On search box boundary
         };
 
-        for (int i = 0; i < points.Length; i++)
+        for (var i = 0; i < points.Length; i++)
         {
             index.Insert(points[i], i + 1);
         }
@@ -198,7 +198,7 @@ public class SpatialIndexTests
             new Point(new Coordinate(20, 20)), // Distance: ~14.14
         };
 
-        for (int i = 0; i < points.Length; i++)
+        for (var i = 0; i < points.Length; i++)
         {
             index.Insert(points[i], i + 1);
         }
@@ -262,7 +262,7 @@ public class SpatialIndexTests
         var index = new SpatialIndex();
 
         // Add several entries to force tree structure
-        for (int i = 0; i < 5; i++)
+        for (var i = 0; i < 5; i++)
         {
             var point = new Point(new Coordinate(i * 10, i * 10));
             index.Insert(point, i + 1);
@@ -286,7 +286,7 @@ public class SpatialIndexTests
 
         // Act - Insert many random points
         const int pointCount = 100;
-        for (int i = 0; i < pointCount; i++)
+        for (var i = 0; i < pointCount; i++)
         {
             var x = random.NextDouble() * 1000;
             var y = random.NextDouble() * 1000;

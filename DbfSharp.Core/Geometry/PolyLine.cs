@@ -145,7 +145,7 @@ public sealed class PolyLine : Shape
 
             foreach (var part in _parts)
             {
-                for (int i = 1; i < part.Length; i++)
+                for (var i = 1; i < part.Length; i++)
                 {
                     totalLength += part[i - 1].DistanceTo(part[i]);
                 }
@@ -167,7 +167,7 @@ public sealed class PolyLine : Shape
 
             foreach (var part in _parts)
             {
-                for (int i = 1; i < part.Length; i++)
+                for (var i = 1; i < part.Length; i++)
                 {
                     totalLength += part[i - 1].Distance3DTo(part[i]);
                 }
@@ -193,7 +193,7 @@ public sealed class PolyLine : Shape
         var part = _parts[partIndex];
         double length = 0;
 
-        for (int i = 1; i < part.Length; i++)
+        for (var i = 1; i < part.Length; i++)
         {
             length += part[i - 1].DistanceTo(part[i]);
         }
@@ -274,7 +274,7 @@ public sealed class PolyLine : Shape
 
         var simplified = new List<Coordinate> { part[0] };
 
-        for (int i = 1; i < part.Length - 1; i++)
+        for (var i = 1; i < part.Length - 1; i++)
         {
             var prev = simplified[^1];
             var current = part[i];
@@ -339,7 +339,7 @@ public sealed class PolyLine : Shape
     /// <inheritdoc />
     public override IEnumerable<string> GetValidationErrors()
     {
-        for (int partIndex = 0; partIndex < _parts.Length; partIndex++)
+        for (var partIndex = 0; partIndex < _parts.Length; partIndex++)
         {
             var part = _parts[partIndex];
 
@@ -349,7 +349,7 @@ public sealed class PolyLine : Shape
                 continue;
             }
 
-            for (int coordIndex = 0; coordIndex < part.Length; coordIndex++)
+            for (var coordIndex = 0; coordIndex < part.Length; coordIndex++)
             {
                 var coord = part[coordIndex];
 
@@ -403,7 +403,7 @@ public sealed class PolyLine : Shape
             return false;
         }
 
-        for (int i = 0; i < _parts.Length; i++)
+        for (var i = 0; i < _parts.Length; i++)
         {
             var thisPart = _parts[i];
             var otherPart = other._parts[i];
@@ -413,7 +413,7 @@ public sealed class PolyLine : Shape
                 return false;
             }
 
-            for (int j = 0; j < thisPart.Length; j++)
+            for (var j = 0; j < thisPart.Length; j++)
             {
                 if (!thisPart[j].Equals(otherPart[j]))
                 {

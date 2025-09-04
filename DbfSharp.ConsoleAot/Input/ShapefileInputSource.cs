@@ -230,7 +230,7 @@ public sealed class ShapefileInputSource : IDisposable
     private static string FormatFileSize(long bytes)
     {
         string[] suffixes = ["B", "KB", "MB", "GB", "TB"];
-        int suffixIndex = 0;
+        var suffixIndex = 0;
         double size = bytes;
 
         while (size >= 1024 && suffixIndex < suffixes.Length - 1)
