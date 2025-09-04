@@ -10,7 +10,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>dbfsharp</ToolCommandName>
     <PackageId>DbfSharp</PackageId>
-    <Version>0.2.6</Version>
+    <Version>0.2.7</Version>
     <Authors>Tomas Stropus</Authors>
     <Description>Cross-platform command-line tool for reading and processing DBF (dBASE) database files</Description>
     <PackageTags>dbf;dbase;database;cli;tool</PackageTags>
