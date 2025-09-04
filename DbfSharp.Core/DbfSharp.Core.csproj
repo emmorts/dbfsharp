@@ -9,7 +9,7 @@
     <IsAotCompatible>true</IsAotCompatible>
     <InvariantGlobalization>true</InvariantGlobalization>
     <PackageId>DbfSharp.Core</PackageId>
-    <Version>0.2.5</Version>
+    <Version>0.2.6</Version>
     <Title>DbfSharp.Core</Title>
     <Authors>emmorts</Authors>
     <Description>A high-performance, memory-efficient .NET library for reading DBF files. Supports various DBF formats including dBase II, III, IV, FoxPro, and Visual FoxPro with memo file support.</Description>
