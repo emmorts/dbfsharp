@@ -33,7 +33,7 @@
     <None Include="..\assets\dbfsharp.jpg" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.8" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.10" />
   </ItemGroup>
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
