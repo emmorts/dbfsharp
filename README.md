@@ -46,9 +46,15 @@ dbfsharp info cities.shp
 
 ## Installation
 
-### Global .NET Tool (Recommended)
+### Homebrew (Recommended)
 
-Requires [.NET 9.0 SDK](https://dotnet.microsoft.com/download) or later:
+```bash
+brew install dbfsharp
+```
+
+### .NET Tool (Alternative)
+
+If you have .NET 9.0 SDK or later installed:
 
 ```bash
 dotnet tool install -g DbfSharp
