@@ -7,7 +7,6 @@
 
 Convert Shapefiles to GeoJSON, extract data from DBF files to CSV/JSON, perform spatial queries, and analyze geospatial data—all from your terminal.
 
----
 
 ## Quick Start
 
@@ -28,8 +27,6 @@ dbfsharp read data.dbf --format csv --output data.csv
 dbfsharp info cities.shp
 ```
 
----
-
 ## Key Features
 
 - **Complete Shapefile support** - Read geometry, attributes, and perform spatial operations
@@ -42,7 +39,6 @@ dbfsharp info cities.shp
 - **Pipeline friendly** - Works with stdin/stdout for Unix-style data processing
 - **Legacy encoding support** - Properly handles various character encodings
 
----
 
 ## Installation
 
@@ -59,20 +55,6 @@ If you have .NET 9.0 SDK or later installed:
 ```bash
 dotnet tool install -g DbfSharp
 ```
-
-Update to the latest version:
-
-```bash
-dotnet tool update -g DbfSharp
-```
-
-### Verify Installation
-
-```bash
-dbfsharp --version
-```
-
----
 
 ## Common Use Cases
 
@@ -137,8 +119,6 @@ dbfsharp read data.dbf --format csv --fields "ID,NAME" | sort | uniq | head -10
 cat remote_file.dbf | dbfsharp read --format json
 ```
 
----
-
 ## Commands
 
 ### `read` - Convert and Export Data
@@ -179,8 +159,6 @@ dbfsharp info [FILE] [OPTIONS]
 
 📚 **[Full command documentation →](./DbfSharp.ConsoleAot/README.md#info---analyze-file-structure)**
 
----
-
 ## Supported Formats
 
 ### Input Formats
@@ -210,7 +188,6 @@ dbfsharp info [FILE] [OPTIONS]
 - **GeoJSON** - For Shapefiles with geometry (RFC 7946 compliant)
 - **Table** - Human-readable console table
 
----
 
 ## Performance
 
