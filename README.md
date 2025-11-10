@@ -12,8 +12,8 @@ Convert Shapefiles to GeoJSON, extract data from DBF files to CSV/JSON, perform 
 ## Quick Start
 
 ```bash
-# Install globally
-dotnet tool install -g DbfSharp
+# Install
+brew install dbfsharp
 
 # Export Shapefile to GeoJSON
 dbfsharp read cities.shp --format geojson --output cities.geojson
