@@ -1,0 +1,29 @@
+name: Update Homebrew Formula
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  trigger-tap-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Homebrew tap update
+        run: |
+          echo "Triggering update for version ${{ github.event.release.tag_name }}"
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.TAP_REPO_TOKEN }}" \
+            https://api.github.com/repos/emmorts/homebrew-tools/dispatches \
+            -d '{
+              "event_type": "new_release",
+              "client_payload": {
+                "version": "${{ github.event.release.tag_name }}"
+              }
+            }'
+          if [ $? -eq 0 ]; then
+            echo "✓ Successfully triggered Homebrew formula update"
+          else
+            echo "✗ Failed to trigger update"
+            exit 1
+          fi
