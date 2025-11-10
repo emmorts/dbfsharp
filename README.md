@@ -3,15 +3,9 @@
 [![DeepWiki](https://img.shields.io/badge/DeepWiki-emmorts%2Fdbfsharp-blue.svg?logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACwAAAAyCAYAAAAnWDnqAAAAAXNSR0IArs4c6QAAA05JREFUaEPtmUtyEzEQhtWTQyQLHNak2AB7ZnyXZMEjXMGeK/AIi+QuHrMnbChYY7MIh8g01fJoopFb0uhhEqqcbWTp06/uv1saEDv4O3n3dV60RfP947Mm9/SQc0ICFQgzfc4CYZoTPAswgSJCCUJUnAAoRHOAUOcATwbmVLWdGoH//PB8mnKqScAhsD0kYP3j/Yt5LPQe2KvcXmGvRHcDnpxfL2zOYJ1mFwrryWTz0advv1Ut4CJgf5uhDuDj5eUcAUoahrdY/56ebRWeraTjMt/00Sh3UDtjgHtQNHwcRGOC98BJEAEymycmYcWwOprTgcB6VZ5JK5TAJ+fXGLBm3FDAmn6oPPjR4rKCAoJCal2eAiQp2x0vxTPB3ALO2CRkwmDy5WohzBDwSEFKRwPbknEggCPB/imwrycgxX2NzoMCHhPkDwqYMr9tRcP5qNrMZHkVnOjRMWwLCcr8ohBVb1OMjxLwGCvjTikrsBOiA6fNyCrm8V1rP93iVPpwaE+gO0SsWmPiXB+jikdf6SizrT5qKasx5j8ABbHpFTx+vFXp9EnYQmLx02h1QTTrl6eDqxLnGjporxl3NL3agEvXdT0WmEost648sQOYAeJS9Q7bfUVoMGnjo4AZdUMQku50McDcMWcBPvr0SzbTAFDfvJqwLzgxwATnCgnp4wDl6Aa+Ax283gghmj+vj7feE2KBBRMW3FzOpLOADl0Isb5587h/U4gGvkt5v60Z1VLG8BhYjbzRwyQZemwAd6cCR5/XFWLYZRIMpX39AR0tjaGGiGzLVyhse5C9RKC6ai42ppWPKiBagOvaYk8lO7DajerabOZP46Lby5wKjw1HCRx7p9sVMOWGzb/vA1hwiWc6jm3MvQDTogQkiqIhJV0nBQBTU+3okKCFDy9WwferkHjtxib7t3xIUQtHxnIwtx4mpg26/HfwVNVDb4oI9RHmx5WGelRVlrtiw43zboCLaxv46AZeB3IlTkwouebTr1y2NjSpHz68WNFjHvupy3q8TFn3Hos2IAk4Ju5dCo8B3wP7VPr/FGaKiG+T+v+TQqIrOqMTL1VdWV1DdmcbO8KXBz6esmYWYKPwDL5b5FA1a0hwapHiom0r/cKaoqr+27/XcrS5UwSMbQAAAABJRU5ErkJggg==)](https://deepwiki.com/emmorts/dbfsharp)
 ![NuGet Version](https://img.shields.io/nuget/v/dbfsharp.core)
 
-**A modern, high-performance command-line tool for working with DBF database files and Shapefiles.**
+**A modern, high-performance command-line tool for working with Shapefiles and DBF database files.**
 
-Convert legacy dBASE files to modern formats (CSV, JSON, GeoJSON), analyze file structures, and perform spatial queries—all from your terminal.
-
----
-
-## What is DBF?
-
-DBF (dBASE Database File) is a legacy database format created in 1983, still widely used in GIS applications, legacy business systems, and government data. DbfSharp makes it easy to extract and convert this data to modern formats without needing specialized database software.
+Convert Shapefiles to GeoJSON, extract data from DBF files to CSV/JSON, perform spatial queries, and analyze geospatial data—all from your terminal.
 
 ---
 
@@ -21,32 +15,32 @@ DBF (dBASE Database File) is a legacy database format created in 1983, still wid
 # Install globally
 dotnet tool install -g DbfSharp
 
-# Convert DBF to CSV
-dbfsharp read customers.dbf --format csv --output customers.csv
-
-# Analyze file structure
-dbfsharp info data.dbf
-
 # Export Shapefile to GeoJSON
 dbfsharp read cities.shp --format geojson --output cities.geojson
 
-# Spatial query on Shapefile
+# Spatial query - filter by bounding box
 dbfsharp read parcels.shp --bounding-box "-118.5,34.0,-118.0,34.5" --format geojson
+
+# Convert DBF to CSV
+dbfsharp read data.dbf --format csv --output data.csv
+
+# Analyze file structure
+dbfsharp info cities.shp
 ```
 
 ---
 
 ## Key Features
 
-- **Cross-platform CLI** - Works on Windows, Linux, and macOS
-- **Multiple output formats** - Export to CSV, TSV, JSON, or GeoJSON
-- **Full Shapefile support** - Read geometry data and perform spatial queries
-- **Spatial operations** - Bounding box filtering, nearest neighbor searches, R-tree indexing
-- **Universal DBF compatibility** - Supports all major versions (dBASE III, IV, Visual FoxPro, Clipper)
-- **Memo file support** - Handles large text fields (.dbt, .fpt memo files)
-- **Legacy encoding** - Properly handles various character encodings (CP437, CP1252, etc.)
+- **Complete Shapefile support** - Read geometry, attributes, and perform spatial operations
+- **Spatial queries** - Bounding box filtering, nearest neighbor searches, R-tree spatial indexing
+- **GeoJSON export** - Convert Shapefiles to modern GeoJSON format
+- **Multiple output formats** - Export to GeoJSON, CSV, TSV, JSON, or console tables
+- **Universal DBF compatibility** - Supports all DBF versions (dBASE III/IV, Visual FoxPro, Clipper)
 - **High performance** - Optimized streaming for large files (millions of records)
+- **Cross-platform CLI** - Works on Windows, Linux, and macOS
 - **Pipeline friendly** - Works with stdin/stdout for Unix-style data processing
+- **Legacy encoding support** - Properly handles various character encodings
 
 ---
 
@@ -76,19 +70,6 @@ dbfsharp --version
 
 ## Common Use Cases
 
-### Converting Legacy Data
-
-```bash
-# Convert to CSV for Excel/Google Sheets
-dbfsharp read legacy_data.dbf --format csv --output data.csv
-
-# Convert to JSON for modern applications
-dbfsharp read products.dbf --format json --output products.json
-
-# Extract specific fields only
-dbfsharp read employees.dbf --fields "ID,NAME,EMAIL,SALARY" --format csv
-```
-
 ### Working with Shapefiles
 
 ```bash
@@ -103,6 +84,19 @@ dbfsharp read poi.shp --nearest-point "-118.25,34.05" --nearest-count 10 --forma
 
 # Extract attributes only (ignore geometry)
 dbfsharp read census.shp --fields "GEOID,POP2020,NAME" --format csv
+```
+
+### Converting DBF Data
+
+```bash
+# Convert to CSV for Excel/Google Sheets
+dbfsharp read data.dbf --format csv --output data.csv
+
+# Convert to JSON for modern applications
+dbfsharp read products.dbf --format json --output products.json
+
+# Extract specific fields only
+dbfsharp read employees.dbf --fields "ID,NAME,EMAIL,SALARY" --format csv
 ```
 
 ### Data Analysis & Exploration
@@ -135,16 +129,6 @@ dbfsharp read data.dbf --format csv --fields "ID,NAME" | sort | uniq | head -10
 
 # Process from stdin
 cat remote_file.dbf | dbfsharp read --format json
-```
-
-### Handling Legacy Encoding
-
-```bash
-# Specify encoding for non-English text
-dbfsharp read legacy_german.dbf --encoding cp850 --format csv
-
-# Windows-1252 encoding (common in Windows applications)
-dbfsharp read windows_data.dbf --encoding cp1252 --format json
 ```
 
 ---
@@ -248,15 +232,6 @@ DbfSharp also provides a high-performance .NET library for programmatic access i
 ```csharp
 using DbfSharp.Core;
 
-// Read DBF file
-using var reader = DbfReader.Create("data.dbf");
-foreach (var record in reader.Records)
-{
-    var name = record.GetString("NAME");
-    var date = record.GetDateTime("DATE");
-    Console.WriteLine($"{name}: {date}");
-}
-
 // Read Shapefile with spatial queries
 using var shpReader = ShapefileReader.Open("cities.shp");
 shpReader.BuildSpatialIndex();
@@ -269,6 +244,15 @@ foreach (var feature in features)
     var geometry = feature.Geometry;
     var population = feature.GetAttribute<int>("POPULATION");
     Console.WriteLine($"{geometry}: {population:N0} people");
+}
+
+// Read DBF file
+using var reader = DbfReader.Create("data.dbf");
+foreach (var record in reader.Records)
+{
+    var name = record.GetString("NAME");
+    var date = record.GetDateTime("DATE");
+    Console.WriteLine($"{name}: {date}");
 }
 ```
 
@@ -299,16 +283,3 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## About DBF Format History
-
-The DBF format was introduced by Ashton-Tate for dBASE II in 1983. Despite its age, it remains widely used in:
-
-- **GIS applications** - ESRI Shapefiles use DBF for attribute data
-- **Legacy systems** - Many government and business databases still use DBF
-- **Data exchange** - Simple format makes it useful for data interchange
-- **Embedded systems** - Small footprint suitable for resource-constrained environments
-
-DbfSharp makes it easy to work with this data using modern tools and workflows.
